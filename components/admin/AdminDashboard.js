@@ -155,12 +155,74 @@ function ApplicationCard({ entry, busy, onStatus, onDelete }) {
   );
 }
 
+function AccountRow({ account, onDelete, onPassword }) {
+  const [password, setPassword] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  async function submit(event) {
+    event.preventDefault();
+    if (password.length < 8) return;
+    setBusy(true);
+    const ok = await onPassword(account, password);
+    setBusy(false);
+    if (ok) setPassword("");
+  }
+
+  return (
+    <article className="glass-card application-card">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <h3 className="font-display font-bold">{account.name || account.username}</h3>
+            <span className="badge badge-neutral">@{account.username}</span>
+            <span
+              className={`badge ${account.source === "registered" ? "badge-pending" : "badge-accepted"}`}
+            >
+              {account.source === "registered" ? "Registered" : "From file"}
+            </span>
+          </div>
+          <p className="faint text-xs mt-1">
+            {account.createdAt ? `Joined ${formatDateTime(account.createdAt)}` : "Listed in data/users.json"}
+            {account.updatedAt ? ` · password set ${formatDateTime(account.updatedAt)}` : ""}
+          </p>
+        </div>
+        <button
+          type="button"
+          className="btn btn-ghost"
+          style={{ color: "var(--danger)" }}
+          disabled={busy}
+          onClick={() => onDelete(account)}
+        >
+          Delete account
+        </button>
+      </div>
+
+      <form onSubmit={submit} className="flex flex-wrap items-end gap-2 mt-3">
+        <label className="field flex-1" style={{ minWidth: "12rem" }}>
+          <span className="field-label">New password</span>
+          <input
+            className="input"
+            type="password"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            placeholder="At least 8 characters"
+            autoComplete="new-password"
+          />
+        </label>
+        <button type="submit" className="btn btn-secondary btn-sm" disabled={busy || password.length < 8}>
+          {busy ? "Saving…" : "Set password"}
+        </button>
+      </form>
+    </article>
+  );
+}
+
 export default function AdminDashboard({ currentUser }) {
   const router = useRouter();
   const [tab, setTab] = useState("applications");
   const [filter, setFilter] = useState("pending");
   const [search, setSearch] = useState("");
-  const [data, setData] = useState({ join: [], applications: [], forms: [] });
+  const [data, setData] = useState({ join: [], applications: [], forms: [], accounts: [] });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
@@ -186,6 +248,7 @@ export default function AdminDashboard({ currentUser }) {
         join: next.join || [],
         applications: next.applications || [],
         forms: next.forms || [],
+        accounts: next.accounts || [],
       });
       setLastSync(new Date());
       setError("");
@@ -348,6 +411,46 @@ export default function AdminDashboard({ currentUser }) {
     }
   }
 
+  async function changeAccountPassword(account, password) {
+    try {
+      const response = await fetch(`/api/admin/accounts/${encodeURIComponent(account.username)}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password }),
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(result.error || "Could not change that password.");
+      setError("");
+      setNotice(`Password updated for @${account.username} — their old sessions are signed out.`);
+      load();
+      return true;
+    } catch (err) {
+      setError(err.message);
+      return false;
+    }
+  }
+
+  async function deleteAccount(account) {
+    const question = `Delete the account @${account.username}? They lose access immediately. Their applications and messages stay on file.`;
+    if (!confirm(question)) return;
+    try {
+      const response = await fetch(`/api/admin/accounts/${encodeURIComponent(account.username)}`, {
+        method: "DELETE",
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(result.error || "Could not delete that account.");
+      setError("");
+      setData((current) => ({
+        ...current,
+        accounts: current.accounts.filter((item) => item.username !== account.username),
+      }));
+      setNotice(`@${account.username} deleted.`);
+      load();
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
   async function createForm() {
     setCreating(true);
     try {
@@ -426,6 +529,7 @@ export default function AdminDashboard({ currentUser }) {
           <Stat label="Rejected" value={counts.denied} accent="var(--danger)" />
           <Stat label="Messages" value={counts.messages} />
           <Stat label="Forms" value={data.forms.length} />
+          <Stat label="Accounts" value={data.accounts.length} />
         </div>
 
         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -434,6 +538,7 @@ export default function AdminDashboard({ currentUser }) {
               { id: "applications", label: "Applications", count: counts.total },
               { id: "messages", label: "Messages", count: counts.messages },
               { id: "forms", label: "Forms", count: data.forms.length },
+              { id: "accounts", label: "Accounts", count: data.accounts.length },
             ].map((item) => (
               <button
                 key={item.id}
@@ -449,7 +554,7 @@ export default function AdminDashboard({ currentUser }) {
             ))}
           </div>
 
-          {tab !== "forms" && (
+          {tab !== "forms" && tab !== "accounts" && (
             <input
               className="input"
               style={{ maxWidth: "16rem" }}
@@ -560,6 +665,38 @@ export default function AdminDashboard({ currentUser }) {
                 <p className="text-sm mt-3 whitespace-pre-wrap">{entry.message}</p>
               </article>
             ))}
+          </div>
+        )}
+
+        {tab === "accounts" && (
+          <div className="grid gap-3">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <p className="muted text-sm max-w-xl">
+                Everyone who can log in to the site. Setting a new password signs them out on every
+                device; deleting an account leaves their past applications and messages in place.
+              </p>
+              <button type="button" className="btn btn-secondary btn-sm" onClick={load}>
+                Refresh
+              </button>
+            </div>
+
+            {data.accounts.length === 0 ? (
+              <div className="empty-state">
+                <p className="font-display font-bold">No accounts yet</p>
+                <p className="muted text-sm max-w-md">
+                  Accounts show up here as people register, plus any listed in data/users.json.
+                </p>
+              </div>
+            ) : (
+              data.accounts.map((account) => (
+                <AccountRow
+                  key={account.username}
+                  account={account}
+                  onDelete={deleteAccount}
+                  onPassword={changeAccountPassword}
+                />
+              ))
+            )}
           </div>
         )}
 

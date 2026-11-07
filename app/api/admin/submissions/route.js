@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { kvGet, kvSet } from "@/lib/kv";
 import { getSessionFromCookies } from "@/lib/auth";
 import { submissionsKey } from "@/lib/applications";
+import { listMembers } from "@/lib/members";
 
 function isAuthorizedRequest() {
   return Boolean(getSessionFromCookies());
@@ -16,9 +17,10 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const [join, index] = await Promise.all([
+  const [join, index, accounts] = await Promise.all([
     kvGet("submissions:join", []),
     kvGet("formbuilder:index", []),
+    listMembers(),
   ]);
 
   const perForm = await Promise.all(
@@ -47,6 +49,7 @@ export async function GET() {
       join,
       applications,
       forms,
+      accounts,
       generatedAt: new Date().toISOString(),
     },
     { headers: { "Cache-Control": "no-store, max-age=0" } }
