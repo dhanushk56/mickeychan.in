@@ -5,6 +5,8 @@ import { socials } from "@/data/socials";
 import SocialIcon from "@/components/SocialIcon";
 
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
+export const fetchCache = "force-no-store";
 
 function shortName(social) {
   return social.name.split(" (")[0];
