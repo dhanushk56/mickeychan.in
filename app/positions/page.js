@@ -10,6 +10,7 @@ import {
 } from "@/lib/applications";
 import Countdown from "@/components/Countdown";
 import LocalTime from "@/components/LocalTime";
+import { isReadyForm } from "@/lib/form-builder/schema";
 
 export const metadata = {
   title: "Open Positions",
@@ -80,14 +81,16 @@ export default async function PositionsPage() {
   const formsIndex = await kvGet("formbuilder:index", []);
   const open = formsIndex.filter((form) => form.published !== false);
 
-  const roles = await Promise.all(
-    open.map(async (entry) => {
-      const form = (await kvGet(`formbuilder:form:${entry.id}`, null)) || entry;
-      const submissions = member ? await kvGet(submissionsKey(entry.id), []) : [];
-      const submission = member ? memberSubmission(submissions, member.username) : null;
-      return { entry, form, gate: applicationGate(form, submission) };
-    })
-  );
+  const roles = (
+    await Promise.all(
+      open.map(async (entry) => {
+        const form = (await kvGet(`formbuilder:form:${entry.id}`, null)) || entry;
+        const submissions = member ? await kvGet(submissionsKey(entry.id), []) : [];
+        const submission = member ? memberSubmission(submissions, member.username) : null;
+        return { entry, form, gate: applicationGate(form, submission) };
+      })
+    )
+  ).filter(({ form }) => isReadyForm(form));
 
   return (
     <main className="page">

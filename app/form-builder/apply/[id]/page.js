@@ -4,6 +4,7 @@ import { kvGet } from "@/lib/kv";
 import ApplyForm from "@/components/form-builder/ApplyForm";
 import { memberFromCookieStore } from "@/lib/members";
 import { STATUS_TEXT, applicationGate, memberSubmission, submissionsKey } from "@/lib/applications";
+import { isReadyForm } from "@/lib/form-builder/schema";
 import Countdown from "@/components/Countdown";
 import LocalTime from "@/components/LocalTime";
 
@@ -36,6 +37,18 @@ export default async function ApplyPage({ params }) {
       <Card kicker="Closed" title="This application is no longer available.">
         <p className="muted text-sm">
           The form may have been removed. Take a look at the other open positions.
+        </p>
+      </Card>
+    );
+  }
+
+  // A form with no titled questions would otherwise render as a single blank
+  // "Untitled question" card, which reads as a broken page.
+  if (!isReadyForm(form)) {
+    return (
+      <Card kicker="Not ready" title="This form has no questions yet.">
+        <p className="muted text-sm">
+          Nothing to fill in yet — the team is still putting this one together. Check back soon.
         </p>
       </Card>
     );

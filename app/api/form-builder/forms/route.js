@@ -27,12 +27,14 @@ export async function POST() {
 
   const id = crypto.randomUUID().slice(0, 8);
   const now = new Date().toISOString();
-  const form = { ...emptyForm(), id, title: "Untitled form", published: true };
+  // New forms start as drafts: an empty form should never appear on the public
+  // positions page just because someone clicked "Create new form".
+  const form = { ...emptyForm(), id, title: "Untitled form", published: false };
 
   await kvSet(`formbuilder:form:${id}`, form);
 
   const index = await kvGet(INDEX_KEY, []);
-  index.unshift({ id, title: form.title, published: true, createdAt: now, updatedAt: now });
+  index.unshift({ id, title: form.title, published: false, createdAt: now, updatedAt: now });
   await kvSet(INDEX_KEY, index);
 
   return NextResponse.json({ id });
