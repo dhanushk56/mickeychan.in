@@ -2,6 +2,8 @@ import { getVideos } from "@/lib/content";
 
 export const dynamic = "force-dynamic";
 
+const YOUTUBE_UPLOADS_PLAYLIST_ID = "UUJhF67Sy9EIfxVjzer-iCHg";
+
 function VideoSection({ title, items }) {
   if (items.length === 0) return null;
   return (
@@ -39,7 +41,20 @@ export default async function VideosPage() {
           <p className="text-black/55 dark:text-white/55 mt-3">Automatically refreshed from YouTube every few minutes.</p>
         </div>
         {videos.length === 0 ? (
-          <div className="glass-card rounded-2xl p-8 text-black/60 dark:text-white/60">YouTube videos are temporarily unavailable.</div>
+          <div className="glass-card rounded-2xl overflow-hidden">
+            <iframe
+              className="w-full aspect-video"
+              src={`https://www.youtube-nocookie.com/embed/videoseries?list=${YOUTUBE_UPLOADS_PLAYLIST_ID}`}
+              title="Mickey Chan YouTube videos"
+              loading="lazy"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              referrerPolicy="strict-origin-when-cross-origin"
+              allowFullScreen
+            />
+            <p className="p-5 text-sm text-black/55 dark:text-white/55">
+              Showing the channel playlist directly from YouTube.
+            </p>
+          </div>
         ) : (
           <>
             <VideoSection title="Videos" items={regularVideos} />
