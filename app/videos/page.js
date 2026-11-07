@@ -1,4 +1,4 @@
-import { getVideos, channelUrl } from "@/lib/content";
+import { getVideos, channels, channelUrl } from "@/lib/content";
 import VideoExplorer from "@/components/videos/VideoExplorer";
 
 export const dynamic = "force-dynamic";
@@ -32,7 +32,12 @@ export default async function VideosPage({ searchParams }) {
           </a>
         </div>
 
-        <VideoExplorer videos={videos} initialId={initialId} channelUrl={channelUrl} />
+        <VideoExplorer
+          videos={videos}
+          initialId={initialId}
+          channelUrl={channelUrl}
+          channels={channels.map(({ id, label, url }) => ({ id, label, url }))}
+        />
       </div>
     </section>
   );

@@ -23,16 +23,18 @@ function VideoCard({ video, onPlay }) {
       <div className="video-body">
         <p className="video-title">{video.title}</p>
         <p className="faint text-xs mt-1.5">
-          {[video.views && `${video.views} views`, video.published].filter(Boolean).join(" · ") ||
-            "On YouTube"}
+          {[video.views && `${video.views} views`, video.published, video.channelLabel]
+            .filter(Boolean)
+            .join(" · ") || "On YouTube"}
         </p>
       </div>
     </button>
   );
 }
 
-export default function VideoExplorer({ videos, initialId = "", channelUrl }) {
+export default function VideoExplorer({ videos, initialId = "", channelUrl, channels = [] }) {
   const [filter, setFilter] = useState("all");
+  const [channel, setChannel] = useState("all");
   const [active, setActive] = useState(null);
 
   useEffect(() => {
@@ -64,10 +66,26 @@ export default function VideoExplorer({ videos, initialId = "", channelUrl }) {
     [videos]
   );
 
+  const channelCounts = useMemo(() => {
+    const map = { all: videos.length };
+    for (const item of channels) {
+      map[item.id] = videos.filter((video) => video.channel === item.id).length;
+    }
+    return map;
+  }, [channels, videos]);
+
   const visible = useMemo(
-    () => (filter === "all" ? videos : videos.filter((video) => (video.type === "short" ? "short" : "video") === filter)),
-    [filter, videos]
+    () =>
+      videos.filter((video) => {
+        const matchesType = filter === "all" || (video.type === "short" ? "short" : "video") === filter;
+        const matchesChannel = channel === "all" || video.channel === channel;
+        return matchesType && matchesChannel;
+      }),
+    [channel, filter, videos]
   );
+
+  const emptyForChannel = channel !== "all" && (channelCounts[channel] || 0) === 0;
+  const selectedChannel = channels.find((item) => item.id === channel);
 
   if (videos.length === 0) {
     return (
@@ -85,34 +103,80 @@ export default function VideoExplorer({ videos, initialId = "", channelUrl }) {
 
   return (
     <div className="grid gap-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="tabbar" role="tablist" aria-label="Filter videos">
-          {[
-            { id: "all", label: "Everything" },
-            { id: "video", label: "Videos" },
-            { id: "short", label: "Shorts" },
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              role="tab"
-              aria-selected={filter === tab.id}
-              className="tab"
-              data-active={filter === tab.id}
-              onClick={() => setFilter(tab.id)}
-            >
-              {tab.label}
-              <span className="tab-count">{counts[tab.id]}</span>
-            </button>
-          ))}
+      <div className="grid gap-3">
+        {channels.length > 1 && (
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="faint text-xs font-bold uppercase" style={{ letterSpacing: ".14em" }}>
+              Channel
+            </span>
+            {[{ id: "all", label: "Both" }, ...channels].map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                className="chip"
+                data-active={channel === item.id}
+                aria-pressed={channel === item.id}
+                onClick={() => setChannel(item.id)}
+              >
+                {item.label}
+                <span className="tab-count">{channelCounts[item.id] ?? 0}</span>
+              </button>
+            ))}
+          </div>
+        )}
+
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="tabbar" role="tablist" aria-label="Filter videos">
+            {[
+              { id: "all", label: "Everything" },
+              { id: "video", label: "Videos" },
+              { id: "short", label: "Shorts" },
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                role="tab"
+                aria-selected={filter === tab.id}
+                className="tab"
+                data-active={filter === tab.id}
+                onClick={() => setFilter(tab.id)}
+              >
+                {tab.label}
+                <span className="tab-count">{counts[tab.id]}</span>
+              </button>
+            ))}
+          </div>
+          <p className="faint text-xs">{visible.length} showing</p>
         </div>
-        <p className="faint text-xs">{visible.length} showing</p>
       </div>
 
-      <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-        {visible.map((video) => (
-          <VideoCard key={video.id} video={video} onPlay={setActive} />
-        ))}
-      </div>
+      {visible.length === 0 ? (
+        <div className="empty-state">
+          <p className="font-display text-lg font-bold">
+            {emptyForChannel ? `Nothing on ${selectedChannel?.label?.toLowerCase()} yet` : "No matches"}
+          </p>
+          <p className="muted text-sm max-w-md">
+            {emptyForChannel
+              ? "This account has no public uploads right now. Everything from the main channel is still here."
+              : "Try a different filter."}
+          </p>
+          {emptyForChannel && selectedChannel?.url && (
+            <a
+              href={selectedChannel.url}
+              target="_blank"
+              rel="noreferrer"
+              className="btn btn-secondary btn-sm mt-2"
+            >
+              Check it on YouTube ↗
+            </a>
+          )}
+        </div>
+      ) : (
+        <div className="video-grid grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-4 items-start">
+          {visible.map((video) => (
+            <VideoCard key={video.id} video={video} onPlay={setActive} />
+          ))}
+        </div>
+      )}
 
       {active && (
         <div className="overlay" role="dialog" aria-modal="true" aria-label={active.title} onClick={() => setActive(null)}>
@@ -120,6 +184,7 @@ export default function VideoExplorer({ videos, initialId = "", channelUrl }) {
             <div className="relative">
               <iframe
                 className="modal-video"
+                data-short={active.type === "short"}
                 src={`https://www.youtube-nocookie.com/embed/${active.id}?autoplay=1&rel=0`}
                 title={active.title}
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -139,7 +204,7 @@ export default function VideoExplorer({ videos, initialId = "", channelUrl }) {
               <div className="min-w-0">
                 <p className="font-display font-bold leading-snug">{active.title}</p>
                 <p className="faint text-xs mt-1">
-                  {[active.views && `${active.views} views`, active.published, active.duration]
+                  {[active.views && `${active.views} views`, active.published, active.duration, active.channelLabel]
                     .filter(Boolean)
                     .join(" · ")}
                 </p>

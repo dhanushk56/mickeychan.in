@@ -9,7 +9,7 @@ export const revalidate = 0;
 export const fetchCache = "force-no-store";
 
 function shortName(social) {
-  return social.name.split(" (")[0];
+  return social.short || social.name.split(" (")[0];
 }
 
 function VideoMini({ video }) {

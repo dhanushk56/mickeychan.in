@@ -1146,6 +1146,21 @@
 
   .application-card { padding: 1rem; }
 
+  /* Auto grid tracks are floored at min-content, so the three-column stat row
+     was forcing the whole page ~90px wider than the phone screen. Let every
+     track shrink instead. */
+  .stat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .shell, .shell > *, .grid > *, .flex > * { min-width: 0; }
+
+  /* Vertical shorts next to 16:9 videos: top-align cards instead of stretching
+     a video card to the height of a tall short. */
+  .video-card { align-self: start; }
+  .video-grid { align-items: start; }
+  .video-body { padding: .7rem .75rem .85rem; }
+  .video-title { font-size: .82rem; }
+  .thumb-pill { font-size: .56rem; padding: .15rem .4rem; }
+  .thumb-badge { font-size: .6rem; right: .4rem; bottom: .4rem; }
+
   /* 16px stops iOS Safari from zooming the page on input focus. */
   .input, .textarea, .select, .input-lg { font-size: 16px; }
 
