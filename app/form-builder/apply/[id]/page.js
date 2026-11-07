@@ -41,7 +41,7 @@ export default async function ApplyPage({ params }) {
     );
   }
 
-  const member = memberFromCookieStore(cookies());
+  const member = await memberFromCookieStore(cookies());
   const applyHref = `/form-builder/apply/${params.id}`;
 
   if (!member) {

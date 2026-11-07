@@ -76,7 +76,7 @@ function StatusBlock({ gate, member }) {
 }
 
 export default async function PositionsPage() {
-  const member = memberFromCookieStore(cookies());
+  const member = await memberFromCookieStore(cookies());
   const formsIndex = await kvGet("formbuilder:index", []);
   const open = formsIndex.filter((form) => form.published !== false);
 

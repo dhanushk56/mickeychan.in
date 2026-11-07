@@ -12,10 +12,10 @@ function safeNext(value) {
   return value;
 }
 
-export default function LoginPage({ searchParams }) {
+export default async function LoginPage({ searchParams }) {
   const next = safeNext(searchParams?.next);
-  const member = memberFromCookieStore(cookies());
+  const member = await memberFromCookieStore(cookies());
   if (member) redirect(next);
 
-  return <MemberLogin next={next} hasAccounts={hasMembers()} />;
+  return <MemberLogin next={next} hasAccounts={await hasMembers()} />;
 }

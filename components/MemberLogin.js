@@ -43,7 +43,7 @@ export default function MemberLogin({ next = "/positions", hasAccounts = true })
 
           {!hasAccounts && (
             <p className="badge badge-pending mb-4 w-full justify-center" role="alert">
-              No accounts exist yet — an admin has to add one first.
+              No accounts exist yet — create one below.
             </p>
           )}
 
@@ -112,8 +112,12 @@ export default function MemberLogin({ next = "/positions", hasAccounts = true })
 
           <p className="faint text-xs mt-5 text-center">
             No account yet?{" "}
-            <Link href="/positions" className="hover:underline" style={{ color: "var(--primary)" }}>
-              Browse open positions
+            <Link
+              href={`/register?next=${encodeURIComponent(next)}`}
+              className="hover:underline"
+              style={{ color: "var(--primary)" }}
+            >
+              Register Now
             </Link>
           </p>
         </form>

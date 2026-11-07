@@ -65,7 +65,7 @@ function sameOrigin(request) {
 
 // Who am I? Used by the navbar to swap "Log in" for the account name.
 export async function GET() {
-  const member = memberFromCookieStore(cookies());
+  const member = await memberFromCookieStore(cookies());
   return NextResponse.json(
     { member: publicMember(member) },
     { headers: { "Cache-Control": "no-store, max-age=0" } }
@@ -77,7 +77,7 @@ export async function POST(request) {
     return NextResponse.json({ error: "Invalid origin." }, { status: 403 });
   }
 
-  if (!hasMembers()) {
+  if (!(await hasMembers())) {
     return NextResponse.json(
       { error: "No accounts are configured on this site yet. An admin has to add one." },
       { status: 500 }
@@ -93,7 +93,7 @@ export async function POST(request) {
   const username = typeof body.username === "string" ? body.username.trim() : "";
   const password = typeof body.password === "string" ? body.password : "";
 
-  const member = findMember(username);
+  const member = await findMember(username);
   if (!member || !verifyMemberPassword(member, password)) {
     recordFailure(key);
     return NextResponse.json({ error: "That username and password don't match." }, { status: 401 });

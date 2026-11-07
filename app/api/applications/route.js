@@ -20,7 +20,7 @@ function flattenQuestions(form) {
 export async function POST(request) {
   // Every application belongs to a signed-in account: that's what makes
   // "one application per person" enforceable.
-  const member = memberFromCookieStore(cookies());
+  const member = await memberFromCookieStore(cookies());
   if (!member) {
     return NextResponse.json({ error: "Please log in to submit an application." }, { status: 401 });
   }
