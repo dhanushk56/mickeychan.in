@@ -26,6 +26,19 @@ function timeAgo(iso) {
   return new Date(iso).toLocaleDateString();
 }
 
+// Local time, always 12-hour. This dashboard only renders submissions inside
+// the browser (they arrive by fetch), so "local" is the visitor's own zone.
+function formatDateTime(iso) {
+  if (!iso) return "—";
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "—";
+  return date.toLocaleString(undefined, {
+    dateStyle: "medium",
+    timeStyle: "short",
+    hour12: true,
+  });
+}
+
 function formatValue(value) {
   if (Array.isArray(value)) return value.join(", ") || "—";
   if (value === undefined || value === null || value === "") return "—";
@@ -46,7 +59,7 @@ function Stat({ label, value, accent }) {
   );
 }
 
-function ApplicationCard({ entry, busy, onStatus }) {
+function ApplicationCard({ entry, busy, onStatus, onDelete }) {
   const [expanded, setExpanded] = useState(false);
   const questions = entry.questions || [];
   const shown = expanded ? questions : questions.slice(0, 3);
@@ -58,6 +71,9 @@ function ApplicationCard({ entry, busy, onStatus }) {
           <div className="flex flex-wrap items-center gap-2">
             <h3 className="font-display font-bold text-base">{entry.formTitle || "Application"}</h3>
             <StatusBadge status={entry.status} />
+            {entry.memberUsername && (
+              <span className="badge badge-neutral">@{entry.memberUsername}</span>
+            )}
           </div>
           <p className="faint text-xs mt-1">
             {entry.formId && (
@@ -66,7 +82,7 @@ function ApplicationCard({ entry, busy, onStatus }) {
               </Link>
             )}
             {" · "}
-            {new Date(entry.createdAt).toLocaleString()}
+            {formatDateTime(entry.createdAt)}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -100,6 +116,15 @@ function ApplicationCard({ entry, busy, onStatus }) {
               Undo
             </button>
           )}
+          <button
+            type="button"
+            className="btn btn-ghost"
+            style={{ color: "var(--danger)" }}
+            disabled={busy}
+            onClick={() => onDelete(entry)}
+          >
+            Delete
+          </button>
         </div>
       </div>
 
@@ -144,6 +169,7 @@ export default function AdminDashboard({ currentUser }) {
   const [busyId, setBusyId] = useState("");
   const [creating, setCreating] = useState(false);
   const [copied, setCopied] = useState("");
+  const [clearing, setClearing] = useState(false);
   const mounted = useRef(true);
 
   const load = useCallback(async () => {
@@ -260,6 +286,45 @@ export default function AdminDashboard({ currentUser }) {
       setError(err.message);
     } finally {
       setBusyId("");
+    }
+  }
+
+  async function deleteApplication(entry) {
+    const who = entry.memberUsername ? `@${entry.memberUsername}` : "this applicant";
+    if (!confirm(`Delete the application from ${who}? They will be able to apply again.`)) return;
+    setBusyId(entry.id);
+    try {
+      const response = await fetch(`/api/admin/applications/${entry.formId}/${entry.id}`, {
+        method: "DELETE",
+      });
+      if (!response.ok) throw new Error("Could not delete that application.");
+      setData((current) => ({
+        ...current,
+        applications: current.applications.filter((item) => item.id !== entry.id),
+      }));
+      setNotice("Application deleted.");
+      load();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusyId("");
+    }
+  }
+
+  async function deleteAllApplications() {
+    const question = `Delete all ${counts.total} applications? Every form is cleared and everyone can apply again. Contact messages are kept.`;
+    if (!confirm(question)) return;
+    setClearing(true);
+    try {
+      const response = await fetch("/api/admin/submissions", { method: "DELETE" });
+      if (!response.ok) throw new Error("Could not clear the submissions.");
+      setData((current) => ({ ...current, applications: [] }));
+      setNotice("All applications deleted.");
+      load();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setClearing(false);
     }
   }
 
@@ -398,6 +463,21 @@ export default function AdminDashboard({ currentUser }) {
               ))}
             </div>
 
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="faint text-xs">
+                Deleting a submission also lets that person apply again.
+              </p>
+              <button
+                type="button"
+                className="btn btn-ghost"
+                style={{ color: "var(--danger)" }}
+                onClick={deleteAllApplications}
+                disabled={clearing || counts.total === 0}
+              >
+                {clearing ? "Deleting…" : "Delete all submissions"}
+              </button>
+            </div>
+
             {loading ? (
               <div className="glass-card p-8 muted">Loading submissions…</div>
             ) : filteredApplications.length === 0 ? (
@@ -417,6 +497,7 @@ export default function AdminDashboard({ currentUser }) {
                     entry={entry}
                     busy={busyId === entry.id}
                     onStatus={updateStatus}
+                    onDelete={deleteApplication}
                   />
                 ))}
               </div>
@@ -439,7 +520,7 @@ export default function AdminDashboard({ currentUser }) {
                     <h3 className="font-display font-bold">{entry.name}</h3>
                     <span className="badge badge-neutral">{entry.role}</span>
                   </div>
-                  <span className="faint text-xs">{new Date(entry.createdAt).toLocaleString()}</span>
+                  <span className="faint text-xs">{formatDateTime(entry.createdAt)}</span>
                 </div>
                 <a href={`mailto:${entry.email}`} className="text-xs font-semibold mt-1 inline-block" style={{ color: "var(--primary)" }}>
                   {entry.email}

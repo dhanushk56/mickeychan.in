@@ -1,5 +1,15 @@
 import Link from "next/link";
+import { cookies } from "next/headers";
 import { kvGet } from "@/lib/kv";
+import { memberFromCookieStore } from "@/lib/members";
+import {
+  STATUS_TEXT,
+  applicationGate,
+  memberSubmission,
+  submissionsKey,
+} from "@/lib/applications";
+import Countdown from "@/components/Countdown";
+import LocalTime from "@/components/LocalTime";
 
 export const metadata = {
   title: "Open Positions",
@@ -10,9 +20,74 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 export const fetchCache = "force-no-store";
 
+function StatusBlock({ gate, member }) {
+  if (!member) {
+    return (
+      <p className="faint text-sm">
+        Log in to apply — your application, its status and any reapply timer stay on your account.
+      </p>
+    );
+  }
+
+  if (gate.status === "none") {
+    return <p className="muted text-sm">You haven&apos;t applied to this role yet.</p>;
+  }
+
+  const submitted = (
+    <p className="faint text-xs">
+      Submitted <LocalTime iso={gate.submission.createdAt} />
+    </p>
+  );
+
+  if (gate.status === "pending") {
+    return (
+      <>
+        <span className="badge badge-pending">Pending review</span>
+        <p className="muted text-sm">{STATUS_TEXT.pending}</p>
+        {submitted}
+      </>
+    );
+  }
+
+  if (gate.status === "accepted") {
+    return (
+      <>
+        <span className="badge badge-accepted">Accepted</span>
+        <p className="muted text-sm">{STATUS_TEXT.accepted}</p>
+        {submitted}
+      </>
+    );
+  }
+
+  return (
+    <>
+      <span className="badge badge-denied">Rejected</span>
+      {gate.canApply ? (
+        <p className="muted text-sm">Your cooldown is over — you can apply again now.</p>
+      ) : (
+        <p className="muted text-sm">
+          You can reapply in{" "}
+          {gate.availableAt ? <Countdown to={gate.availableAt} className="font-semibold" /> : "a moment"}.
+        </p>
+      )}
+      {submitted}
+    </>
+  );
+}
+
 export default async function PositionsPage() {
+  const member = memberFromCookieStore(cookies());
   const formsIndex = await kvGet("formbuilder:index", []);
   const open = formsIndex.filter((form) => form.published !== false);
+
+  const roles = await Promise.all(
+    open.map(async (entry) => {
+      const form = (await kvGet(`formbuilder:form:${entry.id}`, null)) || entry;
+      const submissions = member ? await kvGet(submissionsKey(entry.id), []) : [];
+      const submission = member ? memberSubmission(submissions, member.username) : null;
+      return { entry, form, gate: applicationGate(form, submission) };
+    })
+  );
 
   return (
     <main className="page">
@@ -24,9 +99,18 @@ export default async function PositionsPage() {
             Roles we&apos;re currently looking to fill. Each listing opens a short application form —
             answers go straight to the review queue.
           </p>
+          {!member && (
+            <p className="faint text-sm mt-4">
+              Applying needs an account so one person can only apply once per role.{" "}
+              <Link href="/login?next=%2Fpositions" className="hover:underline" style={{ color: "var(--primary)" }}>
+                Log in
+              </Link>{" "}
+              to see your status here.
+            </p>
+          )}
         </div>
 
-        {open.length === 0 ? (
+        {roles.length === 0 ? (
           <div className="empty-state">
             <p className="font-display text-lg font-bold">No open positions right now</p>
             <p className="muted text-sm max-w-md">
@@ -38,23 +122,39 @@ export default async function PositionsPage() {
           </div>
         ) : (
           <div className="grid gap-3 md:grid-cols-2">
-            {open.map((form) => (
-              <Link
-                key={form.id}
-                href={`/form-builder/apply/${form.id}`}
-                className="glass-card lift p-6 flex items-center justify-between gap-4"
-              >
-                <span className="min-w-0">
-                  <span className="font-display text-xl font-bold block mb-1.5">
-                    {form.title || "Untitled role"}
-                  </span>
-                  <span className="faint text-sm block">
-                    {form.createdAt ? `Posted ${new Date(form.createdAt).toLocaleDateString()}` : "Open now"}
-                  </span>
-                </span>
-                <span className="icon-button flex-shrink-0" aria-hidden="true">↗</span>
-              </Link>
-            ))}
+            {roles.map(({ entry, form, gate }) => {
+              const applyHref = `/form-builder/apply/${entry.id}`;
+              const href = member
+                ? applyHref
+                : `/login?next=${encodeURIComponent(applyHref)}`;
+              const label = !member ? "Log in to apply" : gate.canApply ? "Apply now" : "View status";
+
+              return (
+                <article
+                  key={entry.id}
+                  className="glass-card lift p-6 flex flex-col gap-3 min-w-0"
+                >
+                  <div className="min-w-0">
+                    <p className="font-display text-xl font-bold">
+                      {form.title || "Untitled role"}
+                    </p>
+                    <p className="faint text-sm mt-1">
+                      {entry.createdAt
+                        ? `Posted ${new Date(entry.createdAt).toLocaleDateString()}`
+                        : "Open now"}
+                    </p>
+                  </div>
+
+                  <div className="grid gap-2">
+                    <StatusBlock gate={gate} member={member} />
+                  </div>
+
+                  <Link href={href} className="btn btn-secondary btn-sm mt-auto self-start">
+                    {label} <span aria-hidden="true">↗</span>
+                  </Link>
+                </article>
+              );
+            })}
           </div>
         )}
 

@@ -616,7 +616,29 @@ export default function FormBuilder({ initialForm, publicUrl, currentUser, formI
                     onChange={(event) => updateForm({ successMessage: event.target.value })}
                   />
                 </label>
+                <label className="field">
+                  <span className="field-label">Reapply cooldown after rejection (hours)</span>
+                  <input
+                    type="number"
+                    min="0"
+                    step="1"
+                    className="input"
+                    value={form.settings?.cooldownHours ?? 0}
+                    onChange={(event) =>
+                      updateForm({
+                        settings: {
+                          ...(form.settings || {}),
+                          cooldownHours: Math.max(0, Math.floor(Number(event.target.value) || 0)),
+                        },
+                      })
+                    }
+                  />
+                </label>
               </div>
+              <p className="faint text-xs">
+                A rejected applicant sees a live countdown and can apply again once it ends. 0 lets
+                them reapply straight away; 24 = one day, 168 = one week.
+              </p>
               <p className="faint text-xs">
                 Public link: <span className="font-mono break-all">{publicUrl}</span>
               </p>

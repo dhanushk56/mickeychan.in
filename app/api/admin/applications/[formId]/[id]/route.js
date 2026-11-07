@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { kvGet, kvSet } from "@/lib/kv";
 import { getSessionFromCookies } from "@/lib/auth";
+import { submissionsKey } from "@/lib/applications";
 
 function readSession() {
   return getSessionFromCookies();
@@ -21,7 +22,7 @@ export async function PATCH(request, { params }) {
     return NextResponse.json({ error: "Invalid status." }, { status: 400 });
   }
 
-  const key = `submissions:applications:${params.formId}`;
+  const key = submissionsKey(params.formId);
   const submissions = await kvGet(key, []);
   const index = submissions.findIndex((entry) => entry.id === params.id);
   if (index === -1) {
@@ -40,4 +41,23 @@ export async function PATCH(request, { params }) {
     { ok: true, application: submissions[index] },
     { headers: { "Cache-Control": "no-store" } }
   );
+}
+
+// Protected — deletes one application. That also lifts the one-application
+// lock, so the person is free to apply again.
+export async function DELETE(request, { params }) {
+  const session = readSession();
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const key = submissionsKey(params.formId);
+  const submissions = await kvGet(key, []);
+  const next = submissions.filter((entry) => entry.id !== params.id);
+  if (next.length === submissions.length) {
+    return NextResponse.json({ error: "Application not found." }, { status: 404 });
+  }
+
+  await kvSet(key, next);
+  return NextResponse.json({ ok: true }, { headers: { "Cache-Control": "no-store" } });
 }

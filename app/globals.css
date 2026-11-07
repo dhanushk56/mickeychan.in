@@ -139,9 +139,9 @@
   }
 
   /* --- Scrollbars -----------------------------------------------------
-     Desktop: the page still scrolls vertically, but the vertical bar is
-     hidden; a horizontal bar remains available if content overflows.
-     Mobile: vertical bar stays visible, horizontal scrolling is off. */
+     No vertical bar anywhere, desktop or mobile: the page still scrolls,
+     it just never draws the track. Desktop keeps a horizontal bar for wide
+     content, mobile has no horizontal scrolling at all. */
   ::-webkit-scrollbar { width: 10px; height: 10px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb {
@@ -158,8 +158,8 @@
   }
 
   @media (max-width: 768px) {
-    html { scrollbar-width: thin; }
-    ::-webkit-scrollbar { width: 8px; height: 0; }
+    html { scrollbar-width: none; }
+    ::-webkit-scrollbar { width: 0; height: 0; }
     ::-webkit-scrollbar:horizontal { height: 0; }
     body { overflow-x: hidden; }
     html, body { overscroll-behavior-x: none; }

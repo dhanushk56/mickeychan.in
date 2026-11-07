@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
-import { kvGet } from "@/lib/kv";
+import { kvGet, kvSet } from "@/lib/kv";
 import { getSessionFromCookies } from "@/lib/auth";
+import { submissionsKey } from "@/lib/applications";
 
 function isAuthorizedRequest() {
   return Boolean(getSessionFromCookies());
@@ -49,5 +50,21 @@ export async function GET() {
       generatedAt: new Date().toISOString(),
     },
     { headers: { "Cache-Control": "no-store, max-age=0" } }
+  );
+}
+
+// Protected — wipes every application across every form. Contact messages are
+// a separate inbox and are left alone.
+export async function DELETE() {
+  if (!isAuthorizedRequest()) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const index = await kvGet("formbuilder:index", []);
+  await Promise.all(index.map((entry) => kvSet(submissionsKey(entry.id), [])));
+
+  return NextResponse.json(
+    { ok: true, cleared: index.length },
+    { headers: { "Cache-Control": "no-store" } }
   );
 }

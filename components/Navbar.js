@@ -15,6 +15,7 @@ export default function Navbar() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [member, setMember] = useState(null);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12);
@@ -27,7 +28,23 @@ export default function Navbar() {
     setOpen(false);
   }, [pathname]);
 
+  // Session lives in an HttpOnly cookie, so the navbar asks the server who is
+  // signed in rather than trusting anything stored in the browser.
+  useEffect(() => {
+    let alive = true;
+    fetch("/api/auth/member", { cache: "no-store" })
+      .then((response) => (response.ok ? response.json() : null))
+      .then((data) => {
+        if (alive) setMember(data?.member || null);
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, [pathname]);
+
   const isActive = (href) => pathname === href || pathname.startsWith(`${href}/`);
+  const accountHref = member ? "/api/auth/member/logout" : "/login";
 
   return (
     <header className="site-nav">
@@ -52,6 +69,20 @@ export default function Navbar() {
 
         <div className="flex items-center gap-2">
           <ThemeToggle />
+          {member ? (
+            <>
+              <span className="badge badge-neutral hidden md:inline-flex" title={member.username}>
+                {member.name}
+              </span>
+              <a href={accountHref} className="btn btn-secondary btn-sm hidden sm:inline-flex">
+                Log out
+              </a>
+            </>
+          ) : (
+            <Link href="/login" className="btn btn-secondary btn-sm hidden sm:inline-flex">
+              Log in
+            </Link>
+          )}
           <Link href="/join" className="btn btn-primary btn-sm hidden sm:inline-flex">
             Join us <span aria-hidden="true">↗</span>
           </Link>
@@ -80,10 +111,18 @@ export default function Navbar() {
               {link.label}
             </Link>
           ))}
+          <a
+            href={accountHref}
+            className="btn btn-secondary"
+            style={{ "--i": String(LINKS.length) }}
+            onClick={() => setOpen(false)}
+          >
+            {member ? `Log out (${member.username})` : "Log in"}
+          </a>
           <Link
             href="/join"
             className="btn btn-primary mt-1"
-            style={{ "--i": String(LINKS.length) }}
+            style={{ "--i": String(LINKS.length + 1) }}
             onClick={() => setOpen(false)}
           >
             Join us

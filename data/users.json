@@ -1,0 +1,12 @@
+{
+  "$note": "Site accounts for applicants. Only a salted scrypt hash is stored — never a plaintext password. Add or change an account with: npm run user:add -- <username> \"Full name\". A forgotten password can only be reset by editing this file (or rerunning that command) and redeploying.",
+  "users": [
+    {
+      "username": "mickey",
+      "name": "Mickey Chan",
+      "salt": "0a20485ba73cb63a2c0df7ead2d1893d",
+      "hash": "2f6e8b133fa2b5619bc85f7034c3e0e98ed10c865749b922e8f3d3bca40c9e412444d7a2dbe1a75edfdb69092dabd260db7097ffcd0aefb76034959cb435ec56",
+      "updatedAt": "2026-11-07T00:00:00.000Z"
+    }
+  ]
+}
