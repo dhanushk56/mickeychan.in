@@ -217,8 +217,8 @@
       inset 0 -1px 0 var(--glass-edge);
     -webkit-backdrop-filter: blur(34px) saturate(190%) brightness(1.03);
     backdrop-filter: blur(34px) saturate(190%) brightness(1.03);
-    transition: transform 260ms cubic-bezier(.22, 1, .36, 1), box-shadow 260ms ease,
-      border-color 260ms ease, background-color 260ms ease, backdrop-filter 260ms ease;
+    transition: transform 340ms cubic-bezier(.22, 1, .36, 1), box-shadow 340ms ease,
+      border-color 300ms ease, background-color 300ms ease, backdrop-filter 340ms ease;
   }
 
   .glass-card:hover {
@@ -227,9 +227,9 @@
   }
 
   .lift:hover {
-    transform: translateY(-5px);
+    transform: translateY(-6px);
     border-color: color-mix(in srgb, var(--primary) 40%, transparent);
-    box-shadow: 0 30px 60px -22px rgba(76, 29, 149, .45),
+    box-shadow: 0 32px 64px -24px rgba(76, 29, 149, .45),
       inset 0 1px 0 var(--glass-highlight);
   }
 
@@ -832,6 +832,25 @@
   .sub-handle {
     font-size: .72rem;
     color: rgba(228, 222, 244, .5);
+  }
+
+  /* --- Scroll reveal --------------------------------------------------- */
+  /* Added by ScrollReveal.js to cards that start below the fold, so the page
+     never flashes: without JavaScript nothing is hidden in the first place. */
+  .reveal {
+    opacity: 0;
+    transform: translate3d(0, 22px, 0) scale(.985);
+    transition:
+      opacity 620ms cubic-bezier(.22, 1, .36, 1),
+      transform 760ms cubic-bezier(.22, 1, .36, 1);
+    transition-delay: calc(var(--reveal-i, 0) * 65ms);
+    will-change: opacity, transform;
+  }
+
+  .reveal.is-revealed {
+    opacity: 1;
+    transform: none;
+    will-change: auto;
   }
 
   /* --- Video ---------------------------------------------------------- */

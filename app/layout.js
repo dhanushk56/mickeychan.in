@@ -3,6 +3,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import PetalField from "@/components/PetalField";
 import ScrollProgress from "@/components/ScrollProgress";
+import ScrollReveal from "@/components/ScrollReveal";
 
 export const metadata = {
   title: {
@@ -41,6 +42,7 @@ export default function RootLayout({ children }) {
         <div className="grid-veil" aria-hidden="true" />
         <PetalField />
         <ScrollProgress />
+        <ScrollReveal />
         <Navbar />
         <main className="relative z-10 pt-24">{children}</main>
         <Footer />

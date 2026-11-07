@@ -269,7 +269,7 @@ export default async function Home() {
                 cta: "Follow the story",
               },
             ].map((card) => (
-              <div key={card.title} className="glass-card p-6 flex flex-col animate-rise">
+              <div key={card.title} className="glass-card p-6 flex flex-col">
                 <span className="glass-inset icon-button mb-5" aria-hidden="true">{card.glyph}</span>
                 <h3 className="font-display text-lg font-bold mb-2">{card.title}</h3>
                 <p className="muted text-sm leading-relaxed flex-1">{card.body}</p>
