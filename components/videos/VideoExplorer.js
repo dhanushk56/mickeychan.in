@@ -57,17 +57,44 @@ export default function VideoExplorer({ videos, initialId = "", channelUrl, chan
     };
   }, [active]);
 
+  // Counts are conversational, not static totals: the type tabs count what the
+  // selected channel actually holds, and the channel chips count what the
+  // selected type actually holds. Picking an empty account therefore shows
+  // zeros everywhere instead of promising videos that aren't rendered.
+  const videosInChannel = useMemo(
+    () => (channel === "all" ? videos : videos.filter((video) => video.channel === channel)),
+    [channel, videos]
+  );
+
   const counts = useMemo(
     () => ({
-      all: videos.length,
-      video: videos.filter((video) => video.type !== "short").length,
-      short: videos.filter((video) => video.type === "short").length,
+      all: videosInChannel.length,
+      video: videosInChannel.filter((video) => video.type !== "short").length,
+      short: videosInChannel.filter((video) => video.type === "short").length,
     }),
-    [videos]
+    [videosInChannel]
+  );
+
+  const videosInType = useMemo(
+    () =>
+      filter === "all"
+        ? videos
+        : videos.filter((video) => (video.type === "short" ? "short" : "video") === filter),
+    [filter, videos]
   );
 
   const channelCounts = useMemo(() => {
-    const map = { all: videos.length };
+    const map = { all: videosInType.length };
+    for (const item of channels) {
+      map[item.id] = videosInType.filter((video) => video.channel === item.id).length;
+    }
+    return map;
+  }, [channels, videosInType]);
+
+  // Totals per channel ignore the type filter, so the empty state can tell the
+  // difference between "this account has nothing" and "no shorts on it".
+  const channelTotals = useMemo(() => {
+    const map = {};
     for (const item of channels) {
       map[item.id] = videos.filter((video) => video.channel === item.id).length;
     }
@@ -84,7 +111,7 @@ export default function VideoExplorer({ videos, initialId = "", channelUrl, chan
     [channel, filter, videos]
   );
 
-  const emptyForChannel = channel !== "all" && (channelCounts[channel] || 0) === 0;
+  const emptyForChannel = channel !== "all" && (channelTotals[channel] || 0) === 0;
   const selectedChannel = channels.find((item) => item.id === channel);
 
   if (videos.length === 0) {
