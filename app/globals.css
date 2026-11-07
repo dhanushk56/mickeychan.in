@@ -413,9 +413,10 @@
     gap: .25rem;
     padding: .7rem;
     border-radius: 1.4rem;
-    /* Mostly opaque glass: the page behind must not read through the labels.
-       92% of the theme background keeps the glassy tint but kills the noise. */
-    background: color-mix(in srgb, var(--bg-base) 92%, transparent);
+    /* Near-solid glass: the page behind must not read through the labels.
+       97% of the theme background hides the backdrop while the blurred edge
+       and sheen keep the frosted look. */
+    background: color-mix(in srgb, var(--bg-base) 97%, transparent);
     background-image: linear-gradient(160deg, var(--glass-tint), transparent 65%);
     border: 1px solid var(--glass-line);
     box-shadow: var(--glass-shadow);
