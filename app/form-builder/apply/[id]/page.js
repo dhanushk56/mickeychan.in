@@ -5,10 +5,13 @@ import ApplyForm from "@/components/form-builder/ApplyForm";
 import { memberFromCookieStore } from "@/lib/members";
 import { STATUS_TEXT, applicationGate, memberSubmission, submissionsKey } from "@/lib/applications";
 import { isReadyForm } from "@/lib/form-builder/schema";
+import { unstable_noStore as noStore } from "next/cache";
 import Countdown from "@/components/Countdown";
 import LocalTime from "@/components/LocalTime";
 
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
+export const fetchCache = "force-no-store";
 
 export const metadata = { title: "Apply" };
 
@@ -30,6 +33,11 @@ function Card({ kicker, title, children }) {
 }
 
 export default async function ApplyPage({ params }) {
+  // Same hardening as /positions: never serve this page or its KV read from a
+  // cached render, or an applicant can be shown a form as it looked earlier
+  // (or an empty one) while the real form is complete.
+  noStore();
+
   const form = await kvGet(`formbuilder:form:${params.id}`, null);
 
   if (!form) {
@@ -45,32 +53,11 @@ export default async function ApplyPage({ params }) {
   // A form with no titled questions would otherwise render as a single blank
   // "Untitled question" card, which reads as a broken page.
   if (!isReadyForm(form)) {
-    const shape = JSON.stringify({
-      id: params.id,
-      type: typeof form,
-      keys: form && typeof form === "object" ? Object.keys(form) : null,
-      sectionsType: Array.isArray(form?.sections) ? "array" : typeof form?.sections,
-      sectionCount: Array.isArray(form?.sections) ? form.sections.length : null,
-      section0Keys: Array.isArray(form?.sections) ? Object.keys(form.sections[0] || {}) : null,
-      questionsType: Array.isArray(form?.sections?.[0]?.questions)
-        ? "array"
-        : typeof form?.sections?.[0]?.questions,
-      questionCount: Array.isArray(form?.sections?.[0]?.questions)
-        ? form.sections[0].questions.length
-        : null,
-      firstQuestionKeys: Array.isArray(form?.sections?.[0]?.questions)
-        ? Object.keys(form.sections[0].questions[0] || {})
-        : null,
-      firstTitleLength: String(form?.sections?.[0]?.questions?.[0]?.title ?? "").length,
-    });
     return (
       <Card kicker="Not ready" title="This form has no questions yet.">
         <p className="muted text-sm">
           Nothing to fill in yet — the team is still putting this one together. Check back soon.
         </p>
-        <pre data-form-shape style={{ fontSize: "10px", whiteSpace: "pre-wrap", opacity: 0.6 }}>
-          {shape}
-        </pre>
       </Card>
     );
   }
