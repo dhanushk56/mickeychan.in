@@ -77,10 +77,12 @@ export async function POST(request) {
     return NextResponse.json({ error: "Invalid origin." }, { status: 403 });
   }
 
+  // An empty registry isn't a server fault — registration is open, so answer
+  // like any other failed login instead of a 500.
   if (!(await hasMembers())) {
     return NextResponse.json(
-      { error: "No accounts are configured on this site yet. An admin has to add one." },
-      { status: 500 }
+      { error: "No accounts exist yet. Create one, then log in." },
+      { status: 401 }
     );
   }
 
