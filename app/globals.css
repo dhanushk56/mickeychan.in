@@ -767,6 +767,73 @@
     color: var(--text-faint);
   }
 
+  /* --- Channel subscriber cards --------------------------------------- */
+  /* Deliberately dark in both themes: the count is white text, which needs a
+     fixed dark surface rather than the theme's translucent glass. */
+  .channel-stats {
+    display: grid;
+    gap: .75rem;
+    grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  }
+
+  .sub-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: .3rem;
+    padding: 1.4rem 1.5rem;
+    border-radius: 1.25rem;
+    overflow: hidden;
+    isolation: isolate;
+    background: linear-gradient(150deg, #2a2044, #150f28 58%, #221a3a);
+    border: 1px solid rgba(255, 255, 255, .14);
+    box-shadow: 0 22px 44px -26px rgba(24, 12, 46, .8);
+    min-width: 0;
+  }
+
+  .sub-card::after {
+    content: "";
+    position: absolute;
+    top: -45%;
+    right: -25%;
+    width: 13rem;
+    height: 13rem;
+    background: radial-gradient(circle, rgba(196, 145, 255, .5), transparent 68%);
+    z-index: -1;
+  }
+
+  .sub-label {
+    font-size: .68rem;
+    font-weight: 800;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: rgba(228, 222, 244, .62);
+  }
+
+  .sub-count {
+    display: inline-flex;
+    align-items: baseline;
+    gap: .08em;
+    font-family: 'Bricolage Grotesque', 'Plus Jakarta Sans', system-ui, sans-serif;
+    font-size: clamp(2.1rem, 7vw, 2.9rem);
+    font-weight: 800;
+    line-height: 1.02;
+    letter-spacing: -.035em;
+    color: #fff;
+  }
+
+  .sub-plus {
+    font-size: .55em;
+    font-weight: 700;
+    color: rgba(255, 255, 255, .72);
+    transform: translateY(-.12em);
+  }
+
+  .sub-handle {
+    font-size: .72rem;
+    color: rgba(228, 222, 244, .5);
+  }
+
   /* --- Video ---------------------------------------------------------- */
   .video-card {
     display: flex;

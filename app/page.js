@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getVideos, channelUrl } from "@/lib/content";
+import { getChannelSubscribers, getVideos, channelUrl } from "@/lib/content";
 import { kvGet } from "@/lib/kv";
 import { socials } from "@/data/socials";
 import SocialIcon from "@/components/SocialIcon";
@@ -73,7 +73,11 @@ const QUESTIONS = [
 ];
 
 export default async function Home() {
-  const [videos, forms] = await Promise.all([getVideos(), kvGet("formbuilder:index", [])]);
+  const [videos, forms, channelStats] = await Promise.all([
+    getVideos(),
+    kvGet("formbuilder:index", []),
+    getChannelSubscribers(),
+  ]);
 
   const longForm = videos.filter((video) => video.type !== "short");
   const shorts = videos.filter((video) => video.type === "short");
@@ -186,6 +190,44 @@ export default async function Home() {
               </a>
             </div>
           )}
+        </div>
+      </section>
+
+      <section className="px-6 md:px-16 pb-16">
+        <div className="shell">
+          <div className="flex flex-wrap items-end justify-between gap-3 mb-4">
+            <div>
+              <p className="kicker">On YouTube</p>
+              <h2 className="display-lg mt-2">Two channels, one audience.</h2>
+            </div>
+            <p className="faint text-xs max-w-xs">
+              Subscriber counts refresh a few times a day.
+            </p>
+          </div>
+
+          <div className="channel-stats">
+            {channelStats.map((channel) => (
+              <a
+                key={channel.id}
+                href={channel.url}
+                target="_blank"
+                rel="noreferrer"
+                className="sub-card lift"
+                title={`${channel.label} on YouTube`}
+              >
+                <span className="sub-label">{channel.label}</span>
+                <span className="sub-count">
+                  {channel.subscribers || "—"}
+                  {channel.subscribers && (
+                    <span className="sub-plus" aria-hidden="true">
+                      +
+                    </span>
+                  )}
+                </span>
+                <span className="sub-handle">@{channel.handle} ↗</span>
+              </a>
+            ))}
+          </div>
         </div>
       </section>
 
