@@ -328,6 +328,26 @@ export default function AdminDashboard({ currentUser }) {
     }
   }
 
+  async function deleteMessage(entry) {
+    const who = entry.memberUsername ? `@${entry.memberUsername}` : entry.name || "this sender";
+    if (!confirm(`Delete the message from ${who}? This can't be undone.`)) return;
+    setBusyId(entry.id);
+    try {
+      const response = await fetch(`/api/admin/messages/${entry.id}`, { method: "DELETE" });
+      if (!response.ok) throw new Error("Could not delete that message.");
+      setData((current) => ({
+        ...current,
+        join: current.join.filter((item) => item.id !== entry.id),
+      }));
+      setNotice("Message deleted.");
+      load();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusyId("");
+    }
+  }
+
   async function createForm() {
     setCreating(true);
     try {
@@ -524,6 +544,15 @@ export default function AdminDashboard({ currentUser }) {
                     )}
                   </div>
                   <span className="faint text-xs">{formatDateTime(entry.createdAt)}</span>
+                  <button
+                    type="button"
+                    className="btn btn-ghost"
+                    style={{ color: "var(--danger)" }}
+                    disabled={busyId === entry.id}
+                    onClick={() => deleteMessage(entry)}
+                  >
+                    Delete
+                  </button>
                 </div>
                 <a href={`mailto:${entry.email}`} className="text-xs font-semibold mt-1 inline-block" style={{ color: "var(--primary)" }}>
                   {entry.email}
