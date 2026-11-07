@@ -519,6 +519,9 @@ export default function AdminDashboard({ currentUser }) {
                   <div className="flex flex-wrap items-center gap-2">
                     <h3 className="font-display font-bold">{entry.name}</h3>
                     <span className="badge badge-neutral">{entry.role}</span>
+                    {entry.memberUsername && (
+                      <span className="badge badge-neutral">@{entry.memberUsername}</span>
+                    )}
                   </div>
                   <span className="faint text-xs">{formatDateTime(entry.createdAt)}</span>
                 </div>
