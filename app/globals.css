@@ -119,7 +119,6 @@
       radial-gradient(760px 540px at 92% 4%, var(--blob-2), transparent 60%),
       radial-gradient(820px 620px at 70% 92%, var(--blob-3), transparent 62%);
     background-attachment: fixed;
-    overflow-x: hidden;
     transition: background-color 300ms ease, color 300ms ease;
     -webkit-font-smoothing: antialiased;
   }
@@ -139,6 +138,10 @@
     outline-offset: 2px;
   }
 
+  /* --- Scrollbars -----------------------------------------------------
+     Desktop: the page still scrolls vertically, but the vertical bar is
+     hidden; a horizontal bar remains available if content overflows.
+     Mobile: vertical bar stays visible, horizontal scrolling is off. */
   ::-webkit-scrollbar { width: 10px; height: 10px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb {
@@ -146,6 +149,20 @@
     border-radius: 999px;
     border: 2px solid transparent;
     background-clip: content-box;
+  }
+
+  @media (min-width: 769px) {
+    html { scrollbar-width: none; }
+    ::-webkit-scrollbar:vertical { width: 0; }
+    ::-webkit-scrollbar { height: 10px; }
+  }
+
+  @media (max-width: 768px) {
+    html { scrollbar-width: thin; }
+    ::-webkit-scrollbar { width: 8px; height: 0; }
+    ::-webkit-scrollbar:horizontal { height: 0; }
+    body { overflow-x: hidden; }
+    html, body { overscroll-behavior-x: none; }
   }
 }
 
@@ -1087,6 +1104,58 @@
   .nav-links { display: none; }
   .menu-button { display: inline-grid; }
   .nav-shell { padding: .5rem .5rem .5rem .75rem; }
+
+  /* Mobile layout: tighter gutters, stacked headers, thumb-sized controls. */
+  .page {
+    padding: 1.75rem 1rem 3rem;
+    min-height: calc(100dvh - 9rem);
+  }
+
+  .shell { max-width: 100%; }
+
+  .section-head {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: .4rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .display-xl { font-size: clamp(2.2rem, 11vw, 3.1rem); }
+  .display-lg { font-size: clamp(1.75rem, 8.5vw, 2.4rem); }
+
+  /* The sticky builder toolbar eats too much of a phone screen. */
+  .builder-toolbar {
+    position: static;
+    border-radius: 1rem;
+    padding: .6rem;
+  }
+
+  .fact-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: .15rem;
+  }
+
+  .fact-row dd { text-align: left; }
+
+  .tabbar {
+    width: 100%;
+    justify-content: flex-start;
+    border-radius: 1rem;
+  }
+
+  .application-card { padding: 1rem; }
+
+  /* 16px stops iOS Safari from zooming the page on input focus. */
+  .input, .textarea, .select, .input-lg { font-size: 16px; }
+
+  /* Nothing may poke past the viewport on a phone. */
+  img, svg, video, iframe, canvas { max-width: 100%; height: auto; }
+  .btn, .btn-sm, .chip, .badge { max-width: 100%; }
+
+  h1, h2, h3, h4, .display-lg, .display-xl, .video-title, .fact-row dd {
+    overflow-wrap: anywhere;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
