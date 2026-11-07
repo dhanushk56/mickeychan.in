@@ -4,7 +4,7 @@ import VideosLibrary from "./VideosLibrary";
 export const dynamic = "force-dynamic";
 
 export default async function VideosPage() {
-  const { videos, complete } = await getVideos();
+  const videos = await getVideos();
 
   return (
     <section className="px-6 md:px-16 py-20 md:py-28">
@@ -12,9 +12,9 @@ export default async function VideosPage() {
         <div className="mb-12">
           <p className="section-kicker">From the channel</p>
           <h1 className="font-display text-4xl md:text-5xl font-bold mt-2">Videos & Shorts</h1>
-          <p className="text-black/55 dark:text-white/55 mt-3">Browse uploads and shorts, sorted the way you like.</p>
+          <p className="text-black/55 dark:text-white/55 mt-3">Browse recent uploads from YouTube, separated into videos and Shorts.</p>
         </div>
-        <VideosLibrary videos={videos} complete={complete} />
+        <VideosLibrary videos={videos} />
       </div>
     </section>
   );
