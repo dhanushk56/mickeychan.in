@@ -413,11 +413,11 @@
     gap: .25rem;
     padding: .7rem;
     border-radius: 1.4rem;
-    /* Near-solid glass: the page behind must not read through the labels.
-       97% of the theme background hides the backdrop while the blurred edge
-       and sheen keep the frosted look. */
-    background: color-mix(in srgb, var(--bg-base) 97%, transparent);
-    background-image: linear-gradient(160deg, var(--glass-tint), transparent 65%);
+    /* Opaque glass: anything translucent let the page behind ghost through the
+       labels, so the panel uses the theme background solid and keeps only a
+       frosted sheen + soft edge for the glass look. */
+    background: var(--bg-base);
+    background-image: linear-gradient(160deg, var(--glass-sheen), transparent 60%);
     border: 1px solid var(--glass-line);
     box-shadow: var(--glass-shadow);
     -webkit-backdrop-filter: blur(34px) saturate(180%);
