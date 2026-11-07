@@ -66,24 +66,29 @@ export default function Navbar() {
           </button>
         </div>
 
-        {open && (
-          <nav className="mobile-nav" aria-label="Mobile">
-            {LINKS.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className="nav-link"
-                data-active={isActive(link.href)}
-                onClick={() => setOpen(false)}
-              >
-                {link.label}
-              </Link>
-            ))}
-            <Link href="/join" className="btn btn-primary mt-1" onClick={() => setOpen(false)}>
-              Join us
+        {/* Stays mounted so it can animate both ways instead of popping in. */}
+        <nav className="mobile-nav" data-open={open} aria-label="Mobile" aria-hidden={!open}>
+          {LINKS.map((link, index) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className="nav-link"
+              data-active={isActive(link.href)}
+              style={{ "--i": String(index) }}
+              onClick={() => setOpen(false)}
+            >
+              {link.label}
             </Link>
-          </nav>
-        )}
+          ))}
+          <Link
+            href="/join"
+            className="btn btn-primary mt-1"
+            style={{ "--i": String(LINKS.length) }}
+            onClick={() => setOpen(false)}
+          >
+            Join us
+          </Link>
+        </nav>
       </div>
     </header>
   );
