@@ -1,8 +1,13 @@
 import { NextResponse } from "next/server";
 import { kvGet, kvSet, kvDel } from "@/lib/kv";
 import { getSessionFromCookies } from "@/lib/auth";
+import { formChangeSummary, logActivity } from "@/lib/activity-log";
 
 const INDEX_KEY = "formbuilder:index";
+
+function actor() {
+  return getSessionFromCookies()?.user?.username || "Admin";
+}
 
 function isAuthorizedRequest() {
   return Boolean(getSessionFromCookies());
@@ -59,6 +64,14 @@ export async function PUT(request, { params }) {
 
   await kvSet(INDEX_KEY, updatedIndex);
 
+  await logActivity({
+    area: "admin",
+    action: "form-saved",
+    username: actor(),
+    detail: `Edited “${form.title || "Untitled form"}”: ${formChangeSummary(existing, form)}`,
+    request,
+  });
+
   return NextResponse.json({ ok: true, form }, { headers: { "Cache-Control": "no-store" } });
 }
 
@@ -68,9 +81,18 @@ export async function DELETE(request, { params }) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const existing = await kvGet(`formbuilder:form:${params.id}`, null);
   await kvDel(`formbuilder:form:${params.id}`);
   const index = await kvGet(INDEX_KEY, []);
   await kvSet(INDEX_KEY, index.filter((entry) => entry.id !== params.id));
+
+  await logActivity({
+    area: "admin",
+    action: "form-deleted",
+    username: actor(),
+    detail: `Deleted the form “${existing?.title || params.id}”`,
+    request,
+  });
 
   return NextResponse.json({ ok: true });
 }

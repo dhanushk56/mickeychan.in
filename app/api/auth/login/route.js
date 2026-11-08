@@ -5,6 +5,7 @@ import {
   isPasswordConfigured,
   sessionCookieHeader,
 } from "@/lib/auth";
+import { logActivity } from "@/lib/activity-log";
 
 export const dynamic = "force-dynamic";
 
@@ -71,14 +72,32 @@ export async function POST(request) {
 
   const body = await request.json().catch(() => ({}));
   const password = typeof body.password === "string" ? body.password : "";
+  // Only a label for the activity log. It is never checked against anything.
+  const typedName = typeof body.username === "string" ? body.username.trim() : "";
+  const actor = typedName || "Admin";
 
   if (!checkPassword(password)) {
     recordFailure(key);
+    await logActivity({
+      area: "admin",
+      action: "login-failed",
+      username: typedName || "Unknown",
+      detail: "Wrong admin password",
+      ok: false,
+      request,
+    });
     return NextResponse.json({ error: "That password didn't work." }, { status: 401 });
   }
 
   attempts.delete(key);
-  const response = NextResponse.json({ ok: true });
-  response.headers.append("Set-Cookie", sessionCookieHeader(createSessionToken()));
+  const response = NextResponse.json({ ok: true, user: { username: actor } });
+  response.headers.append("Set-Cookie", sessionCookieHeader(createSessionToken(actor)));
+  await logActivity({
+    area: "admin",
+    action: "login",
+    username: actor,
+    detail: "Signed in to the admin console",
+    request,
+  });
   return response;
 }

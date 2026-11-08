@@ -4,6 +4,7 @@ import { kvGet, kvSet } from "@/lib/kv";
 import { validateResponses } from "@/lib/form-builder/schema";
 import { memberFromCookieStore } from "@/lib/members";
 import { STATUS_TEXT, applicationGate, memberSubmission, submissionsKey } from "@/lib/applications";
+import { logActivity } from "@/lib/activity-log";
 
 export const dynamic = "force-dynamic";
 
@@ -98,6 +99,14 @@ export async function POST(request) {
     memberName: member.name,
   });
   await kvSet(key, submissions);
+
+  await logActivity({
+    area: "website",
+    action: "application",
+    username: member.username,
+    detail: `Submitted an application for “${form.title || formId}”`,
+    request,
+  });
 
   return NextResponse.json({ ok: true });
 }

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { kvGet, kvSet } from "@/lib/kv";
 import { memberFromCookieStore } from "@/lib/members";
+import { logActivity } from "@/lib/activity-log";
 
 const SUBMISSIONS_KEY = "submissions:join";
 
@@ -60,6 +61,14 @@ export async function POST(request) {
     createdAt: new Date().toISOString(),
   });
   await kvSet(SUBMISSIONS_KEY, submissions);
+
+  await logActivity({
+    area: "website",
+    action: "message",
+    username: member.username,
+    detail: `Sent a “join us” message (${role})`,
+    request,
+  });
 
   return NextResponse.json({ ok: true });
 }

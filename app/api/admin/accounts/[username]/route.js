@@ -1,8 +1,13 @@
 import { NextResponse } from "next/server";
 import { getSessionFromCookies } from "@/lib/auth";
 import { deleteMember, setMemberPassword } from "@/lib/members";
+import { logActivity } from "@/lib/activity-log";
 
 export const dynamic = "force-dynamic";
+
+function actor() {
+  return getSessionFromCookies()?.user?.username || "Admin";
+}
 
 // Protected — set any account's password. That also invalidates the account's
 // existing sessions, so the person has to log in again with the new password.
@@ -20,6 +25,14 @@ export async function PATCH(request, { params }) {
     return NextResponse.json({ error: result.error }, { status: missing ? 404 : 400 });
   }
 
+  await logActivity({
+    area: "admin",
+    action: "account-password",
+    username: actor(),
+    detail: `Changed the password for @${decodeURIComponent(params.username)}`,
+    request,
+  });
+
   return NextResponse.json({ ok: true }, { headers: { "Cache-Control": "no-store" } });
 }
 
@@ -34,6 +47,14 @@ export async function DELETE(request, { params }) {
   if (result.error) {
     return NextResponse.json({ error: result.error }, { status: 404 });
   }
+
+  await logActivity({
+    area: "admin",
+    action: "account-deleted",
+    username: actor(),
+    detail: `Deleted the account @${result.member.username}`,
+    request,
+  });
 
   return NextResponse.json({ ok: true }, { headers: { "Cache-Control": "no-store" } });
 }

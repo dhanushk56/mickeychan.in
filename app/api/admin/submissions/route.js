@@ -3,6 +3,7 @@ import { kvGet, kvSet } from "@/lib/kv";
 import { getSessionFromCookies } from "@/lib/auth";
 import { submissionsKey } from "@/lib/applications";
 import { listMembers } from "@/lib/members";
+import { logActivity } from "@/lib/activity-log";
 
 function isAuthorizedRequest() {
   return Boolean(getSessionFromCookies());
@@ -58,13 +59,32 @@ export async function GET() {
 
 // Protected — wipes every application across every form. Contact messages are
 // a separate inbox and are left alone.
-export async function DELETE() {
-  if (!isAuthorizedRequest()) {
+export async function DELETE(request) {
+  const session = getSessionFromCookies();
+  if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const index = await kvGet("formbuilder:index", []);
-  await Promise.all(index.map((entry) => kvSet(submissionsKey(entry.id), [])));
+  const cleared = await Promise.all(
+    index.map(async (entry) => {
+      const key = submissionsKey(entry.id);
+      const submissions = await kvGet(key, []);
+      await kvSet(key, []);
+      return Array.isArray(submissions) ? submissions.length : 0;
+    })
+  );
+  const total = cleared.reduce((sum, count) => sum + count, 0);
+
+  await logActivity({
+    area: "admin",
+    action: "applications-cleared",
+    username: session.user.username,
+    detail:
+      `Deleted all ${total} application${total === 1 ? "" : "s"} across ` +
+      `${index.length} form${index.length === 1 ? "" : "s"}`,
+    request,
+  });
 
   return NextResponse.json(
     { ok: true, cleared: index.length },

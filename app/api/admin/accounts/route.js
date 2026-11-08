@@ -1,8 +1,13 @@
 import { NextResponse } from "next/server";
 import { getSessionFromCookies } from "@/lib/auth";
 import { listMembers, publicMember, registerMember } from "@/lib/members";
+import { logActivity } from "@/lib/activity-log";
 
 export const dynamic = "force-dynamic";
+
+function actor() {
+  return getSessionFromCookies()?.user?.username || "Admin";
+}
 
 // Protected — the admin console's account list (never includes hashes).
 export async function GET() {
@@ -41,6 +46,14 @@ export async function POST(request) {
     const taken = result.error.includes("already taken");
     return NextResponse.json({ error: result.error }, { status: taken ? 409 : 400 });
   }
+
+  await logActivity({
+    area: "admin",
+    action: "account-created",
+    username: actor(),
+    detail: `Created the account @${result.member.username}`,
+    request,
+  });
 
   return NextResponse.json(
     { ok: true, member: publicMember(result.member) },

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { kvGet, kvSet } from "@/lib/kv";
 import { getSessionFromCookies } from "@/lib/auth";
+import { logActivity } from "@/lib/activity-log";
 
 const VIDEOS_KEY = "content:videos";
 const SUBMISSIONS_KEY = "submissions:join";
@@ -27,5 +28,14 @@ export async function PUT(request) {
     return NextResponse.json({ error: "Invalid content payload." }, { status: 400 });
   }
   await Promise.all([kvSet(VIDEOS_KEY, body.videos), kvSet(FORM_KEY, body.form)]);
+
+  await logActivity({
+    area: "admin",
+    action: "content",
+    username: getSessionFromCookies()?.user?.username || "Admin",
+    detail: `Updated site content (${body.videos.length} video${body.videos.length === 1 ? "" : "s"} and the join form)`,
+    request,
+  });
+
   return NextResponse.json({ ok: true, videos: body.videos, form: body.form });
 }

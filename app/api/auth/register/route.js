@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createMemberToken, memberCookieHeader, publicMember, registerMember } from "@/lib/members";
 import { requestIps, requestLocation } from "@/lib/request-ips";
+import { logActivity } from "@/lib/activity-log";
 
 export const dynamic = "force-dynamic";
 
@@ -87,11 +88,28 @@ export async function POST(request) {
     location: requestLocation(request),
   });
   if (result.error) {
+    if (result.code === "ip_limit") {
+      await logActivity({
+        area: "website",
+        action: "signup-blocked",
+        username: username || "Unknown",
+        detail: "Blocked: this internet connection already has an account",
+        ok: false,
+        request,
+      });
+    }
     const conflict = result.code === "ip_limit" || result.error.includes("already taken");
     return NextResponse.json({ error: result.error, code: result.code }, { status: conflict ? 409 : 400 });
   }
 
   recordSignup(key);
+  await logActivity({
+    area: "website",
+    action: "register",
+    username: result.member.username,
+    detail: "Created a site account",
+    request,
+  });
 
   // Sign them straight in: registration and login are one step.
   const response = NextResponse.json({ ok: true, member: publicMember(result.member) });

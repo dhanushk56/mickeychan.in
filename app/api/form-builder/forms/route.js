@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { kvGet, kvSet } from "@/lib/kv";
 import { emptyForm } from "@/lib/form-builder/schema";
 import { getSessionFromCookies } from "@/lib/auth";
+import { logActivity } from "@/lib/activity-log";
 
 const INDEX_KEY = "formbuilder:index";
 
@@ -20,7 +21,7 @@ export async function GET() {
   return NextResponse.json(index, { headers: { "Cache-Control": "no-store" } });
 }
 
-export async function POST() {
+export async function POST(request) {
   if (!isAuthorizedRequest()) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -36,6 +37,14 @@ export async function POST() {
   const index = await kvGet(INDEX_KEY, []);
   index.unshift({ id, title: form.title, published: false, createdAt: now, updatedAt: now });
   await kvSet(INDEX_KEY, index);
+
+  await logActivity({
+    area: "admin",
+    action: "form-created",
+    username: getSessionFromCookies()?.user?.username || "Admin",
+    detail: `Created a new form (/${id}), saved as a draft`,
+    request,
+  });
 
   return NextResponse.json({ id });
 }

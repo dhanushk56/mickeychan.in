@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 
 export default function PasswordGate({ area = "This area" }) {
   const router = useRouter();
+  const [name, setName] = useState("");
   const [password, setPassword] = useState("");
   const [reveal, setReveal] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -18,7 +19,9 @@ export default function PasswordGate({ area = "This area" }) {
       const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password }),
+        // The name is only a label for the activity log; the server checks the
+        // password and nothing else.
+        body: JSON.stringify({ username: name, password }),
       });
       const result = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(result.error || "Sign in failed.");
@@ -42,6 +45,21 @@ export default function PasswordGate({ area = "This area" }) {
           </p>
 
           <label className="field">
+            <span className="field-label">Your name</span>
+            <input
+              className="input"
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+              placeholder="e.g. Mickey"
+              autoComplete="username"
+              autoFocus
+            />
+            <span className="faint text-xs mt-1 leading-relaxed">
+              Only labels your entries in the activity log — it isn&apos;t checked against anything.
+            </span>
+          </label>
+
+          <label className="field mt-3">
             <span className="field-label">Password</span>
             <div className="relative flex items-center">
               <input
@@ -50,7 +68,6 @@ export default function PasswordGate({ area = "This area" }) {
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
                 placeholder="••••••••"
-                autoFocus
                 autoComplete="current-password"
                 required
                 style={{ paddingRight: "3rem" }}

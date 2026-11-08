@@ -12,6 +12,28 @@ const STATUS_META = {
   denied: { label: "Denied", className: "badge-denied" },
 };
 
+// Plain-language names for the activity log's action keys.
+const ACTION_LABEL = {
+  login: "Sign-in",
+  "login-failed": "Failed sign-in",
+  logout: "Log out",
+  register: "New account",
+  "signup-blocked": "Blocked signup",
+  application: "Application",
+  message: "Join us message",
+  "account-created": "Account created",
+  "account-password": "Password changed",
+  "account-deleted": "Account deleted",
+  "application-status": "Review",
+  "application-deleted": "Application deleted",
+  "applications-cleared": "All applications deleted",
+  "message-deleted": "Message deleted",
+  content: "Site content",
+  "form-created": "Form created",
+  "form-saved": "Form edited",
+  "form-deleted": "Form deleted",
+};
+
 function timeAgo(iso) {
   if (!iso) return "—";
   const diff = Date.now() - new Date(iso).getTime();
@@ -234,6 +256,10 @@ export default function AdminDashboard({ currentUser }) {
   const [clearing, setClearing] = useState(false);
   const [newAccount, setNewAccount] = useState({ username: "", name: "", password: "" });
   const [creatingAccount, setCreatingAccount] = useState(false);
+  const [activity, setActivity] = useState([]);
+  const [activityLoading, setActivityLoading] = useState(false);
+  const [activitySearch, setActivitySearch] = useState("");
+  const [activityScope, setActivityScope] = useState("all");
   const mounted = useRef(true);
 
   const load = useCallback(async () => {
@@ -263,6 +289,33 @@ export default function AdminDashboard({ currentUser }) {
       if (mounted.current) setLoading(false);
     }
   }, [router]);
+
+  // The activity log is read on demand rather than riding the 5-second
+  // submissions poll: it's a much bigger payload and only matters while you're
+  // actually looking at it.
+  const loadActivity = useCallback(async () => {
+    setActivityLoading(true);
+    try {
+      const response = await fetch("/api/admin/activity?limit=1000", { cache: "no-store" });
+      if (response.status === 401) {
+        router.push("/admin");
+        return;
+      }
+      if (!response.ok) throw new Error("Could not load the activity log.");
+      const next = await response.json();
+      if (!mounted.current) return;
+      setActivity(Array.isArray(next.entries) ? next.entries : []);
+      setError("");
+    } catch (err) {
+      if (mounted.current) setError(err.message);
+    } finally {
+      if (mounted.current) setActivityLoading(false);
+    }
+  }, [router]);
+
+  useEffect(() => {
+    if (tab === "activity") loadActivity();
+  }, [tab, loadActivity]);
 
   useEffect(() => {
     mounted.current = true;
@@ -327,6 +380,26 @@ export default function AdminDashboard({ currentUser }) {
       [entry.name, entry.email, entry.role, entry.message].join(" ").toLowerCase().includes(term)
     );
   }, [data.join, search]);
+
+  const filteredActivity = useMemo(() => {
+    const term = activitySearch.trim().toLowerCase();
+    return activity.filter((entry) => {
+      if (activityScope === "admin" && entry.area !== "admin") return false;
+      if (activityScope === "website" && entry.area !== "website") return false;
+      if (
+        activityScope === "login" &&
+        !["login", "login-failed", "logout", "register", "signup-blocked"].includes(entry.action)
+      ) {
+        return false;
+      }
+      if (!term) return true;
+      return [entry.username, entry.detail, entry.action, entry.ip, entry.city, entry.country]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase()
+        .includes(term);
+    });
+  }, [activity, activityScope, activitySearch]);
 
   async function updateStatus(entry, status) {
     setBusyId(entry.id);
@@ -478,6 +551,11 @@ export default function AdminDashboard({ currentUser }) {
     }
   }
 
+  function refreshAll() {
+    load();
+    if (tab === "activity") loadActivity();
+  }
+
   async function createForm() {
     setCreating(true);
     try {
@@ -528,7 +606,7 @@ export default function AdminDashboard({ currentUser }) {
             <span className="faint text-xs">
               {lastSync ? `synced ${timeAgo(lastSync.toISOString())}` : "connecting…"}
             </span>
-            <button type="button" className="btn btn-secondary btn-sm" onClick={load}>
+            <button type="button" className="btn btn-secondary btn-sm" onClick={refreshAll}>
               Refresh
             </button>
             <Link href="/form-builder" className="btn btn-primary btn-sm">
@@ -566,6 +644,7 @@ export default function AdminDashboard({ currentUser }) {
               { id: "messages", label: "Messages", count: counts.messages },
               { id: "forms", label: "Forms", count: data.forms.length },
               { id: "accounts", label: "Accounts", count: data.accounts.length },
+              { id: "activity", label: "Activity", count: activity.length },
             ].map((item) => (
               <button
                 key={item.id}
@@ -581,7 +660,7 @@ export default function AdminDashboard({ currentUser }) {
             ))}
           </div>
 
-          {tab !== "forms" && tab !== "accounts" && (
+          {tab !== "forms" && tab !== "accounts" && tab !== "activity" && (
             <input
               className="input"
               style={{ maxWidth: "16rem" }}
@@ -784,6 +863,106 @@ export default function AdminDashboard({ currentUser }) {
                   onPassword={changeAccountPassword}
                 />
               ))
+            )}
+          </div>
+        )}
+
+        {tab === "activity" && (
+          <div className="grid gap-3">
+            <div className="glass-card application-card">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <h3 className="font-display font-bold">Activity log</h3>
+                <span className="badge badge-neutral">
+                  {activity.length ? `${activity.length} shown` : "0 events"}
+                </span>
+              </div>
+              <p className="faint text-xs mt-1 leading-relaxed">
+                Every sign-in — admin or site account — and every action taken here or on the site,
+                newest first. Times use your own local clock. The log is append-only: there are no
+                controls to edit or delete entries, by design.
+              </p>
+              <div className="flex flex-wrap items-center gap-2 mt-3">
+                {[
+                  { id: "all", label: "Everything" },
+                  { id: "login", label: "Sign-ins" },
+                  { id: "admin", label: "Admin console" },
+                  { id: "website", label: "Website" },
+                ].map((scope) => (
+                  <button
+                    key={scope.id}
+                    type="button"
+                    className="chip"
+                    data-active={activityScope === scope.id}
+                    onClick={() => setActivityScope(scope.id)}
+                  >
+                    {scope.label}
+                  </button>
+                ))}
+                <input
+                  className="input"
+                  style={{ maxWidth: "16rem" }}
+                  placeholder="Search names, actions, addresses…"
+                  value={activitySearch}
+                  onChange={(event) => setActivitySearch(event.target.value)}
+                />
+                <button
+                  type="button"
+                  className="btn btn-secondary btn-sm"
+                  onClick={loadActivity}
+                  disabled={activityLoading}
+                >
+                  {activityLoading ? "Loading…" : "Refresh"}
+                </button>
+              </div>
+            </div>
+
+            {activityLoading && activity.length === 0 ? (
+              <div className="glass-card p-8 muted">Loading activity…</div>
+            ) : filteredActivity.length === 0 ? (
+              <div className="empty-state">
+                <p className="font-display font-bold">
+                  {activity.length === 0 ? "Nothing recorded yet" : "Nothing matches that filter"}
+                </p>
+                <p className="muted text-sm max-w-md">
+                  {activity.length === 0
+                    ? "Sign-ins, submissions and admin actions appear here as they happen."
+                    : "Try a different filter or clear the search."}
+                </p>
+              </div>
+            ) : (
+              <div className="grid gap-2">
+                {filteredActivity.map((entry) => (
+                  <article key={entry.id} className="glass-card application-card">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div className="flex flex-wrap items-center gap-2 min-w-0">
+                        <span
+                          className={`badge ${entry.area === "admin" ? "badge-pending" : "badge-neutral"}`}
+                        >
+                          {entry.area === "admin" ? "Admin console" : "Website"}
+                        </span>
+                        <span className="badge badge-neutral">@{entry.username}</span>
+                        <span className="faint text-xs">
+                          {ACTION_LABEL[entry.action] || entry.action}
+                        </span>
+                        {!entry.ok && <span className="badge badge-denied">Failed</span>}
+                      </div>
+                      <span className="faint text-xs">
+                        {formatDateTime(new Date(entry.at).toISOString())}
+                      </span>
+                    </div>
+                    <p className="text-sm mt-2 whitespace-pre-wrap break-words">
+                      {entry.detail || "—"}
+                    </p>
+                    {(entry.ip || entry.city || entry.country) && (
+                      <p className="faint text-xs mt-1">
+                        {[entry.ip, entry.city, entry.country, entry.timezone]
+                          .filter(Boolean)
+                          .join(" · ")}
+                      </p>
+                    )}
+                  </article>
+                ))}
+              </div>
             )}
           </div>
         )}

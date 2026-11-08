@@ -9,6 +9,7 @@ import {
   publicMember,
   verifyMemberPassword,
 } from "@/lib/members";
+import { logActivity } from "@/lib/activity-log";
 
 export const dynamic = "force-dynamic";
 
@@ -98,11 +99,26 @@ export async function POST(request) {
   const member = await findMember(username);
   if (!member || !verifyMemberPassword(member, password)) {
     recordFailure(key);
+    await logActivity({
+      area: "website",
+      action: "login-failed",
+      username: username || "Unknown",
+      detail: "Wrong username or password",
+      ok: false,
+      request,
+    });
     return NextResponse.json({ error: "That username and password don't match." }, { status: 401 });
   }
 
   attempts.delete(key);
   const response = NextResponse.json({ ok: true, member: publicMember(member) });
   response.headers.append("Set-Cookie", memberCookieHeader(createMemberToken(member)));
+  await logActivity({
+    area: "website",
+    action: "login",
+    username: member.username,
+    detail: "Signed in to the site",
+    request,
+  });
   return response;
 }
