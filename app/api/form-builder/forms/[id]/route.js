@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { kvGet, kvSet, kvDel } from "@/lib/kv";
 import { getSessionFromCookies } from "@/lib/auth";
 import { formChangeSummary, logActivity } from "@/lib/activity-log";
+import { normalizeRichText } from "@/lib/rich-text";
 
 const INDEX_KEY = "formbuilder:index";
 
@@ -40,8 +41,21 @@ export async function PUT(request, { params }) {
     return NextResponse.json({ error: "Form not found." }, { status: 404 });
   }
 
+  // Descriptions are stored as rich-text blocks. Whatever the editor (or a
+  // hand-made request) sent is reduced to that format here, once, so the pages
+  // that render it never have to trust it.
+  const sections = body.sections.slice(0, 60).map((section) => ({
+    ...section,
+    description: normalizeRichText(section?.description),
+    questions: (Array.isArray(section?.questions) ? section.questions : [])
+      .slice(0, 100)
+      .map((question) => ({ ...question, description: normalizeRichText(question?.description) })),
+  }));
+
   const form = {
     ...body,
+    description: normalizeRichText(body.description),
+    sections,
     id: params.id,
     published: Boolean(body.published),
     createdAt: existing.createdAt || new Date().toISOString(),

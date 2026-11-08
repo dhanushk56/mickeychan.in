@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { QUESTION_TYPES, createQuestion, createSection, typeMeta } from "@/lib/form-builder/schema";
 import FormRenderer from "@/components/form-builder/FormRenderer";
+import RichTextEditor from "@/components/RichTextEditor";
 
 function uid(prefix) {
   return `${prefix}_${Math.random().toString(36).slice(2, 10)}`;
@@ -316,16 +317,19 @@ export default function FormBuilder({ initialForm, publicUrl, currentUser, formI
                   placeholder="Application form title"
                 />
               </label>
-              <label className="field">
+              <div className="field">
                 <span className="field-label">Description</span>
-                <textarea
-                  className="textarea"
-                  rows={2}
-                  value={form.description || ""}
-                  onChange={(event) => updateForm({ description: event.target.value })}
-                  placeholder="What is this form for?"
+                <RichTextEditor
+                  label="Form description"
+                  value={form.description}
+                  onChange={(blocks) => updateForm({ description: blocks })}
+                  placeholder="What is this form for? Press Enter for a new line."
                 />
-              </label>
+                <span className="faint text-xs">
+                  Enter starts a new line. Highlight text to bold it, underline it, or change its
+                  size and font.
+                </span>
+              </div>
               <div className="flex flex-wrap gap-2 pt-1">
                 <span className="chip" data-active="true">{totals.sections} sections</span>
                 <span className="chip">{totals.questions} questions</span>
@@ -343,11 +347,12 @@ export default function FormBuilder({ initialForm, publicUrl, currentUser, formI
                       onChange={(event) => updateSection(section.id, { title: event.target.value })}
                       placeholder="Section title"
                     />
-                    <input
-                      className="input text-sm"
-                      value={section.description || ""}
-                      onChange={(event) => updateSection(section.id, { description: event.target.value })}
+                    <RichTextEditor
+                      label={`Section ${sIndex + 1} description`}
+                      value={section.description}
+                      onChange={(blocks) => updateSection(section.id, { description: blocks })}
                       placeholder="Section description (optional)"
+                      minHeight="2.5rem"
                     />
                   </div>
                   <div className="flex flex-col gap-1">
@@ -404,13 +409,14 @@ export default function FormBuilder({ initialForm, publicUrl, currentUser, formI
                           </select>
                         </div>
 
-                        <input
-                          className="input text-sm"
-                          value={question.description || ""}
-                          onChange={(event) =>
-                            updateQuestion(section.id, question.id, { description: event.target.value })
+                        <RichTextEditor
+                          label="Question helper text"
+                          value={question.description}
+                          onChange={(blocks) =>
+                            updateQuestion(section.id, question.id, { description: blocks })
                           }
                           placeholder="Helper text (optional)"
+                          minHeight="2.5rem"
                         />
 
                         {meta.hasOptions && (

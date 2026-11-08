@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import AnnouncementsPanel from "@/components/admin/AnnouncementsPanel";
 
 const POLL_MS = 5000;
 
@@ -32,6 +33,8 @@ const ACTION_LABEL = {
   "form-created": "Form created",
   "form-saved": "Form edited",
   "form-deleted": "Form deleted",
+  announcement: "Announcement posted",
+  "announcement-deleted": "Announcement deleted",
 };
 
 function timeAgo(iso) {
@@ -644,6 +647,7 @@ export default function AdminDashboard({ currentUser }) {
               { id: "messages", label: "Messages", count: counts.messages },
               { id: "forms", label: "Forms", count: data.forms.length },
               { id: "accounts", label: "Accounts", count: data.accounts.length },
+              { id: "announcements", label: "Announcements" },
               { id: "activity", label: "Activity", count: activity.length },
             ].map((item) => (
               <button
@@ -655,12 +659,12 @@ export default function AdminDashboard({ currentUser }) {
                 onClick={() => setTab(item.id)}
               >
                 {item.label}
-                <span className="tab-count">{item.count}</span>
+                {typeof item.count === "number" && <span className="tab-count">{item.count}</span>}
               </button>
             ))}
           </div>
 
-          {tab !== "forms" && tab !== "accounts" && tab !== "activity" && (
+          {tab !== "forms" && tab !== "accounts" && tab !== "activity" && tab !== "announcements" && (
             <input
               className="input"
               style={{ maxWidth: "16rem" }}
@@ -966,6 +970,8 @@ export default function AdminDashboard({ currentUser }) {
             )}
           </div>
         )}
+
+        {tab === "announcements" && <AnnouncementsPanel />}
 
         {tab === "forms" && (
           <div className="grid gap-3">

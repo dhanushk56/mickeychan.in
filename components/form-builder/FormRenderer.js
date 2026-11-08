@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { validateResponses } from "@/lib/form-builder/schema";
+import RichText from "@/components/RichText";
 
 function QuestionField({ question, value, onChange, error }) {
   const setValue = (next) => onChange(question.id, next);
@@ -12,7 +13,7 @@ function QuestionField({ question, value, onChange, error }) {
         {question.title || "Untitled question"}
         {question.required && <span style={{ color: "var(--accent)" }}> *</span>}
       </p>
-      {question.description && <p className="muted text-sm mt-1 mb-3">{question.description}</p>}
+      <RichText value={question.description} className="muted text-sm mt-1 mb-3" />
 
       <div className="mt-3">
         {question.type === "short_answer" && (
@@ -204,7 +205,7 @@ export default function FormRenderer({ form, mode = "fill", onSubmit, submitting
       <div className="glass-card p-6">
         <p className="kicker">Application</p>
         <h1 className="font-display text-2xl md:text-3xl font-bold mt-2">{form.title}</h1>
-        {form.description && <p className="muted mt-2 leading-relaxed">{form.description}</p>}
+        <RichText value={form.description} className="muted mt-2 leading-relaxed" />
       </div>
 
       {sections.length > 1 && (
@@ -225,7 +226,7 @@ export default function FormRenderer({ form, mode = "fill", onSubmit, submitting
         </div>
       )}
 
-      {section.description && <p className="muted text-sm">{section.description}</p>}
+      <RichText value={section.description} className="muted text-sm" />
 
       {section.questions.map((question) => (
         <QuestionField

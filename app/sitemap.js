@@ -6,6 +6,7 @@ const BASE_URL = "https://mickeychan.in";
 const PAGES = [
   { path: "/", changeFrequency: "weekly", priority: 1 },
   { path: "/videos", changeFrequency: "weekly", priority: 0.9 },
+  { path: "/announcements", changeFrequency: "daily", priority: 0.85 },
   { path: "/positions", changeFrequency: "daily", priority: 0.9 },
   { path: "/socials", changeFrequency: "monthly", priority: 0.7 },
   { path: "/join", changeFrequency: "monthly", priority: 0.6 },
