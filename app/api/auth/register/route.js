@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createMemberToken, memberCookieHeader, publicMember, registerMember } from "@/lib/members";
+import { requestIps, requestLocation } from "@/lib/request-ips";
 
 export const dynamic = "force-dynamic";
 
@@ -76,10 +77,18 @@ export async function POST(request) {
     return NextResponse.json({ error: "Those passwords don't match." }, { status: 400 });
   }
 
-  const result = await registerMember({ username, name, password });
+  // One account per internet connection — every address this request came from
+  // is recorded and checked, so swapping networks doesn't buy a second account.
+  const result = await registerMember({
+    username,
+    name,
+    password,
+    ips: requestIps(request),
+    location: requestLocation(request),
+  });
   if (result.error) {
-    const taken = result.error.includes("already taken");
-    return NextResponse.json({ error: result.error }, { status: taken ? 409 : 400 });
+    const conflict = result.code === "ip_limit" || result.error.includes("already taken");
+    return NextResponse.json({ error: result.error, code: result.code }, { status: conflict ? 409 : 400 });
   }
 
   recordSignup(key);

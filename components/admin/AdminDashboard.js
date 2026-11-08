@@ -232,6 +232,8 @@ export default function AdminDashboard({ currentUser }) {
   const [creating, setCreating] = useState(false);
   const [copied, setCopied] = useState("");
   const [clearing, setClearing] = useState(false);
+  const [newAccount, setNewAccount] = useState({ username: "", name: "", password: "" });
+  const [creatingAccount, setCreatingAccount] = useState(false);
   const mounted = useRef(true);
 
   const load = useCallback(async () => {
@@ -448,6 +450,31 @@ export default function AdminDashboard({ currentUser }) {
       load();
     } catch (err) {
       setError(err.message);
+    }
+  }
+
+  async function createAccount(event) {
+    event.preventDefault();
+    if (creatingAccount) return;
+    setCreatingAccount(true);
+    try {
+      const response = await fetch("/api/admin/accounts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newAccount),
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(result.error || "Could not create that account.");
+      setError("");
+      setNotice(
+        `Account @${result.member?.username || newAccount.username} created — give them the password you set.`
+      );
+      setNewAccount({ username: "", name: "", password: "" });
+      load();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setCreatingAccount(false);
     }
   }
 
@@ -679,6 +706,67 @@ export default function AdminDashboard({ currentUser }) {
                 Refresh
               </button>
             </div>
+
+            <form onSubmit={createAccount} className="glass-card application-card">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <h3 className="font-display font-bold">Create an account</h3>
+                <span className="badge badge-neutral">Admin only</span>
+              </div>
+              <p className="faint text-xs mt-1 leading-relaxed">
+                People who sign themselves up get one account per internet connection. Accounts made
+                here skip that limit, so you can set up a household or a second account by hand.
+              </p>
+              <div className="flex flex-wrap items-end gap-2 mt-3">
+                <label className="field flex-1" style={{ minWidth: "10rem" }}>
+                  <span className="field-label">Username</span>
+                  <input
+                    className="input"
+                    value={newAccount.username}
+                    onChange={(event) =>
+                      setNewAccount((current) => ({ ...current, username: event.target.value }))
+                    }
+                    autoCapitalize="none"
+                    spellCheck={false}
+                    placeholder="3–24 letters, numbers, . _ -"
+                    required
+                  />
+                </label>
+                <label className="field flex-1" style={{ minWidth: "10rem" }}>
+                  <span className="field-label">Display name (optional)</span>
+                  <input
+                    className="input"
+                    value={newAccount.name}
+                    onChange={(event) =>
+                      setNewAccount((current) => ({ ...current, name: event.target.value }))
+                    }
+                    placeholder="How their name shows up"
+                  />
+                </label>
+                <label className="field flex-1" style={{ minWidth: "10rem" }}>
+                  <span className="field-label">Password</span>
+                  <input
+                    className="input"
+                    type="password"
+                    value={newAccount.password}
+                    onChange={(event) =>
+                      setNewAccount((current) => ({ ...current, password: event.target.value }))
+                    }
+                    autoComplete="new-password"
+                    placeholder="At least 8 characters"
+                    required
+                  />
+                </label>
+                <button
+                  type="submit"
+                  className="btn btn-primary btn-sm"
+                  disabled={
+                    creatingAccount || newAccount.username.trim().length < 3 || newAccount.password.length < 8
+                  }
+                >
+                  {creatingAccount ? "Creating…" : "Create account"}
+                </button>
+              </div>
+            </form>
 
             {data.accounts.length === 0 ? (
               <div className="empty-state">
