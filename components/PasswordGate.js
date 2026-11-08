@@ -41,22 +41,21 @@ export default function PasswordGate({ area = "This area" }) {
           <p className="kicker justify-center">Protected</p>
           <h1 className="font-display text-2xl font-bold mt-3 mb-2 text-center">Password required</h1>
           <p className="muted text-sm leading-relaxed mb-6 text-center">
-            {area} is locked. Enter the admin password to continue.
+            {area} is locked. Enter your admin credentials to continue.
           </p>
 
           <label className="field">
-            <span className="field-label">Your name</span>
+            <span className="field-label">Username</span>
             <input
               className="input"
               value={name}
               onChange={(event) => setName(event.target.value)}
-              placeholder="e.g. Mickey"
               autoComplete="username"
+              autoCapitalize="none"
+              spellCheck={false}
+              required
               autoFocus
             />
-            <span className="faint text-xs mt-1 leading-relaxed">
-              Only labels your entries in the activity log — it isn&apos;t checked against anything.
-            </span>
           </label>
 
           <label className="field mt-3">
@@ -90,7 +89,11 @@ export default function PasswordGate({ area = "This area" }) {
             </p>
           )}
 
-          <button type="submit" className="btn btn-primary w-full mt-5" disabled={busy || password.length === 0}>
+          <button
+            type="submit"
+            className="btn btn-primary w-full mt-5"
+            disabled={busy || password.length === 0 || name.trim().length === 0}
+          >
             {busy ? "Checking…" : "Unlock ↗"}
           </button>
         </form>
