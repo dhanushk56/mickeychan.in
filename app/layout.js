@@ -13,6 +13,12 @@ export const metadata = {
   description:
     "The official home of Mickey Chan — gamer, streamer, and storyteller. Watch the latest videos and shorts, follow the channel, explore open roles, and apply to join the team.",
   metadataBase: new URL("https://mickeychan.in"),
+  // Same image the navbar shows, so the browser tab matches the site.
+  icons: {
+    icon: [{ url: "/mickey-logo.png", type: "image/png" }],
+    shortcut: "/mickey-logo.png",
+    apple: "/mickey-logo.png",
+  },
   openGraph: {
     title: "Mickey Chan",
     description: "Gamer, streamer, and storyteller. Videos, shorts, and open roles.",
