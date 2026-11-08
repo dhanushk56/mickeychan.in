@@ -1388,9 +1388,18 @@
   padding: 0 .4rem;
   border: 1px solid var(--glass-edge);
   border-radius: .55rem;
-  background: var(--glass-tint);
-  color: var(--text);
+  /* Native selects take their menu colours from the OS, which left these labels
+     white on a light control. The colour is pinned, options included, so the
+     size and font pickers read the same in either theme. */
+  background-color: #fff;
+  color: #16111f;
+  color-scheme: light;
   font-size: .8rem;
+}
+
+.rte-select option {
+  background-color: #fff;
+  color: #16111f;
 }
 
 .rte-area {
