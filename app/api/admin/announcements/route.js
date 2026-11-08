@@ -5,7 +5,10 @@ import { logActivity } from "@/lib/activity-log";
 import {
   ANNOUNCEMENTS_KEY,
   MAX_ANNOUNCEMENTS,
+  MAX_WINDOW_HOURS,
+  MIN_WINDOW_HOURS,
   announcementIsBlank,
+  isValidWindowHours,
   levelMeta,
   normalizeAnnouncement,
   readAnnouncements,
@@ -57,6 +60,16 @@ export async function POST(request) {
     );
   }
 
+  // There is no default window: how long it runs is a decision, not a guess.
+  if (!isValidWindowHours(body.windowHours)) {
+    return NextResponse.json(
+      {
+        error: `Set how long it runs: whole hours from ${MIN_WINDOW_HOURS} to ${MAX_WINDOW_HOURS}.`,
+      },
+      { status: 400 }
+    );
+  }
+
   const existing = readAnnouncements(await kvGet(ANNOUNCEMENTS_KEY, []));
   await kvSet(ANNOUNCEMENTS_KEY, [announcement, ...existing].slice(0, MAX_ANNOUNCEMENTS));
 
@@ -65,10 +78,7 @@ export async function POST(request) {
     area: "admin",
     action: "announcement",
     username: actor(),
-    detail:
-      meta.id === "normal"
-        ? `Posted the announcement “${announcement.title}” for ${announcement.windowHours}h`
-        : `Posted the ${meta.label.toLowerCase()} announcement “${announcement.title}”`,
+    detail: `Posted the ${meta.label.toLowerCase()} announcement “${announcement.title}” for ${announcement.windowHours} hour${announcement.windowHours === 1 ? "" : "s"}`,
     request,
   });
 

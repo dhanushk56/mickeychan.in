@@ -2,14 +2,16 @@
 
 import { useCallback, useEffect, useState } from "react";
 import RichTextEditor from "@/components/RichTextEditor";
-import { DEFAULT_WINDOW_HOURS, LEVELS, isCurrent, levelMeta } from "@/lib/announcements";
+import { LEVELS, isCurrent, isValidWindowHours, levelMeta } from "@/lib/announcements";
 import { richTextIsEmpty, richTextToPlain } from "@/lib/rich-text";
 
 const EMPTY_DRAFT = {
   title: "",
   body: [],
   level: "normal",
-  windowHours: DEFAULT_WINDOW_HOURS,
+  // Kept as a string so the field can start empty: a time has to be chosen, and
+  // nothing is assumed for the admin.
+  windowHours: "",
 };
 
 function formatWhen(iso) {
@@ -23,6 +25,7 @@ function formatWhen(iso) {
 }
 
 function hoursLabel(hours) {
+  if (!Number.isFinite(hours)) return "an unknown time";
   if (hours % 24 === 0 && hours >= 24) {
     const days = hours / 24;
     return `${hours}h (${days} day${days === 1 ? "" : "s"})`;
@@ -85,9 +88,7 @@ export default function AnnouncementsPanel() {
       if (!response.ok) throw new Error(result.error || "Could not post that announcement.");
       setDraft(EMPTY_DRAFT);
       setNotice(
-        draft.level === "normal"
-          ? `Posted — it stays current for ${hoursLabel(draft.windowHours)}.`
-          : `Posted — it stays current until you delete it.`
+        `Posted — it stays current for ${hoursLabel(Number(draft.windowHours))}, then moves to past on its own.`
       );
       load();
     } catch (err) {
@@ -118,14 +119,19 @@ export default function AnnouncementsPanel() {
   }
 
   const meta = levelMeta(draft.level);
-  const canPost = !posting && draft.title.trim().length > 0 && !richTextIsEmpty(draft.body);
+  const canPost =
+    !posting &&
+    draft.title.trim().length > 0 &&
+    !richTextIsEmpty(draft.body) &&
+    isValidWindowHours(draft.windowHours);
 
   return (
     <div className="grid gap-3">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="muted text-sm max-w-xl">
-          Standard announcements leave the Current list when their window ends. Priority and
-          emergency notices ignore the window and stay current until you delete them.
+          Every announcement runs for the number of hours you set, then moves to Past on its own.
+          Priority and emergency notices are only ranked higher while they run — they run out of
+          time like everything else.
         </p>
         <button type="button" className="btn btn-secondary btn-sm" onClick={load} disabled={loading}>
           {loading ? "Loading…" : "Refresh"}
@@ -174,17 +180,15 @@ export default function AnnouncementsPanel() {
             <input
               type="number"
               min="1"
-              max="720"
+              max="8760"
               step="1"
               className="input"
               value={draft.windowHours}
-              disabled={draft.level !== "normal"}
+              placeholder="e.g. 24"
               onChange={(event) =>
-                setDraft((current) => ({
-                  ...current,
-                  windowHours: Math.max(1, Math.floor(Number(event.target.value) || DEFAULT_WINDOW_HOURS)),
-                }))
+                setDraft((current) => ({ ...current, windowHours: event.target.value }))
               }
+              required
             />
           </label>
         </div>
@@ -200,10 +204,9 @@ export default function AnnouncementsPanel() {
         </div>
 
         <p className="faint text-xs leading-relaxed">
-          {meta.note}
-          {draft.level === "normal"
-            ? ` This one is set to run for ${hoursLabel(draft.windowHours)} — 24 is one day.`
-            : " The hours field doesn't apply to this type."}
+          {meta.note} When the time you set runs out it moves to Past announcements on its own —
+          there is no fixed 24-hour window, and nothing to switch off by hand. 24 is one day, 168
+          is one week.
         </p>
 
         <div className="flex flex-wrap items-center gap-2">
@@ -253,9 +256,9 @@ export default function AnnouncementsPanel() {
                   </div>
                   <p className="faint text-xs mt-1">
                     Posted {formatWhen(announcement.createdAt)} by {announcement.author || "Admin"}
-                    {announcement.level === "normal"
+                    {Number.isFinite(announcement.windowHours)
                       ? ` · current for ${hoursLabel(announcement.windowHours)}`
-                      : " · stays until deleted"}
+                      : " · no time limit set"}
                   </p>
                 </div>
                 <button
