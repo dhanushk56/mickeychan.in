@@ -33,9 +33,6 @@ function Card({ kicker, title, children }) {
 }
 
 export default async function ApplyPage({ params }) {
-  // Same hardening as /positions: never serve this page or its KV read from a
-  // cached render, or an applicant can be shown a form as it looked earlier
-  // (or an empty one) while the real form is complete.
   noStore();
 
   const form = await kvGet(`formbuilder:form:${params.id}`, null);
@@ -50,8 +47,6 @@ export default async function ApplyPage({ params }) {
     );
   }
 
-  // A form with no titled questions would otherwise render as a single blank
-  // "Untitled question" card, which reads as a broken page.
   if (!isReadyForm(form)) {
     return (
       <Card kicker="Not ready" title="This form has no questions yet.">

@@ -13,8 +13,6 @@ import { logActivity } from "@/lib/activity-log";
 
 export const dynamic = "force-dynamic";
 
-// Same shape as the admin login throttle: per-instance, but enough to make
-// guessing slow.
 const attempts = globalThis.__mcMemberAttempts || (globalThis.__mcMemberAttempts = new Map());
 const WINDOW_MS = 10 * 60 * 1000;
 const MAX_ATTEMPTS = 10;
@@ -43,9 +41,6 @@ function recordFailure(key) {
   else record.count += 1;
 }
 
-// Accepts the public host too: behind a proxy (dev preview tunnels, custom
-// domains) request.url still points at the internal server, so comparing only
-// against it would reject every real browser.
 function sameOrigin(request) {
   const origin = request.headers.get("origin");
   if (!origin) return true;
@@ -59,12 +54,10 @@ function sameOrigin(request) {
   try {
     candidates.push(new URL(request.url).host);
   } catch {
-    /* ignore */
   }
   return candidates.filter(Boolean).includes(originHost);
 }
 
-// Who am I? Used by the navbar to swap "Log in" for the account name.
 export async function GET() {
   const member = await memberFromCookieStore(cookies());
   return NextResponse.json(
@@ -78,8 +71,6 @@ export async function POST(request) {
     return NextResponse.json({ error: "Invalid origin." }, { status: 403 });
   }
 
-  // An empty registry isn't a server fault — registration is open, so answer
-  // like any other failed login instead of a 500.
   if (!(await hasMembers())) {
     return NextResponse.json(
       { error: "No accounts exist yet. Create one, then log in." },

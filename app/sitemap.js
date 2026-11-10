@@ -1,8 +1,5 @@
 const BASE_URL = "https://mickeychan.in";
 
-// Only pages a stranger could usefully land on. /admin, /form-builder and
-// /form-builder/apply/[id] are signed-in screens, and /login and /register are
-// just doors into the site — none of them are reading material for a crawler.
 const PAGES = [
   { path: "/", changeFrequency: "weekly", priority: 1 },
   { path: "/videos", changeFrequency: "weekly", priority: 0.9 },
@@ -12,8 +9,6 @@ const PAGES = [
   { path: "/join", changeFrequency: "monthly", priority: 0.6 },
 ];
 
-// Next serves this at /sitemap.xml and regenerates it on every build, so the
-// dates always match what is actually deployed.
 export default function sitemap() {
   const lastModified = new Date();
 

@@ -4,8 +4,6 @@ import { AREA_LABEL, readActivity } from "@/lib/activity-log";
 
 export const dynamic = "force-dynamic";
 
-// Protected, read-only. There is deliberately no DELETE or PATCH here: the log
-// is the record of what happened, so the console can only read it.
 export async function GET(request) {
   if (!getSessionFromCookies()) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

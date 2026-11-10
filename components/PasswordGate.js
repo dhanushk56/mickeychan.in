@@ -19,8 +19,6 @@ export default function PasswordGate({ area = "This area" }) {
       const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        // The name is only a label for the activity log; the server checks the
-        // password and nothing else.
         body: JSON.stringify({ username: name, password }),
       });
       const result = await response.json().catch(() => ({}));

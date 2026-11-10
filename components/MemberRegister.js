@@ -28,7 +28,6 @@ export default function MemberRegister({ next = "/positions" }) {
       });
       const result = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(result.error || "Could not create your account.");
-      // Full navigation so the navbar picks up the new session.
       window.location.assign(next || "/positions");
     } catch (err) {
       setError(err.message);

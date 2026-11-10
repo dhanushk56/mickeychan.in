@@ -5,8 +5,6 @@ import { logActivity } from "@/lib/activity-log";
 
 export const dynamic = "force-dynamic";
 
-// Registrations are cheap to spam, so cap them per IP the same way logins are
-// capped. Serverless instances keep their own counter.
 const signups = globalThis.__mcSignupAttempts || (globalThis.__mcSignupAttempts = new Map());
 const WINDOW_MS = 60 * 60 * 1000;
 const MAX_SIGNUPS = 5;
@@ -35,8 +33,6 @@ function recordSignup(key) {
   else record.count += 1;
 }
 
-// Proxy-aware same-origin check: request.url points at the internal server
-// when the app sits behind a tunnel or custom domain.
 function sameOrigin(request) {
   const origin = request.headers.get("origin");
   if (!origin) return true;
@@ -50,7 +46,6 @@ function sameOrigin(request) {
   try {
     candidates.push(new URL(request.url).host);
   } catch {
-    /* ignore */
   }
   return candidates.filter(Boolean).includes(originHost);
 }
@@ -78,8 +73,6 @@ export async function POST(request) {
     return NextResponse.json({ error: "Those passwords don't match." }, { status: 400 });
   }
 
-  // One account per internet connection — every address this request came from
-  // is recorded and checked, so swapping networks doesn't buy a second account.
   const result = await registerMember({
     username,
     name,
@@ -111,7 +104,6 @@ export async function POST(request) {
     request,
   });
 
-  // Sign them straight in: registration and login are one step.
   const response = NextResponse.json({ ok: true, member: publicMember(result.member) });
   response.headers.append("Set-Cookie", memberCookieHeader(createMemberToken(result.member)));
   return response;

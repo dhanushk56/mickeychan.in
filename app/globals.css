@@ -3,12 +3,6 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-/* ---------------------------------------------------------------------------
-   Design tokens
-   Everything visual is driven from here so the whole site (public pages,
-   admin, form builder) shares one glass language in both themes.
---------------------------------------------------------------------------- */
 :root {
   color-scheme: light;
 
@@ -137,11 +131,6 @@
     outline: 2px solid var(--primary);
     outline-offset: 2px;
   }
-
-  /* --- Scrollbars -----------------------------------------------------
-     No vertical bar anywhere, desktop or mobile: the page still scrolls,
-     it just never draws the track. Desktop keeps a horizontal bar for wide
-     content, mobile has no horizontal scrolling at all. */
   ::-webkit-scrollbar { width: 10px; height: 10px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb {
@@ -167,7 +156,6 @@
 }
 
 @layer components {
-  /* --- Surfaces ------------------------------------------------------- */
   .glass {
     position: relative;
     background: var(--glass);
@@ -240,8 +228,6 @@
   }
 
   .hairline { border-color: var(--glass-edge) !important; }
-
-  /* --- Type helpers --------------------------------------------------- */
   .kicker {
     display: inline-flex;
     align-items: center;
@@ -302,8 +288,6 @@
     background: var(--primary);
     box-shadow: 0 0 0 4px var(--primary-soft);
   }
-
-  /* --- Navigation ----------------------------------------------------- */
   .site-nav {
     position: fixed;
     inset: 0 0 auto 0;
@@ -413,9 +397,6 @@
     gap: .25rem;
     padding: .7rem;
     border-radius: 1.4rem;
-    /* Opaque glass: anything translucent let the page behind ghost through the
-       labels, so the panel uses the theme background solid and keeps only a
-       frosted sheen + soft edge for the glass look. */
     background: var(--bg-base);
     background-image: linear-gradient(160deg, var(--glass-sheen), transparent 60%);
     border: 1px solid var(--glass-line);
@@ -447,8 +428,6 @@
   }
 
   .mobile-nav .nav-link[data-active="true"] { color: var(--primary); }
-
-  /* Stagger the rows so the panel unrolls rather than snapping open. */
   .mobile-nav[data-open="true"] .nav-link,
   .mobile-nav[data-open="true"] .btn {
     animation: nav-row-in 300ms cubic-bezier(.22, 1, .36, 1) both;
@@ -459,8 +438,6 @@
     from { opacity: 0; transform: translateY(-6px); }
     to { opacity: 1; transform: translateY(0); }
   }
-
-  /* --- Reading progress ----------------------------------------------- */
   .scroll-progress {
     position: fixed;
     inset: 0 0 auto 0;
@@ -490,8 +467,6 @@
     box-shadow: 0 0 20px color-mix(in srgb, var(--primary) 80%, transparent),
       0 0 8px color-mix(in srgb, var(--accent) 70%, transparent);
   }
-
-  /* --- Buttons -------------------------------------------------------- */
   .btn {
     display: inline-flex;
     align-items: center;
@@ -569,8 +544,6 @@
   .btn-danger:hover:not(:disabled) { transform: translateY(-1px); background: color-mix(in srgb, var(--danger) 22%, transparent); }
 
   .btn-sm { padding: .45rem .8rem; font-size: .78rem; }
-
-  /* --- Form controls -------------------------------------------------- */
   .field { display: grid; gap: .45rem; }
 
   .field-label {
@@ -626,8 +599,6 @@
   }
 
   .input-lg { padding: .95rem 1.05rem; font-size: 1rem; border-radius: 1rem; }
-
-  /* --- Tabs / chips / badges ------------------------------------------ */
   .tabbar {
     display: inline-flex;
     flex-wrap: wrap;
@@ -732,8 +703,6 @@
     animation: none;
     box-shadow: none;
   }
-
-  /* --- Stats ---------------------------------------------------------- */
   .stat-grid {
     display: grid;
     gap: .75rem;
@@ -766,10 +735,6 @@
     text-transform: uppercase;
     color: var(--text-faint);
   }
-
-  /* --- Channel subscriber cards --------------------------------------- */
-  /* Deliberately dark in both themes: the count is white text, which needs a
-     fixed dark surface rather than the theme's translucent glass. */
   .channel-stats {
     display: grid;
     gap: .75rem;
@@ -833,10 +798,6 @@
     font-size: .72rem;
     color: rgba(228, 222, 244, .5);
   }
-
-  /* --- Scroll reveal --------------------------------------------------- */
-  /* Added by ScrollReveal.js to cards that start below the fold, so the page
-     never flashes: without JavaScript nothing is hidden in the first place. */
   .reveal {
     opacity: 0;
     transform: translate3d(0, 22px, 0) scale(.985);
@@ -852,8 +813,6 @@
     transform: none;
     will-change: auto;
   }
-
-  /* --- Video ---------------------------------------------------------- */
   .video-card {
     display: flex;
     flex-direction: column;
@@ -956,8 +915,6 @@
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
-
-  /* --- Overlay / modal ------------------------------------------------ */
   .overlay {
     position: fixed;
     inset: 0;
@@ -987,8 +944,6 @@
     display: block;
     background: #000;
   }
-
-  /* --- Page shell ----------------------------------------------------- */
   .page {
     min-height: calc(100vh - 12rem);
     padding: 3rem 1.5rem 4rem;
@@ -1020,8 +975,6 @@
     border: 1px dashed var(--glass-edge);
     background: var(--glass-soft);
   }
-
-  /* --- Admin ---------------------------------------------------------- */
   .admin-shell { display: grid; gap: 1.25rem; }
 
   .admin-header {
@@ -1044,8 +997,6 @@
   @media (max-width: 640px) {
     .application-grid { grid-template-columns: 1fr; }
   }
-
-  /* --- Builder -------------------------------------------------------- */
   .builder-layout { display: grid; gap: 1rem; }
 
   .builder-toolbar {
@@ -1076,8 +1027,6 @@
   .option-row { display: flex; align-items: center; gap: .55rem; }
 
   .option-marker { width: .95rem; text-align: center; color: var(--text-faint); font-size: .8rem; }
-
-  /* --- Footer --------------------------------------------------------- */
   .site-footer {
     padding: 2.25rem 1.5rem 3rem;
     border-top: 1px solid var(--glass-edge);
@@ -1099,8 +1048,6 @@
   .footer-links { display: flex; flex-wrap: wrap; gap: 1rem; }
   .footer-links a { color: var(--text-muted); transition: color 160ms ease; }
   .footer-links a:hover { color: var(--primary); }
-
-  /* --- Home details -------------------------------------------------- */
   .fact-list { display: grid; gap: 0; margin: 0; }
 
   .fact-row {
@@ -1168,8 +1115,6 @@
     font-size: .88rem;
     line-height: 1.65;
   }
-
-  /* --- Ambient petals ------------------------------------------------ */
   .petal {
     position: absolute;
     top: -8%;
@@ -1209,8 +1154,6 @@
 .delay-1 { animation-delay: 90ms; }
 .delay-2 { animation-delay: 180ms; }
 .delay-3 { animation-delay: 270ms; }
-
-/* Soft page-level grain/grid so glass panels have texture behind them. */
 .grid-veil {
   position: fixed;
   inset: 0;
@@ -1228,8 +1171,6 @@
   .nav-links { display: none; }
   .menu-button { display: inline-grid; }
   .nav-shell { padding: .5rem .5rem .5rem .75rem; }
-
-  /* Mobile layout: tighter gutters, stacked headers, thumb-sized controls. */
   .page {
     padding: 1.75rem 1rem 3rem;
     min-height: calc(100dvh - 9rem);
@@ -1246,8 +1187,6 @@
 
   .display-xl { font-size: clamp(2.2rem, 11vw, 3.1rem); }
   .display-lg { font-size: clamp(1.75rem, 8.5vw, 2.4rem); }
-
-  /* The sticky builder toolbar eats too much of a phone screen. */
   .builder-toolbar {
     position: static;
     border-radius: 1rem;
@@ -1269,26 +1208,15 @@
   }
 
   .application-card { padding: 1rem; }
-
-  /* Auto grid tracks are floored at min-content, so the three-column stat row
-     was forcing the whole page ~90px wider than the phone screen. Let every
-     track shrink instead. */
   .stat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .shell, .shell > *, .grid > *, .flex > * { min-width: 0; }
-
-  /* Vertical shorts next to 16:9 videos: top-align cards instead of stretching
-     a video card to the height of a tall short. */
   .video-card { align-self: start; }
   .video-grid { align-items: start; }
   .video-body { padding: .7rem .75rem .85rem; }
   .video-title { font-size: .82rem; }
   .thumb-pill { font-size: .56rem; padding: .15rem .4rem; }
   .thumb-badge { font-size: .6rem; right: .4rem; bottom: .4rem; }
-
-  /* 16px stops iOS Safari from zooming the page on input focus. */
   .input, .textarea, .select, .input-lg { font-size: 16px; }
-
-  /* Nothing may poke past the viewport on a phone. */
   img, svg, video, iframe, canvas { max-width: 100%; height: auto; }
   .btn, .btn-sm, .chip, .badge { max-width: 100%; }
 
@@ -1305,8 +1233,6 @@
     transition-duration: .01ms !important;
   }
 }
-
-/* ---------- Rich text (form descriptions, announcements) ---------- */
 
 .rich-text {
   display: grid;
@@ -1330,8 +1256,6 @@
 .rt-font-display { font-family: 'Bricolage Grotesque', 'Plus Jakarta Sans', system-ui, sans-serif; }
 .rt-font-serif { font-family: 'Iowan Old Style', 'Palatino Linotype', Georgia, serif; }
 .rt-font-mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
-
-/* ---------- Rich text editor ---------- */
 
 .rte {
   border: 1px solid var(--glass-edge);
@@ -1388,9 +1312,6 @@
   padding: 0 .4rem;
   border: 1px solid var(--glass-edge);
   border-radius: .55rem;
-  /* Native selects take their menu colours from the OS, which left these labels
-     white on a light control. The colour is pinned, options included, so the
-     size and font pickers read the same in either theme. */
   background-color: #fff;
   color: #16111f;
   color-scheme: light;
@@ -1416,8 +1337,6 @@
   color: var(--text-faint);
   pointer-events: none;
 }
-
-/* ---------- Announcements ---------- */
 
 .announcement-card {
   padding: 1.35rem;

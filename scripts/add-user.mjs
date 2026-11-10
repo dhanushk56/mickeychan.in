@@ -1,11 +1,4 @@
 #!/usr/bin/env node
-// Adds (or re-passwords) a site account in data/users.json.
-//
-//   npm run user:add -- <username> "<Full name>"
-//
-// You'll be prompted for the password without it being echoed, so it never
-// lands in shell history. Only the salted scrypt hash is written to the file;
-// commit and deploy for the change to reach production.
 
 import crypto from "node:crypto";
 import fs from "node:fs";

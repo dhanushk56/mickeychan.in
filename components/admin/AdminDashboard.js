@@ -13,7 +13,6 @@ const STATUS_META = {
   denied: { label: "Denied", className: "badge-denied" },
 };
 
-// Plain-language names for the activity log's action keys.
 const ACTION_LABEL = {
   login: "Sign-in",
   "login-failed": "Failed sign-in",
@@ -51,8 +50,6 @@ function timeAgo(iso) {
   return new Date(iso).toLocaleDateString();
 }
 
-// Local time, always 12-hour. This dashboard only renders submissions inside
-// the browser (they arrive by fetch), so "local" is the visitor's own zone.
 function formatDateTime(iso) {
   if (!iso) return "—";
   const date = new Date(iso);
@@ -293,9 +290,6 @@ export default function AdminDashboard({ currentUser }) {
     }
   }, [router]);
 
-  // The activity log is read on demand rather than riding the 5-second
-  // submissions poll: it's a much bigger payload and only matters while you're
-  // actually looking at it.
   const loadActivity = useCallback(async () => {
     setActivityLoading(true);
     try {

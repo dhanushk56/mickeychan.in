@@ -2,8 +2,6 @@
 
 import { useEffect, useState } from "react";
 
-// Renders "2d 04h 11m 09s" until `to` (ISO string). Starts as a dash on the
-// server and the first client paint, so hydration can't mismatch on the clock.
 function formatRemaining(ms) {
   const total = Math.max(0, Math.floor(ms / 1000));
   const days = Math.floor(total / 86400);

@@ -7,7 +7,6 @@ const SUBMISSIONS_KEY = "submissions:join";
 
 export const dynamic = "force-dynamic";
 
-// Protected — deletes one contact ("join us") message from the inbox.
 export async function DELETE(request, { params }) {
   const session = getSessionFromCookies();
   if (!session) {

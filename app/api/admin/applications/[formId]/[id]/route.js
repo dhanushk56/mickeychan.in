@@ -10,7 +10,6 @@ function readSession() {
 
 export const dynamic = "force-dynamic";
 
-// Protected — updates one application's review status within its form's list.
 export async function PATCH(request, { params }) {
   const session = readSession();
   if (!session) {
@@ -54,8 +53,6 @@ export async function PATCH(request, { params }) {
   );
 }
 
-// Protected — deletes one application. That also lifts the one-application
-// lock, so the person is free to apply again.
 export async function DELETE(request, { params }) {
   const session = readSession();
   if (!session) {

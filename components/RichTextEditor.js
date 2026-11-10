@@ -32,8 +32,6 @@ const BLOCK_TAGS = new Set([
 const SIZE_PREFIX = "rt-size-";
 const FONT_PREFIX = "rt-font-";
 
-// Only the properties the editor can produce are read, and only their "on"
-// state — a bold ancestor stays bold for the text inside it either way.
 function formatOf(element) {
   const format = {};
   try {
@@ -45,7 +43,6 @@ function formatOf(element) {
     if (decoration.includes("underline")) format.u = true;
     if (decoration.includes("line-through")) format.s = true;
   } catch {
-    // A node without a computed style keeps whatever it inherited.
   }
   for (const name of Array.from(element.classList || [])) {
     if (name.startsWith(SIZE_PREFIX)) format.size = name.slice(SIZE_PREFIX.length);
@@ -54,8 +51,6 @@ function formatOf(element) {
   return format;
 }
 
-// Reduces whatever the contentEditable is holding — tags, spans, stray styles —
-// back to the same small block/run format everything else stores.
 function htmlToBlocks(root) {
   const blocks = [];
   let current = [];
@@ -119,9 +114,6 @@ export default function RichTextEditor({
   const lastEmitted = useRef("");
   const valueKey = JSON.stringify(normalizeRichText(value));
 
-  // The contentEditable owns the caret, so React only writes into it when the
-  // value changed somewhere else (another form was opened, a field was reset).
-  // Typing never round-trips through innerHTML.
   useEffect(() => {
     const area = areaRef.current;
     if (!area) return;
@@ -135,7 +127,6 @@ export default function RichTextEditor({
       document.execCommand("styleWithCSS", false, false);
       document.execCommand("defaultParagraphSeparator", false, "div");
     } catch {
-      // Older browsers use their own markup; htmlToBlocks reads it all the same.
     }
   }, []);
 
@@ -155,9 +146,6 @@ export default function RichTextEditor({
     emit();
   }
 
-  // Size and font are applied by wrapping the selection. A selection that
-  // already carried one is stripped first, so picking "Large" twice never ends
-  // up nested inside the previous "Large".
   function wrap(prefix, id) {
     const area = areaRef.current;
     if (!area) return;
@@ -187,8 +175,6 @@ export default function RichTextEditor({
   function handlePaste(event) {
     const text = event.clipboardData?.getData("text/plain");
     if (text == null) return;
-    // Pasted rich content would arrive as markup this app doesn't model, so it
-    // is reduced to plain text with one line break per pasted line.
     event.preventDefault();
     const html = text
       .replace(/\r\n?/g, "\n")

@@ -1,6 +1,3 @@
-// Snapshot of the channel's latest uploads, used only when YouTube can't be
-// reached at request time (CI builds, blocked datacenter IPs, outages).
-// Live data comes from lib/content.js and always takes priority.
 export const videos = [
   {
     "id": "aByJNO03mQo",

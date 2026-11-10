@@ -16,7 +16,6 @@ export async function POST(request) {
   return response;
 }
 
-// Plain link/GET for convenience, redirecting home after clearing the cookie.
 export async function GET(request) {
   const session = getSessionFromCookies();
   const response = NextResponse.redirect(new URL("/", request.url));

@@ -2,8 +2,6 @@
 
 import { useEffect, useState } from "react";
 
-// Soft drifting glass motes behind the UI. Deliberately few and faint so the
-// frosted panels stay readable in both themes.
 const COLORS = ["#c4b5fd", "#a78bfa", "#f9a8d4", "#93c5fd"];
 
 function randomPetal(id) {

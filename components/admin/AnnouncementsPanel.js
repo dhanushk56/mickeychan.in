@@ -9,8 +9,6 @@ const EMPTY_DRAFT = {
   title: "",
   body: [],
   level: "normal",
-  // Kept as a string so the field can start empty: a time has to be chosen, and
-  // nothing is assumed for the admin.
   windowHours: "",
 };
 
@@ -67,7 +65,6 @@ export default function AnnouncementsPanel() {
     load();
   }, [load]);
 
-  // Keeps the Current/Past labels honest while the console is left open.
   useEffect(() => {
     const id = setInterval(() => setNow(Date.now()), 60000);
     return () => clearInterval(id);

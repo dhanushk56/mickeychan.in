@@ -4,8 +4,6 @@ import { ANNOUNCEMENTS_KEY, readAnnouncements, splitAnnouncements } from "@/lib/
 
 export const dynamic = "force-dynamic";
 
-// Public. The split is worked out per request, because "current" depends on how
-// long ago each announcement was posted relative to right now.
 export async function GET() {
   const list = readAnnouncements(await kvGet(ANNOUNCEMENTS_KEY, []));
   const now = Date.now();

@@ -57,10 +57,6 @@ export default function VideoExplorer({ videos, initialId = "", channelUrl, chan
     };
   }, [active]);
 
-  // Counts are conversational, not static totals: the type tabs count what the
-  // selected channel actually holds, and the channel chips count what the
-  // selected type actually holds. Picking an empty account therefore shows
-  // zeros everywhere instead of promising videos that aren't rendered.
   const videosInChannel = useMemo(
     () => (channel === "all" ? videos : videos.filter((video) => video.channel === channel)),
     [channel, videos]
@@ -91,8 +87,6 @@ export default function VideoExplorer({ videos, initialId = "", channelUrl, chan
     return map;
   }, [channels, videosInType]);
 
-  // Totals per channel ignore the type filter, so the empty state can tell the
-  // difference between "this account has nothing" and "no shorts on it".
   const channelTotals = useMemo(() => {
     const map = {};
     for (const item of channels) {

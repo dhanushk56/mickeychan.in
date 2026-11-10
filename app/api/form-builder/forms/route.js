@@ -28,8 +28,6 @@ export async function POST(request) {
 
   const id = crypto.randomUUID().slice(0, 8);
   const now = new Date().toISOString();
-  // New forms start as drafts: an empty form should never appear on the public
-  // positions page just because someone clicked "Create new form".
   const form = { ...emptyForm(), id, title: "Untitled form", published: false };
 
   await kvSet(`formbuilder:form:${id}`, form);

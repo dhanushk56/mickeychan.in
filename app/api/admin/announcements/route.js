@@ -44,7 +44,6 @@ export async function POST(request) {
     return NextResponse.json({ error: "Invalid announcement." }, { status: 400 });
   }
 
-  // The id and timestamp are the server's to choose, whatever the client sent.
   const announcement = normalizeAnnouncement({
     title: body.title,
     body: body.body,
@@ -60,7 +59,6 @@ export async function POST(request) {
     );
   }
 
-  // There is no default window: how long it runs is a decision, not a guess.
   if (!isValidWindowHours(body.windowHours)) {
     return NextResponse.json(
       {

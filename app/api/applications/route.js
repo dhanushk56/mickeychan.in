@@ -19,15 +19,11 @@ function flattenQuestions(form) {
 }
 
 export async function POST(request) {
-  // Every application belongs to a signed-in account: that's what makes
-  // "one application per person" enforceable.
   const member = await memberFromCookieStore(cookies());
   if (!member) {
     return NextResponse.json({ error: "Please log in to submit an application." }, { status: 401 });
   }
 
-  // Same-origin guard that also works behind a proxy, where request.url still
-  // points at the internal server rather than the public host.
   const origin = request.headers.get("origin");
   if (origin) {
     let originHost;
@@ -40,7 +36,6 @@ export async function POST(request) {
     try {
       hosts.push(new URL(request.url).host);
     } catch {
-      /* ignore */
     }
     if (!hosts.filter(Boolean).includes(originHost)) {
       return NextResponse.json({ error: "Invalid origin." }, { status: 403 });

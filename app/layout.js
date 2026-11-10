@@ -13,7 +13,6 @@ export const metadata = {
   description:
     "The official home of Mickey Chan — gamer, streamer, and storyteller. Watch the latest videos and shorts, follow the channel, explore open roles, and apply to join the team.",
   metadataBase: new URL("https://mickeychan.in"),
-  // Same image the navbar shows, so the browser tab matches the site.
   icons: {
     icon: [{ url: "/mickey-logo.png", type: "image/png" }],
     shortcut: "/mickey-logo.png",
@@ -26,8 +25,6 @@ export const metadata = {
   },
 };
 
-// Runs before React hydrates so the correct theme is on <html> for the very
-// first paint — without this, the page would flash the wrong theme briefly.
 const noFlashScript = `
 (function () {
   try {

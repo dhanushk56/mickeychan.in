@@ -9,9 +9,6 @@ import { logActivity } from "@/lib/activity-log";
 
 export const dynamic = "force-dynamic";
 
-// Very small in-memory throttle: 8 failed attempts per IP per 10 minutes.
-// Serverless instances each keep their own counter, which still slows
-// brute-forcing considerably.
 const attempts = globalThis.__mcLoginAttempts || (globalThis.__mcLoginAttempts = new Map());
 const WINDOW_MS = 10 * 60 * 1000;
 const MAX_ATTEMPTS = 8;
@@ -72,7 +69,6 @@ export async function POST(request) {
 
   const body = await request.json().catch(() => ({}));
   const password = typeof body.password === "string" ? body.password : "";
-  // Only a label for the activity log. It is never checked against anything.
   const typedName = typeof body.username === "string" ? body.username.trim() : "";
   const actor = typedName || "Admin";
 

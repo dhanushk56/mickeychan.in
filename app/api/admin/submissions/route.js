@@ -9,8 +9,6 @@ function isAuthorizedRequest() {
   return Boolean(getSessionFromCookies());
 }
 
-// Backs the live admin dashboard — polled every few seconds, so it must never
-// be cached by the browser or the Next data cache.
 export const dynamic = "force-dynamic";
 
 export async function GET() {
@@ -57,8 +55,6 @@ export async function GET() {
   );
 }
 
-// Protected — wipes every application across every form. Contact messages are
-// a separate inbox and are left alone.
 export async function DELETE(request) {
   const session = getSessionFromCookies();
   if (!session) {

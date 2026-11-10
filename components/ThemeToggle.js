@@ -3,9 +3,6 @@
 import { useEffect, useState } from "react";
 
 export default function ThemeToggle({ className = "" }) {
-  // Starts null so the server-rendered markup and first client render match.
-  // The real value is already on <html> from the inline script in layout.js,
-  // which runs before React hydrates.
   const [theme, setTheme] = useState(null);
 
   useEffect(() => {
@@ -18,7 +15,6 @@ export default function ThemeToggle({ className = "" }) {
     try {
       localStorage.setItem("mc-theme", next);
     } catch {
-      // localStorage can be unavailable (private mode, disabled) — theme just won't persist.
     }
     setTheme(next);
   }

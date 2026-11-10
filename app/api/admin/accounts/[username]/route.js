@@ -9,8 +9,6 @@ function actor() {
   return getSessionFromCookies()?.user?.username || "Admin";
 }
 
-// Protected — set any account's password. That also invalidates the account's
-// existing sessions, so the person has to log in again with the new password.
 export async function PATCH(request, { params }) {
   if (!getSessionFromCookies()) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -36,8 +34,6 @@ export async function PATCH(request, { params }) {
   return NextResponse.json({ ok: true }, { headers: { "Cache-Control": "no-store" } });
 }
 
-// Protected — delete any account. Their applications stay on file so the review
-// history survives; they simply can't log in or apply again.
 export async function DELETE(request, { params }) {
   if (!getSessionFromCookies()) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

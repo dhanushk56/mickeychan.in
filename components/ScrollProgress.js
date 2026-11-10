@@ -3,11 +3,6 @@
 import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 
-// Thin frosted bar pinned to the very top of the viewport showing how far
-// through the page you are. Pure presentation: hidden from screen readers.
-//
-// It updates the bar directly (no React state) so the bar tracks the scroll
-// at pointer speed and never causes the page tree to re-render.
 export default function ScrollProgress() {
   const barRef = useRef(null);
   const pathname = usePathname();
@@ -41,7 +36,6 @@ export default function ScrollProgress() {
     const observer = new ResizeObserver(refresh);
     observer.observe(document.body);
 
-    // Late layout shifts (fonts, thumbnails) settle just after navigation.
     const settle = window.setTimeout(refresh, 250);
 
     return () => {

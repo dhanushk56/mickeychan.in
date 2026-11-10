@@ -12,8 +12,6 @@ const nextTarget = "/join";
 export default async function JoinPage() {
   const member = await memberFromCookieStore(cookies());
 
-  // Messages are only accepted from signed-in accounts, so which account sent
-  // what is never a guess.
   if (!member) {
     return (
       <main className="page">

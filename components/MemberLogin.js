@@ -22,7 +22,6 @@ export default function MemberLogin({ next = "/positions", hasAccounts = true })
       });
       const result = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(result.error || "Could not sign you in.");
-      // Full navigation so the navbar picks up the new session.
       window.location.assign(next || "/positions");
     } catch (err) {
       setError(err.message);

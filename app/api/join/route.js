@@ -8,8 +8,6 @@ const SUBMISSIONS_KEY = "submissions:join";
 
 export const dynamic = "force-dynamic";
 
-// Proxy-aware same-origin check (request.url still points at the internal
-// server behind a tunnel/custom domain).
 function sameOrigin(request) {
   const origin = request.headers.get("origin");
   if (!origin) return true;
@@ -23,14 +21,11 @@ function sameOrigin(request) {
   try {
     candidates.push(new URL(request.url).host);
   } catch {
-    /* ignore */
   }
   return candidates.filter(Boolean).includes(originHost);
 }
 
 export async function POST(request) {
-  // Every message is tied to a signed-in account so the team always knows who
-  // they're replying to.
   const member = await memberFromCookieStore(cookies());
   if (!member) {
     return NextResponse.json({ error: "Please log in to send a message." }, { status: 401 });

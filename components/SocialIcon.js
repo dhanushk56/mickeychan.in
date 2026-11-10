@@ -1,4 +1,3 @@
-// Official brand marks from Simple Icons (MIT licensed) — https://simpleicons.org
 const ICONS = {
   youtube: {
     color: "#FF0000",

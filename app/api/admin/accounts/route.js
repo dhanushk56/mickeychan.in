@@ -9,7 +9,6 @@ function actor() {
   return getSessionFromCookies()?.user?.username || "Admin";
 }
 
-// Protected — the admin console's account list (never includes hashes).
 export async function GET() {
   if (!getSessionFromCookies()) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -21,9 +20,6 @@ export async function GET() {
   );
 }
 
-// Protected — make an account by hand. This deliberately skips the one account
-// per internet connection rule that self-signups obey, so a household or a
-// second account can be set up when someone asks the team directly.
 export async function POST(request) {
   if (!getSessionFromCookies()) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

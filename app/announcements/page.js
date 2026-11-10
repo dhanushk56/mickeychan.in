@@ -50,8 +50,6 @@ function AnnouncementCard({ announcement, past = false }) {
       </div>
       <h3 className="font-display text-lg font-bold mt-3">{announcement.title}</h3>
       <RichText value={announcement.body} className="muted leading-relaxed mt-2" />
-      {/* When it went up is part of the notice, not fine print: it is on every
-          card, current or past. */}
       <p className="muted text-xs mt-3">
         Posted <LocalTime iso={announcement.createdAt} />
         {left != null && <> · moves to past in {formatLeft(left)}</>}
@@ -63,8 +61,6 @@ function AnnouncementCard({ announcement, past = false }) {
 }
 
 export default async function AnnouncementsPage() {
-  // Same reasoning as /positions: the current/past split is about right now, so
-  // this page must never come from a cached render.
   noStore();
 
   const list = readAnnouncements(await kvGet(ANNOUNCEMENTS_KEY, []));

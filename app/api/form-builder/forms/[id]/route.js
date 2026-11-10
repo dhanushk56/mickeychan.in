@@ -16,7 +16,6 @@ function isAuthorizedRequest() {
 
 export const dynamic = "force-dynamic";
 
-// Public — the /form-builder/apply/[id] page needs to read this form.
 export async function GET(request, { params }) {
   const form = await kvGet(`formbuilder:form:${params.id}`, null);
   if (!form) {
@@ -25,7 +24,6 @@ export async function GET(request, { params }) {
   return NextResponse.json(form, { headers: { "Cache-Control": "no-store" } });
 }
 
-// Protected — requires a valid admin password session.
 export async function PUT(request, { params }) {
   if (!isAuthorizedRequest()) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -41,9 +39,6 @@ export async function PUT(request, { params }) {
     return NextResponse.json({ error: "Form not found." }, { status: 404 });
   }
 
-  // Descriptions are stored as rich-text blocks. Whatever the editor (or a
-  // hand-made request) sent is reduced to that format here, once, so the pages
-  // that render it never have to trust it.
   const sections = body.sections.slice(0, 60).map((section) => ({
     ...section,
     description: normalizeRichText(section?.description),
@@ -89,7 +84,6 @@ export async function PUT(request, { params }) {
   return NextResponse.json({ ok: true, form }, { headers: { "Cache-Control": "no-store" } });
 }
 
-// Protected — removes a form from the list. Its past submissions are kept.
 export async function DELETE(request, { params }) {
   if (!isAuthorizedRequest()) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

@@ -29,8 +29,6 @@ export default function Navbar() {
     setOpen(false);
   }, [pathname]);
 
-  // Session lives in an HttpOnly cookie, so the navbar asks the server who is
-  // signed in rather than trusting anything stored in the browser.
   useEffect(() => {
     let alive = true;
     fetch("/api/auth/member", { cache: "no-store" })
@@ -98,7 +96,6 @@ export default function Navbar() {
           </button>
         </div>
 
-        {/* Stays mounted so it can animate both ways instead of popping in. */}
         <nav className="mobile-nav" data-open={open} aria-label="Mobile" aria-hidden={!open}>
           {LINKS.map((link, index) => (
             <Link

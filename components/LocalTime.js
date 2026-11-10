@@ -4,8 +4,6 @@ import { useEffect, useState } from "react";
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
-// 12-hour UTC rendering, used for the server/first paint so the markup is
-// stable, and as the fallback wherever local formatting isn't available.
 export function utc12(iso) {
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return "—";
@@ -16,8 +14,6 @@ export function utc12(iso) {
   return `${MONTHS[date.getUTCMonth()]} ${date.getUTCDate()}, ${date.getUTCFullYear()} · ${hours}:${minutes} ${suffix} UTC`;
 }
 
-// Shows the visitor's own clock (12-hour) once mounted; before that it prints
-// the same UTC string the server produced, so hydration stays clean.
 export default function LocalTime({ iso, className = "" }) {
   const [label, setLabel] = useState(() => utc12(iso));
 

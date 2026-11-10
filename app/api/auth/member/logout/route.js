@@ -3,7 +3,6 @@ import { cookies } from "next/headers";
 import { clearMemberCookieHeader, memberFromCookieStore } from "@/lib/members";
 import { logActivity } from "@/lib/activity-log";
 
-// Plain link so the navbar's "Log out" works without JavaScript.
 export async function GET(request) {
   const member = await memberFromCookieStore(cookies());
   const response = NextResponse.redirect(new URL("/", request.url));
