@@ -6,6 +6,7 @@ import {
   sessionCookieHeader,
 } from "@/lib/auth";
 import { logActivity } from "@/lib/activity-log";
+import { isAdminUsername } from "@/lib/admin-access";
 
 export const dynamic = "force-dynamic";
 
@@ -70,7 +71,6 @@ export async function POST(request) {
   const body = await request.json().catch(() => ({}));
   const password = typeof body.password === "string" ? body.password : "";
   const typedName = typeof body.username === "string" ? body.username.trim() : "";
-  const actor = typedName || "Admin";
 
   if (!checkPassword(password)) {
     recordFailure(key);
@@ -85,7 +85,27 @@ export async function POST(request) {
     return NextResponse.json({ error: "That password didn't work." }, { status: 401 });
   }
 
+  if (!isAdminUsername(typedName)) {
+    recordFailure(key);
+    await logActivity({
+      area: "admin",
+      action: "login-denied",
+      username: typedName || "Unknown",
+      detail: "Username is not on the admin allowlist",
+      ok: false,
+      request,
+    });
+    return NextResponse.json(
+      {
+        error: "That username doesn't have access to the admin console.",
+        code: "admin_not_allowed",
+      },
+      { status: 403 }
+    );
+  }
+
   attempts.delete(key);
+  const actor = typedName;
   const response = NextResponse.json({ ok: true, user: { username: actor } });
   response.headers.append("Set-Cookie", sessionCookieHeader(createSessionToken(actor)));
   await logActivity({

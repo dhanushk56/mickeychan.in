@@ -7,6 +7,7 @@ const PAGES = [
   { path: "/positions", changeFrequency: "daily", priority: 0.9 },
   { path: "/socials", changeFrequency: "monthly", priority: 0.7 },
   { path: "/join", changeFrequency: "monthly", priority: 0.6 },
+  { path: "/sitemap", changeFrequency: "monthly", priority: 0.4 },
 ];
 
 export default function sitemap() {
