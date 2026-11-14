@@ -90,18 +90,19 @@ export async function POST(request) {
 
   const member = (await findMember(username)) || (await findMemberByEmail(username));
 
-  if (member && member.provider === "google") {
+  if (member && (member.provider === "google" || member.provider === "discord")) {
+    const provider = member.provider === "discord" ? "Discord" : "Google";
     await logActivity({
       area: "website",
       action: "login-blocked",
       username: member.username,
-      detail: "Tried to use a password on a Google account",
+      detail: `Tried to use a password on a ${provider} account`,
       ok: false,
       request,
     });
     return NextResponse.json(
       {
-        error: "That account signs in with Google — use the Google button instead.",
+        error: `That account signs in with ${provider} — use the ${provider} button instead.`,
         code: "google_only",
       },
       { status: 400 }

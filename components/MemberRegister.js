@@ -3,8 +3,9 @@
 import { useState } from "react";
 import Link from "next/link";
 import GoogleMark from "@/components/GoogleMark";
+import DiscordMark from "@/components/DiscordMark";
 
-export default function MemberRegister({ next = "/positions", googleEnabled = false }) {
+export default function MemberRegister({ next = "/positions", googleEnabled = false, discordEnabled = false }) {
   const [name, setName] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -128,20 +129,33 @@ export default function MemberRegister({ next = "/positions", googleEnabled = fa
             {busy ? "Creating…" : "Create account ↗"}
           </button>
 
-          {googleEnabled && (
+          {(googleEnabled || discordEnabled) && (
             <>
               <div className="flex items-center gap-3 my-5" aria-hidden="true">
                 <span className="h-px flex-1" style={{ background: "var(--glass-edge)" }} />
                 <span className="faint text-xs uppercase tracking-widest">or</span>
                 <span className="h-px flex-1" style={{ background: "var(--glass-edge)" }} />
               </div>
-              <a
-                href={`/api/auth/google?next=${encodeURIComponent(next)}`}
-                className="btn btn-secondary w-full gap-2"
-              >
-                <GoogleMark />
-                Continue with Google
-              </a>
+              <div className="grid gap-2">
+                {googleEnabled && (
+                  <a
+                    href={`/api/auth/google?next=${encodeURIComponent(next)}`}
+                    className="btn btn-secondary w-full gap-2"
+                  >
+                    <GoogleMark />
+                    Continue with Google
+                  </a>
+                )}
+                {discordEnabled && (
+                  <a
+                    href={`/api/auth/discord?next=${encodeURIComponent(next)}`}
+                    className="btn btn-secondary w-full gap-2"
+                  >
+                    <DiscordMark />
+                    Continue with Discord
+                  </a>
+                )}
+              </div>
             </>
           )}
 

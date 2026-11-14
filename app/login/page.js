@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import MemberLogin from "@/components/MemberLogin";
 import { hasMembers, memberFromCookieStore } from "@/lib/members";
 import { isGoogleConfigured } from "@/lib/google";
+import { isDiscordConfigured } from "@/lib/discord";
 
 export const dynamic = "force-dynamic";
 
@@ -17,6 +18,12 @@ const ERRORS = {
   email_taken:
     "That email address already belongs to an account with a password. Log in with your password instead.",
   ip_limit: "This internet connection already has an account. Log in with it instead.",
+  discord_unavailable: "Discord sign-in isn't set up on this site yet.",
+  discord_denied: "Discord sign-in was cancelled.",
+  discord_failed: "Discord sign-in didn't finish. Please try again.",
+  discord_state: "That Discord sign-in attempt expired. Please try again.",
+  discord_no_email: "Discord didn't share an email address, so no account was created.",
+  discord_email_unverified: "Discord hasn't confirmed that email address, so no account was created.",
 };
 
 function safeNext(value) {
@@ -36,6 +43,7 @@ export default async function LoginPage({ searchParams }) {
       next={next}
       hasAccounts={await hasMembers()}
       googleEnabled={isGoogleConfigured()}
+      discordEnabled={isDiscordConfigured()}
       initialError={ERRORS[errorCode] || ""}
     />
   );
