@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import MemberRegister from "@/components/MemberRegister";
 import { memberFromCookieStore } from "@/lib/members";
+import { isGoogleConfigured } from "@/lib/google";
 
 export const dynamic = "force-dynamic";
 
@@ -17,5 +18,5 @@ export default async function RegisterPage({ searchParams }) {
   const member = await memberFromCookieStore(cookies());
   if (member) redirect(next);
 
-  return <MemberRegister next={next} />;
+  return <MemberRegister next={next} googleEnabled={isGoogleConfigured()} />;
 }

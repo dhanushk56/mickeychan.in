@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
-import { createMemberToken, memberCookieHeader, publicMember, registerMember } from "@/lib/members";
+import { deleteMember, publicMember, registerMember } from "@/lib/members";
 import { requestIps, requestLocation } from "@/lib/request-ips";
 import { logActivity } from "@/lib/activity-log";
+import { isEmailConfigured } from "@/lib/email";
+import { sendVerificationEmail } from "@/lib/email-verification";
+import { safeNextPath, siteOrigin } from "@/lib/site-url";
 
 export const dynamic = "force-dynamic";
 
@@ -55,6 +58,13 @@ export async function POST(request) {
     return NextResponse.json({ error: "Invalid origin." }, { status: 403 });
   }
 
+  if (!isEmailConfigured()) {
+    return NextResponse.json(
+      { error: "Account creation is paused — email confirmation isn't set up yet." },
+      { status: 503 }
+    );
+  }
+
   const key = clientKey(request);
   if (tooManySignups(key)) {
     return NextResponse.json(
@@ -68,6 +78,7 @@ export async function POST(request) {
   const password = typeof body.password === "string" ? body.password : "";
   const confirm = typeof body.confirmPassword === "string" ? body.confirmPassword : password;
   const name = typeof body.name === "string" ? body.name : "";
+  const email = typeof body.email === "string" ? body.email : "";
 
   if (password !== confirm) {
     return NextResponse.json({ error: "Those passwords don't match." }, { status: 400 });
@@ -76,7 +87,10 @@ export async function POST(request) {
   const result = await registerMember({
     username,
     name,
+    email,
     password,
+    provider: "password",
+    emailVerified: false,
     ips: requestIps(request),
     location: requestLocation(request),
   });
@@ -95,16 +109,32 @@ export async function POST(request) {
     return NextResponse.json({ error: result.error, code: result.code }, { status: conflict ? 409 : 400 });
   }
 
+  const sent = await sendVerificationEmail({
+    member: result.member,
+    origin: siteOrigin(request),
+    next: safeNextPath(body.next),
+  });
+  if (sent.error) {
+    await deleteMember(result.member.username);
+    return NextResponse.json(
+      { error: "We couldn't send the confirmation email. Please try again in a minute." },
+      { status: 502 }
+    );
+  }
+
   recordSignup(key);
   await logActivity({
     area: "website",
     action: "register",
     username: result.member.username,
-    detail: "Created a site account",
+    detail: "Created a site account (waiting for email confirmation)",
     request,
   });
 
-  const response = NextResponse.json({ ok: true, member: publicMember(result.member) });
-  response.headers.append("Set-Cookie", memberCookieHeader(createMemberToken(result.member)));
-  return response;
+  return NextResponse.json({
+    ok: true,
+    pending: true,
+    email: result.member.email,
+    member: publicMember(result.member),
+  });
 }

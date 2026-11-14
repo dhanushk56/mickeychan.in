@@ -3,17 +3,27 @@
 import { useState } from "react";
 import Link from "next/link";
 
-export default function MemberLogin({ next = "/positions", hasAccounts = true }) {
+export default function MemberLogin({
+  next = "/positions",
+  hasAccounts = true,
+  googleEnabled = false,
+  initialError = "",
+  initialCode = "",
+}) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [reveal, setReveal] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState(initialError);
+  const [code, setCode] = useState(initialCode);
+  const [resendStatus, setResendStatus] = useState("");
 
   async function submit(event) {
     event.preventDefault();
     setBusy(true);
     setError("");
+    setCode("");
+    setResendStatus("");
     try {
       const response = await fetch("/api/auth/member", {
         method: "POST",
@@ -21,7 +31,10 @@ export default function MemberLogin({ next = "/positions", hasAccounts = true })
         body: JSON.stringify({ username, password }),
       });
       const result = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(result.error || "Could not sign you in.");
+      if (!response.ok) {
+        setCode(result.code || "");
+        throw new Error(result.error || "Could not sign you in.");
+      }
       window.location.assign(next || "/positions");
     } catch (err) {
       setError(err.message);
@@ -29,11 +42,30 @@ export default function MemberLogin({ next = "/positions", hasAccounts = true })
     }
   }
 
+  async function resend() {
+    setResendStatus("Sending…");
+    try {
+      const response = await fetch("/api/auth/verify/resend", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, next }),
+      });
+      const result = await response.json().catch(() => ({}));
+      setResendStatus(
+        response.ok ? "Sent — check your inbox." : result.error || "Could not send it again."
+      );
+    } catch {
+      setResendStatus("Could not send it again.");
+    }
+  }
+
   return (
     <div className="page">
       <div className="shell" style={{ maxWidth: "30rem" }}>
         <form onSubmit={submit} className="glass-card p-8 animate-rise">
-          <span className="glass-inset icon-button mx-auto mb-5" aria-hidden="true">☺</span>
+          <span className="glass-inset icon-button mx-auto mb-5" aria-hidden="true">
+            ☺
+          </span>
           <p className="kicker justify-center">Site account</p>
           <h1 className="font-display text-2xl font-bold mt-3 mb-2 text-center">Log in</h1>
           <p className="muted text-sm leading-relaxed mb-6 text-center">
@@ -44,6 +76,22 @@ export default function MemberLogin({ next = "/positions", hasAccounts = true })
             <p className="badge badge-pending mb-4 w-full justify-center" role="alert">
               No accounts exist yet — create one below.
             </p>
+          )}
+
+          {googleEnabled && (
+            <>
+              <a
+                href={`/api/auth/google?next=${encodeURIComponent(next)}`}
+                className="btn btn-secondary w-full"
+              >
+                Continue with Google
+              </a>
+              <div className="flex items-center gap-3 my-5" aria-hidden="true">
+                <span className="h-px flex-1" style={{ background: "var(--glass-edge)" }} />
+                <span className="faint text-xs uppercase tracking-widest">or</span>
+                <span className="h-px flex-1" style={{ background: "var(--glass-edge)" }} />
+              </div>
+            </>
           )}
 
           <label className="field">
@@ -90,6 +138,25 @@ export default function MemberLogin({ next = "/positions", hasAccounts = true })
             </p>
           )}
 
+          {code === "unverified" && (
+            <div className="mt-3">
+              {resendStatus ? (
+                <p className="badge badge-pending w-full justify-center" role="status">
+                  {resendStatus}
+                </p>
+              ) : (
+                <button
+                  type="button"
+                  className="btn btn-secondary btn-sm w-full"
+                  onClick={resend}
+                  disabled={!username}
+                >
+                  Send the confirmation link again
+                </button>
+              )}
+            </div>
+          )}
+
           <button
             type="submit"
             className="btn btn-primary w-full mt-5"
@@ -103,9 +170,8 @@ export default function MemberLogin({ next = "/positions", hasAccounts = true })
               ⚠ Don&apos;t forget your password
             </p>
             <p className="faint text-xs mt-1 leading-relaxed">
-              Accounts are stored in a file inside the site&apos;s repository, so there&apos;s no
-              self-service reset. If you lose your password you will have to contact an admin to get
-              it reset.
+              There&apos;s no self-service reset. If you lose your password you will have to contact an
+              admin to get it reset.
             </p>
           </div>
 

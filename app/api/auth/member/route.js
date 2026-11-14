@@ -88,6 +88,43 @@ export async function POST(request) {
   const password = typeof body.password === "string" ? body.password : "";
 
   const member = await findMember(username);
+
+  if (member && member.provider === "google") {
+    await logActivity({
+      area: "website",
+      action: "login-blocked",
+      username: member.username,
+      detail: "Tried to use a password on a Google account",
+      ok: false,
+      request,
+    });
+    return NextResponse.json(
+      {
+        error: "That account signs in with Google — use the Google button instead.",
+        code: "google_only",
+      },
+      { status: 400 }
+    );
+  }
+
+  if (member && member.email && member.emailVerified !== true) {
+    await logActivity({
+      area: "website",
+      action: "login-blocked",
+      username: member.username,
+      detail: "Email address not confirmed yet",
+      ok: false,
+      request,
+    });
+    return NextResponse.json(
+      {
+        error: "Confirm your email address first — we sent you a link when you signed up.",
+        code: "unverified",
+      },
+      { status: 403 }
+    );
+  }
+
   if (!member || !verifyMemberPassword(member, password)) {
     recordFailure(key);
     await logActivity({
