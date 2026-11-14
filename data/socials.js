@@ -1,13 +1,13 @@
 export const socials = [
   {
-    name: "YouTube (Main Account)",
-    short: "YouTube",
+    name: "MickeyChan (YouTube)",
+    short: "MickeyChan",
     href: "https://youtube.com/@mickeychaan",
     icon: "youtube",
   },
   {
-    name: "YouTube (Second Account)",
-    short: "YouTube 2",
+    name: "MickeyTV (YouTube)",
+    short: "MickeyTV",
     href: "https://www.youtube.com/@MickeyInReal",
     icon: "youtube",
   },

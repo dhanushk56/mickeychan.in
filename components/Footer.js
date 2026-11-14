@@ -13,7 +13,7 @@ export default function Footer() {
           <Link href="/join">Contact</Link>
           <Link href="/sitemap">Sitemap</Link>
           <a href={socials[0]?.href} target="_blank" rel="noreferrer">
-            YouTube ↗
+            {socials[0]?.short || "YouTube"} ↗
           </a>
         </nav>
       </div>
