@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import {
   createMemberToken,
   findMember,
+  findMemberByEmail,
   hasMembers,
   memberCookieHeader,
   memberFromCookieStore,
@@ -87,7 +88,7 @@ export async function POST(request) {
   const username = typeof body.username === "string" ? body.username.trim() : "";
   const password = typeof body.password === "string" ? body.password : "";
 
-  const member = await findMember(username);
+  const member = (await findMember(username)) || (await findMemberByEmail(username));
 
   if (member && member.provider === "google") {
     await logActivity({

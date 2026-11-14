@@ -55,7 +55,7 @@ export default function MemberLogin({
           )}
 
           <label className="field">
-            <span className="field-label">Username</span>
+            <span className="field-label">Username or email</span>
             <input
               className="input"
               value={username}
@@ -63,6 +63,7 @@ export default function MemberLogin({
               autoComplete="username"
               autoCapitalize="none"
               spellCheck={false}
+              placeholder="yourname or you@example.com"
               required
             />
           </label>
