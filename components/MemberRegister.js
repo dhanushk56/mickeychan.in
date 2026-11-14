@@ -12,8 +12,6 @@ export default function MemberRegister({ next = "/positions", googleEnabled = fa
   const [reveal, setReveal] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const [pendingEmail, setPendingEmail] = useState("");
-  const [resendStatus, setResendStatus] = useState("");
 
   const mismatch = confirmPassword.length > 0 && password !== confirmPassword;
   const emailLooksValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
@@ -32,79 +30,15 @@ export default function MemberRegister({ next = "/positions", googleEnabled = fa
       const response = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, username, email, password, confirmPassword, next }),
+        body: JSON.stringify({ name, username, email, password, confirmPassword }),
       });
       const result = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(result.error || "Could not create your account.");
-      setPendingEmail(result.email || email.trim());
+      window.location.assign(`/verify?next=${encodeURIComponent(next)}`);
     } catch (err) {
       setError(err.message);
-    } finally {
       setBusy(false);
     }
-  }
-
-  async function resend() {
-    setResendStatus("Sending…");
-    try {
-      const response = await fetch("/api/auth/verify/resend", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, next }),
-      });
-      const result = await response.json().catch(() => ({}));
-      setResendStatus(
-        response.ok ? "Sent — check your inbox again." : result.error || "Could not send it again."
-      );
-    } catch {
-      setResendStatus("Could not send it again.");
-    }
-  }
-
-  if (pendingEmail) {
-    return (
-      <div className="page">
-        <div className="shell" style={{ maxWidth: "30rem" }}>
-          <div className="glass-card p-8 animate-rise">
-            <span className="glass-inset icon-button mx-auto mb-5" aria-hidden="true">
-              ✉
-            </span>
-            <p className="kicker justify-center">One step left</p>
-            <h1 className="font-display text-2xl font-bold mt-3 mb-2 text-center">
-              Check your inbox
-            </h1>
-            <p className="muted text-sm leading-relaxed mb-4 text-center">
-              We sent a confirmation link to <strong>{pendingEmail}</strong>. Open it to finish
-              creating @{username} and sign in.
-            </p>
-            <p className="faint text-xs leading-relaxed text-center">
-              The link works for 24 hours. If it isn&apos;t there in a minute, check your spam folder.
-            </p>
-
-            {resendStatus && (
-              <p className="badge badge-pending mt-4 w-full justify-center" role="status">
-                {resendStatus}
-              </p>
-            )}
-
-            <button type="button" className="btn btn-secondary w-full mt-5" onClick={resend}>
-              Send the link again
-            </button>
-
-            <p className="faint text-xs mt-5 text-center">
-              Already confirmed?{" "}
-              <Link
-                href={`/login?next=${encodeURIComponent(next)}`}
-                className="hover:underline"
-                style={{ color: "var(--primary)" }}
-              >
-                Log in
-              </Link>
-            </p>
-          </div>
-        </div>
-      </div>
-    );
   }
 
   return (
@@ -179,7 +113,7 @@ export default function MemberRegister({ next = "/positions", googleEnabled = fa
               required
             />
             <span className="faint text-xs mt-1">
-              We email a link here and you confirm it before your first login.
+              We send a 6-digit code here to confirm the address.
             </span>
           </label>
 

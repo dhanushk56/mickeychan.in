@@ -70,6 +70,14 @@ export default function Navbar() {
           <ThemeToggle />
           {member ? (
             <>
+              {!member.emailVerified && (
+                <Link
+                  href={`/verify?next=${encodeURIComponent(pathname || "/")}`}
+                  className="btn btn-primary btn-sm hidden sm:inline-flex"
+                >
+                  Verify your account
+                </Link>
+              )}
               <span className="badge badge-neutral hidden md:inline-flex" title={member.username}>
                 {member.name}
               </span>
@@ -109,10 +117,20 @@ export default function Navbar() {
               {link.label}
             </Link>
           ))}
+          {member && !member.emailVerified && (
+            <Link
+              href={`/verify?next=${encodeURIComponent(pathname || "/")}`}
+              className="btn btn-primary"
+              style={{ "--i": String(LINKS.length) }}
+              onClick={() => setOpen(false)}
+            >
+              Verify your account
+            </Link>
+          )}
           <a
             href={accountHref}
             className="btn btn-secondary"
-            style={{ "--i": String(LINKS.length) }}
+            style={{ "--i": String(LINKS.length + (member && !member.emailVerified ? 1 : 0)) }}
             onClick={() => setOpen(false)}
           >
             {member ? `Log out (${member.username})` : "Log in"}
@@ -120,7 +138,7 @@ export default function Navbar() {
           <Link
             href="/join"
             className="btn btn-primary mt-1"
-            style={{ "--i": String(LINKS.length + 1) }}
+            style={{ "--i": String(LINKS.length + (member && !member.emailVerified ? 2 : 1)) }}
             onClick={() => setOpen(false)}
           >
             Join us

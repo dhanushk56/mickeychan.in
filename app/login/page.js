@@ -17,7 +17,6 @@ const ERRORS = {
   email_taken:
     "That email address already belongs to an account with a password. Log in with your password instead.",
   ip_limit: "This internet connection already has an account. Log in with it instead.",
-  verify_invalid: "That confirmation link has expired or was already used.",
 };
 
 function safeNext(value) {
@@ -31,16 +30,13 @@ export default async function LoginPage({ searchParams }) {
   if (member) redirect(next);
 
   const errorCode = typeof searchParams?.error === "string" ? searchParams.error : "";
-  const initialError = ERRORS[errorCode] || "";
-  const initialCode = errorCode === "verify_invalid" ? "verify_invalid" : "";
 
   return (
     <MemberLogin
       next={next}
       hasAccounts={await hasMembers()}
       googleEnabled={isGoogleConfigured()}
-      initialError={initialError}
-      initialCode={initialCode}
+      initialError={ERRORS[errorCode] || ""}
     />
   );
 }

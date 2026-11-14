@@ -1,10 +1,9 @@
 import { NextResponse } from "next/server";
-import { deleteMember, publicMember, registerMember } from "@/lib/members";
+import { createMemberToken, memberCookieHeader, publicMember, registerMember } from "@/lib/members";
 import { requestIps, requestLocation } from "@/lib/request-ips";
 import { logActivity } from "@/lib/activity-log";
 import { isEmailConfigured } from "@/lib/email";
-import { sendVerificationEmail } from "@/lib/email-verification";
-import { safeNextPath, siteOrigin } from "@/lib/site-url";
+import { sendCodeEmail } from "@/lib/email-verification";
 
 export const dynamic = "force-dynamic";
 
@@ -58,13 +57,6 @@ export async function POST(request) {
     return NextResponse.json({ error: "Invalid origin." }, { status: 403 });
   }
 
-  if (!isEmailConfigured()) {
-    return NextResponse.json(
-      { error: "Account creation is paused — email confirmation isn't set up yet." },
-      { status: 503 }
-    );
-  }
-
   const key = clientKey(request);
   if (tooManySignups(key)) {
     return NextResponse.json(
@@ -109,32 +101,27 @@ export async function POST(request) {
     return NextResponse.json({ error: result.error, code: result.code }, { status: conflict ? 409 : 400 });
   }
 
-  const sent = await sendVerificationEmail({
-    member: result.member,
-    origin: siteOrigin(request),
-    next: safeNextPath(body.next),
-  });
-  if (sent.error) {
-    await deleteMember(result.member.username);
-    return NextResponse.json(
-      { error: "We couldn't send the confirmation email. Please try again in a minute." },
-      { status: 502 }
-    );
+  recordSignup(key);
+
+  let emailSent = false;
+  if (isEmailConfigured()) {
+    const sent = await sendCodeEmail(result.member);
+    emailSent = Boolean(sent.ok);
   }
 
-  recordSignup(key);
   await logActivity({
     area: "website",
     action: "register",
     username: result.member.username,
-    detail: "Created a site account (waiting for email confirmation)",
+    detail: "Created a site account",
     request,
   });
 
-  return NextResponse.json({
+  const response = NextResponse.json({
     ok: true,
-    pending: true,
-    email: result.member.email,
     member: publicMember(result.member),
+    emailSent,
   });
+  response.headers.append("Set-Cookie", memberCookieHeader(createMemberToken(result.member)));
+  return response;
 }

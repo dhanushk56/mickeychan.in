@@ -8,25 +8,17 @@ export default function MemberLogin({
   hasAccounts = true,
   googleEnabled = false,
   initialError = "",
-  initialCode = "",
 }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [reveal, setReveal] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(initialError);
-  const [code, setCode] = useState(initialCode);
-  const [resendStatus, setResendStatus] = useState("");
-  const [email, setEmail] = useState("");
-  const [emailStatus, setEmailStatus] = useState("");
-  const [emailBusy, setEmailBusy] = useState(false);
 
   async function submit(event) {
     event.preventDefault();
     setBusy(true);
     setError("");
-    setCode("");
-    setResendStatus("");
     try {
       const response = await fetch("/api/auth/member", {
         method: "POST",
@@ -34,51 +26,11 @@ export default function MemberLogin({
         body: JSON.stringify({ username, password }),
       });
       const result = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        setCode(result.code || "");
-        throw new Error(result.error || "Could not sign you in.");
-      }
+      if (!response.ok) throw new Error(result.error || "Could not sign you in.");
       window.location.assign(next || "/positions");
     } catch (err) {
       setError(err.message);
       setBusy(false);
-    }
-  }
-
-  async function addEmail(event) {
-    event.preventDefault();
-    setEmailBusy(true);
-    setEmailStatus("");
-    try {
-      const response = await fetch("/api/auth/member/email", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, next }),
-      });
-      const result = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(result.error || "Could not send the confirmation link.");
-      setEmailStatus(`Sent to ${result.email || email}. Open the link in that inbox to finish.`);
-    } catch (err) {
-      setEmailStatus(err.message);
-    } finally {
-      setEmailBusy(false);
-    }
-  }
-
-  async function resend() {
-    setResendStatus("Sending…");
-    try {
-      const response = await fetch("/api/auth/verify/resend", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, next }),
-      });
-      const result = await response.json().catch(() => ({}));
-      setResendStatus(
-        response.ok ? "Sent — check your inbox." : result.error || "Could not send it again."
-      );
-    } catch {
-      setResendStatus("Could not send it again.");
     }
   }
 
@@ -109,6 +61,9 @@ export default function MemberLogin({
               >
                 Continue with Google
               </a>
+              <p className="faint text-xs leading-relaxed mt-2 text-center">
+                Confirms your email automatically — no code needed.
+              </p>
               <div className="flex items-center gap-3 my-5" aria-hidden="true">
                 <span className="h-px flex-1" style={{ background: "var(--glass-edge)" }} />
                 <span className="faint text-xs uppercase tracking-widest">or</span>
@@ -159,60 +114,6 @@ export default function MemberLogin({
             <p className="badge badge-denied mt-4 w-full justify-center" role="alert">
               {error}
             </p>
-          )}
-
-          {code === "unverified" && (
-            <div className="mt-3">
-              {resendStatus ? (
-                <p className="badge badge-pending w-full justify-center" role="status">
-                  {resendStatus}
-                </p>
-              ) : (
-                <button
-                  type="button"
-                  className="btn btn-secondary btn-sm w-full"
-                  onClick={resend}
-                  disabled={!username}
-                >
-                  Send the confirmation link again
-                </button>
-              )}
-            </div>
-          )}
-
-          {code === "email_required" && (
-            <div className="mt-4 grid gap-3">
-              <label className="field">
-                <span className="field-label">Email address</span>
-                <input
-                  className="input"
-                  type="email"
-                  value={email}
-                  onChange={(event) => setEmail(event.target.value)}
-                  autoComplete="email"
-                  autoCapitalize="none"
-                  spellCheck={false}
-                  placeholder="you@example.com"
-                  required
-                />
-                <span className="faint text-xs mt-1">
-                  We send one link here, and the account works once you open it.
-                </span>
-              </label>
-              {emailStatus && (
-                <p className="badge badge-pending w-full justify-center" role="status">
-                  {emailStatus}
-                </p>
-              )}
-              <button
-                type="button"
-                className="btn btn-secondary btn-sm"
-                onClick={addEmail}
-                disabled={emailBusy || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())}
-              >
-                {emailBusy ? "Sending…" : "Send the confirmation link"}
-              </button>
-            </div>
           )}
 
           <button
