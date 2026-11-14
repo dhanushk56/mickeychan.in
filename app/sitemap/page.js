@@ -38,6 +38,7 @@ const SECTIONS = [
     description: "Locked to the accounts on the admin list.",
     links: [
       { href: "/admin", label: "Admin console", note: "Applications, accounts, content and activity" },
+      { href: "/audit", label: "Audit log", note: "Every sign-in and admin action, newest first" },
       { href: "/form-builder", label: "Form builder", note: "Build and publish application forms" },
     ],
   },
