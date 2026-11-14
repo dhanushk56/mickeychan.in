@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import GoogleMark from "@/components/GoogleMark";
 
 export default function MemberLogin({
   next = "/positions",
@@ -51,25 +52,6 @@ export default function MemberLogin({
             <p className="badge badge-pending mb-4 w-full justify-center" role="alert">
               No accounts exist yet — create one below.
             </p>
-          )}
-
-          {googleEnabled && (
-            <>
-              <a
-                href={`/api/auth/google?next=${encodeURIComponent(next)}`}
-                className="btn btn-secondary w-full"
-              >
-                Continue with Google
-              </a>
-              <p className="faint text-xs leading-relaxed mt-2 text-center">
-                Confirms your email automatically — no code needed.
-              </p>
-              <div className="flex items-center gap-3 my-5" aria-hidden="true">
-                <span className="h-px flex-1" style={{ background: "var(--glass-edge)" }} />
-                <span className="faint text-xs uppercase tracking-widest">or</span>
-                <span className="h-px flex-1" style={{ background: "var(--glass-edge)" }} />
-              </div>
-            </>
           )}
 
           <label className="field">
@@ -123,6 +105,23 @@ export default function MemberLogin({
           >
             {busy ? "Signing in…" : "Log in ↗"}
           </button>
+
+          {googleEnabled && (
+            <>
+              <div className="flex items-center gap-3 my-5" aria-hidden="true">
+                <span className="h-px flex-1" style={{ background: "var(--glass-edge)" }} />
+                <span className="faint text-xs uppercase tracking-widest">or</span>
+                <span className="h-px flex-1" style={{ background: "var(--glass-edge)" }} />
+              </div>
+              <a
+                href={`/api/auth/google?next=${encodeURIComponent(next)}`}
+                className="btn btn-secondary w-full gap-2"
+              >
+                <GoogleMark />
+                Continue with Google
+              </a>
+            </>
+          )}
 
           <div className="glass-soft p-4 mt-6" role="note">
             <p className="text-xs font-bold" style={{ color: "var(--warning)" }}>
