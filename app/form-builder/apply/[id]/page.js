@@ -77,6 +77,23 @@ export default async function ApplyPage({ params }) {
     );
   }
 
+  if (!member.emailVerified) {
+    return (
+      <Card kicker="Verify" title="Verify your email to apply">
+        <p className="muted text-sm leading-relaxed">
+          Applications need a confirmed email address, so every response comes from a real, reachable
+          person.
+        </p>
+        <Link
+          href={`/verify?next=${encodeURIComponent(applyHref)}`}
+          className="btn btn-primary mt-2 self-start"
+        >
+          Verify my email <span aria-hidden="true">↗</span>
+        </Link>
+      </Card>
+    );
+  }
+
   const submissions = await kvGet(submissionsKey(params.id), []);
   const gate = applicationGate(form, memberSubmission(submissions, member.username));
 

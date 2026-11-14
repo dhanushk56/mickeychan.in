@@ -8,6 +8,7 @@ import DiscordMark from "@/components/DiscordMark";
 export default function MemberRegister({ next = "/positions", googleEnabled = false, discordEnabled = false }) {
   const [name, setName] = useState("");
   const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [reveal, setReveal] = useState(false);
@@ -15,8 +16,13 @@ export default function MemberRegister({ next = "/positions", googleEnabled = fa
   const [error, setError] = useState("");
 
   const mismatch = confirmPassword.length > 0 && password !== confirmPassword;
+  const emailLooksValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
   const canSubmit =
-    username.trim().length >= 3 && password.length >= 8 && password === confirmPassword && !busy;
+    username.trim().length >= 3 &&
+    emailLooksValid &&
+    password.length >= 8 &&
+    password === confirmPassword &&
+    !busy;
 
   async function submit(event) {
     event.preventDefault();
@@ -26,7 +32,7 @@ export default function MemberRegister({ next = "/positions", googleEnabled = fa
       const response = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, username, password, confirmPassword }),
+        body: JSON.stringify({ name, username, email, password, confirmPassword }),
       });
       const result = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(result.error || "Could not create your account.");
@@ -74,6 +80,24 @@ export default function MemberRegister({ next = "/positions", googleEnabled = fa
               placeholder="3–24 letters, numbers, . _ -"
               required
             />
+          </label>
+
+          <label className="field mt-3">
+            <span className="field-label">Email</span>
+            <input
+              className="input"
+              type="email"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              autoComplete="email"
+              autoCapitalize="none"
+              spellCheck={false}
+              placeholder="you@example.com"
+              required
+            />
+            <span className="faint text-xs mt-1">
+              We send a 6-digit code here, and a confirmed address is needed to apply for roles.
+            </span>
           </label>
 
           <label className="field mt-3">

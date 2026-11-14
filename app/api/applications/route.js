@@ -24,6 +24,16 @@ export async function POST(request) {
     return NextResponse.json({ error: "Please log in to submit an application." }, { status: 401 });
   }
 
+  if (member.emailVerified !== true) {
+    return NextResponse.json(
+      {
+        error: "Confirm your email address before applying — open Verify your account from the menu.",
+        code: "email_unverified",
+      },
+      { status: 403 }
+    );
+  }
+
   const origin = request.headers.get("origin");
   if (origin) {
     let originHost;

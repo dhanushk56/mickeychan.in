@@ -30,6 +30,15 @@ function StatusBlock({ gate, member }) {
     );
   }
 
+  if (!member.emailVerified && gate.status === "none") {
+    return (
+      <p className="faint text-sm">
+        Verify your email address to apply — a confirmed address keeps one real person per
+        application.
+      </p>
+    );
+  }
+
   if (gate.status === "none") {
     return <p className="muted text-sm">You haven&apos;t applied to this role yet.</p>;
   }
@@ -127,10 +136,19 @@ export default async function PositionsPage() {
           <div className="grid gap-3 md:grid-cols-2">
             {roles.map(({ entry, form, gate }) => {
               const applyHref = `/form-builder/apply/${entry.id}`;
-              const href = member
-                ? applyHref
-                : `/login?next=${encodeURIComponent(applyHref)}`;
-              const label = !member ? "Log in to apply" : gate.canApply ? "Apply now" : "View status";
+              const verified = Boolean(member && member.emailVerified);
+              const href = !member
+                ? `/login?next=${encodeURIComponent(applyHref)}`
+                : !verified
+                  ? `/verify?next=${encodeURIComponent(applyHref)}`
+                  : applyHref;
+              const label = !member
+                ? "Log in to apply"
+                : !verified
+                  ? "Verify email to apply"
+                  : gate.canApply
+                    ? "Apply now"
+                    : "View status";
 
               return (
                 <article
