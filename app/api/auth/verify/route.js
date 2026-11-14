@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
 import { consumeEmailToken } from "@/lib/email-verification";
-import { createMemberToken, markEmailVerified, memberCookieHeader } from "@/lib/members";
+import {
+  clearEmailClaimCookieHeader,
+  createMemberToken,
+  markEmailVerified,
+  memberCookieHeader,
+} from "@/lib/members";
 import { logActivity } from "@/lib/activity-log";
 import { safeNextPath, siteOrigin } from "@/lib/site-url";
 
@@ -27,5 +32,6 @@ export async function GET(request) {
 
   const response = NextResponse.redirect(`${origin}${next}`);
   response.headers.append("Set-Cookie", memberCookieHeader(createMemberToken(member)));
+  response.headers.append("Set-Cookie", clearEmailClaimCookieHeader());
   return response;
 }

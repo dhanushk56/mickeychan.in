@@ -17,6 +17,9 @@ export default function MemberLogin({
   const [error, setError] = useState(initialError);
   const [code, setCode] = useState(initialCode);
   const [resendStatus, setResendStatus] = useState("");
+  const [email, setEmail] = useState("");
+  const [emailStatus, setEmailStatus] = useState("");
+  const [emailBusy, setEmailBusy] = useState(false);
 
   async function submit(event) {
     event.preventDefault();
@@ -39,6 +42,26 @@ export default function MemberLogin({
     } catch (err) {
       setError(err.message);
       setBusy(false);
+    }
+  }
+
+  async function addEmail(event) {
+    event.preventDefault();
+    setEmailBusy(true);
+    setEmailStatus("");
+    try {
+      const response = await fetch("/api/auth/member/email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, next }),
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(result.error || "Could not send the confirmation link.");
+      setEmailStatus(`Sent to ${result.email || email}. Open the link in that inbox to finish.`);
+    } catch (err) {
+      setEmailStatus(err.message);
+    } finally {
+      setEmailBusy(false);
     }
   }
 
@@ -154,6 +177,41 @@ export default function MemberLogin({
                   Send the confirmation link again
                 </button>
               )}
+            </div>
+          )}
+
+          {code === "email_required" && (
+            <div className="mt-4 grid gap-3">
+              <label className="field">
+                <span className="field-label">Email address</span>
+                <input
+                  className="input"
+                  type="email"
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                  autoComplete="email"
+                  autoCapitalize="none"
+                  spellCheck={false}
+                  placeholder="you@example.com"
+                  required
+                />
+                <span className="faint text-xs mt-1">
+                  We send one link here, and the account works once you open it.
+                </span>
+              </label>
+              {emailStatus && (
+                <p className="badge badge-pending w-full justify-center" role="status">
+                  {emailStatus}
+                </p>
+              )}
+              <button
+                type="button"
+                className="btn btn-secondary btn-sm"
+                onClick={addEmail}
+                disabled={emailBusy || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())}
+              >
+                {emailBusy ? "Sending…" : "Send the confirmation link"}
+              </button>
             </div>
           )}
 

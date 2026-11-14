@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import {
+  createEmailClaimToken,
   createMemberToken,
+  emailClaimCookieHeader,
   findMember,
   hasMembers,
   memberCookieHeader,
@@ -107,24 +109,6 @@ export async function POST(request) {
     );
   }
 
-  if (member && member.email && member.emailVerified !== true) {
-    await logActivity({
-      area: "website",
-      action: "login-blocked",
-      username: member.username,
-      detail: "Email address not confirmed yet",
-      ok: false,
-      request,
-    });
-    return NextResponse.json(
-      {
-        error: "Confirm your email address first — we sent you a link when you signed up.",
-        code: "unverified",
-      },
-      { status: 403 }
-    );
-  }
-
   if (!member || !verifyMemberPassword(member, password)) {
     recordFailure(key);
     await logActivity({
@@ -136,6 +120,32 @@ export async function POST(request) {
       request,
     });
     return NextResponse.json({ error: "That username and password don't match." }, { status: 401 });
+  }
+
+  if (member.emailVerified !== true) {
+    const needsEmail = !member.email;
+    await logActivity({
+      area: "website",
+      action: "login-blocked",
+      username: member.username,
+      detail: needsEmail ? "Has no email address on file" : "Email address not confirmed yet",
+      ok: false,
+      request,
+    });
+
+    const response = NextResponse.json(
+      {
+        error: needsEmail
+          ? "Add your email address to finish setting up your account."
+          : "Confirm your email address first — we sent you a link when you signed up.",
+        code: needsEmail ? "email_required" : "unverified",
+      },
+      { status: needsEmail ? 409 : 403 }
+    );
+    if (needsEmail) {
+      response.headers.append("Set-Cookie", emailClaimCookieHeader(createEmailClaimToken(member)));
+    }
+    return response;
   }
 
   attempts.delete(key);
