@@ -145,16 +145,6 @@ export default function MemberRegister({ next = "/positions", googleEnabled = fa
             </>
           )}
 
-          <div className="glass-soft p-4 mt-6" role="note">
-            <p className="text-xs font-bold" style={{ color: "var(--warning)" }}>
-              ⚠ Don&apos;t forget your password
-            </p>
-            <p className="faint text-xs mt-1 leading-relaxed">
-              There&apos;s no self-service reset. If you lose your password you will have to contact an
-              admin to get it reset — write it down somewhere safe.
-            </p>
-          </div>
-
           <p className="faint text-xs mt-5 text-center">
             Already have an account?{" "}
             <Link
