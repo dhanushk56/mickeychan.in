@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { kvGet, kvSet } from "@/lib/kv";
 import { memberFromCookieStore } from "@/lib/members";
 import { logActivity } from "@/lib/activity-log";
+import { EMAIL_VERIFICATION_REQUIRED } from "@/lib/features";
 
 const SUBMISSIONS_KEY = "submissions:join";
 
@@ -29,6 +30,16 @@ export async function POST(request) {
   const member = await memberFromCookieStore(cookies());
   if (!member) {
     return NextResponse.json({ error: "Please log in to send a message." }, { status: 401 });
+  }
+
+  if (EMAIL_VERIFICATION_REQUIRED && member.emailVerified !== true) {
+    return NextResponse.json(
+      {
+        error: "Confirm your email address before sending a message — open Verify your account from the menu.",
+        code: "email_unverified",
+      },
+      { status: 403 }
+    );
   }
 
   if (!sameOrigin(request)) {
