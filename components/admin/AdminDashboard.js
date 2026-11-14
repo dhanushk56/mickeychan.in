@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import AnnouncementsPanel from "@/components/admin/AnnouncementsPanel";
+import { useConfirm } from "@/components/ConfirmDialog";
 
 const POLL_MS = 5000;
 
@@ -234,6 +235,7 @@ export default function AdminDashboard({ currentUser }) {
   const [newAccount, setNewAccount] = useState({ username: "", name: "", password: "" });
   const [creatingAccount, setCreatingAccount] = useState(false);
   const mounted = useRef(true);
+  const [dialog, askConfirm] = useConfirm();
 
   const load = useCallback(async () => {
     try {
@@ -355,7 +357,12 @@ export default function AdminDashboard({ currentUser }) {
 
   async function deleteApplication(entry) {
     const who = entry.memberUsername ? `@${entry.memberUsername}` : "this applicant";
-    if (!confirm(`Delete the application from ${who}? They will be able to apply again.`)) return;
+    const ok = await askConfirm({
+      title: "Delete this application?",
+      description: `The application from ${who} will be removed, and they can apply again.`,
+      confirmLabel: "Delete application",
+    });
+    if (!ok) return;
     setBusyId(entry.id);
     try {
       const response = await fetch(`/api/admin/applications/${entry.formId}/${entry.id}`, {
@@ -376,8 +383,12 @@ export default function AdminDashboard({ currentUser }) {
   }
 
   async function deleteAllApplications() {
-    const question = `Delete all ${counts.total} applications? Every form is cleared and everyone can apply again. Contact messages are kept.`;
-    if (!confirm(question)) return;
+    const ok = await askConfirm({
+      title: "Delete every application?",
+      description: `All ${counts.total} applications will be removed. Every form is cleared, everyone can apply again, and contact messages are kept.`,
+      confirmLabel: "Delete all",
+    });
+    if (!ok) return;
     setClearing(true);
     try {
       const response = await fetch("/api/admin/submissions", { method: "DELETE" });
@@ -394,7 +405,12 @@ export default function AdminDashboard({ currentUser }) {
 
   async function deleteMessage(entry) {
     const who = entry.memberUsername ? `@${entry.memberUsername}` : entry.name || "this sender";
-    if (!confirm(`Delete the message from ${who}? This can't be undone.`)) return;
+    const ok = await askConfirm({
+      title: "Delete this message?",
+      description: `The message from ${who} will be permanently removed.`,
+      confirmLabel: "Delete message",
+    });
+    if (!ok) return;
     setBusyId(entry.id);
     try {
       const response = await fetch(`/api/admin/messages/${entry.id}`, { method: "DELETE" });
@@ -432,8 +448,12 @@ export default function AdminDashboard({ currentUser }) {
   }
 
   async function deleteAccount(account) {
-    const question = `Delete the account @${account.username}? They lose access immediately. Their applications and messages stay on file.`;
-    if (!confirm(question)) return;
+    const ok = await askConfirm({
+      title: "Delete this account?",
+      description: `@${account.username} loses access immediately. Their applications and messages stay on file.`,
+      confirmLabel: "Delete account",
+    });
+    if (!ok) return;
     try {
       const response = await fetch(`/api/admin/accounts/${encodeURIComponent(account.username)}`, {
         method: "DELETE",
@@ -495,7 +515,12 @@ export default function AdminDashboard({ currentUser }) {
   }
 
   async function deleteForm(id) {
-    if (!confirm("Delete this form? Past submissions are kept, but the form itself can't be recovered.")) return;
+    const ok = await askConfirm({
+      title: "Delete this form?",
+      description: "Past submissions are kept, but the form itself can't be recovered.",
+      confirmLabel: "Delete form",
+    });
+    if (!ok) return;
     const response = await fetch(`/api/form-builder/forms/${id}`, { method: "DELETE" });
     if (response.ok) {
       setNotice("Form deleted.");
@@ -856,7 +881,8 @@ export default function AdminDashboard({ currentUser }) {
             )}
           </div>
         )}
-      </div>
+            </div>
+      {dialog}
     </div>
   );
 }

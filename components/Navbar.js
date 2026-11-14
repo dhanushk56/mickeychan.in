@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import ThemeToggle from "@/components/ThemeToggle";
+import { EMAIL_VERIFICATION_REQUIRED } from "@/lib/features";
 
 const LINKS = [
   { href: "/videos", label: "Videos" },
@@ -70,7 +71,7 @@ export default function Navbar() {
           <ThemeToggle />
           {member ? (
             <>
-              {!member.emailVerified && (
+              {EMAIL_VERIFICATION_REQUIRED && !member.emailVerified && (
                 <Link
                   href={`/verify?next=${encodeURIComponent(pathname || "/")}`}
                   className="btn btn-primary btn-sm hidden sm:inline-flex"
@@ -117,7 +118,7 @@ export default function Navbar() {
               {link.label}
             </Link>
           ))}
-          {member && !member.emailVerified && (
+          {EMAIL_VERIFICATION_REQUIRED && member && !member.emailVerified && (
             <Link
               href={`/verify?next=${encodeURIComponent(pathname || "/")}`}
               className="btn btn-primary"
@@ -130,7 +131,7 @@ export default function Navbar() {
           <a
             href={accountHref}
             className="btn btn-secondary"
-            style={{ "--i": String(LINKS.length + (member && !member.emailVerified ? 1 : 0)) }}
+            style={{ "--i": String(LINKS.length + (EMAIL_VERIFICATION_REQUIRED && member && !member.emailVerified ? 1 : 0)) }}
             onClick={() => setOpen(false)}
           >
             {member ? `Log out (${member.username})` : "Log in"}
@@ -138,7 +139,7 @@ export default function Navbar() {
           <Link
             href="/join"
             className="btn btn-primary mt-1"
-            style={{ "--i": String(LINKS.length + (member && !member.emailVerified ? 2 : 1)) }}
+            style={{ "--i": String(LINKS.length + (EMAIL_VERIFICATION_REQUIRED && member && !member.emailVerified ? 2 : 1)) }}
             onClick={() => setOpen(false)}
           >
             Join us

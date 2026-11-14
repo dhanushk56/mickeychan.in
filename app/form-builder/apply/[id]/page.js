@@ -8,6 +8,7 @@ import { isReadyForm } from "@/lib/form-builder/schema";
 import { unstable_noStore as noStore } from "next/cache";
 import Countdown from "@/components/Countdown";
 import LocalTime from "@/components/LocalTime";
+import { EMAIL_VERIFICATION_REQUIRED } from "@/lib/features";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -77,7 +78,7 @@ export default async function ApplyPage({ params }) {
     );
   }
 
-  if (!member.emailVerified) {
+  if (EMAIL_VERIFICATION_REQUIRED && !member.emailVerified) {
     return (
       <Card kicker="Verify" title="Verify your email to apply">
         <p className="muted text-sm leading-relaxed">

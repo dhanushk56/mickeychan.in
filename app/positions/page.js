@@ -11,6 +11,7 @@ import {
 import Countdown from "@/components/Countdown";
 import LocalTime from "@/components/LocalTime";
 import { isReadyForm } from "@/lib/form-builder/schema";
+import { EMAIL_VERIFICATION_REQUIRED } from "@/lib/features";
 
 export const metadata = {
   title: "Open Positions",
@@ -30,7 +31,7 @@ function StatusBlock({ gate, member }) {
     );
   }
 
-  if (!member.emailVerified && gate.status === "none") {
+  if (EMAIL_VERIFICATION_REQUIRED && !member.emailVerified && gate.status === "none") {
     return (
       <p className="faint text-sm">
         Verify your email address to apply — a confirmed address keeps one real person per
@@ -136,7 +137,7 @@ export default async function PositionsPage() {
           <div className="grid gap-3 md:grid-cols-2">
             {roles.map(({ entry, form, gate }) => {
               const applyHref = `/form-builder/apply/${entry.id}`;
-              const verified = Boolean(member && member.emailVerified);
+              const verified = !EMAIL_VERIFICATION_REQUIRED || Boolean(member && member.emailVerified);
               const href = !member
                 ? `/login?next=${encodeURIComponent(applyHref)}`
                 : !verified

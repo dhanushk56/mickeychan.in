@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useConfirm } from "@/components/ConfirmDialog";
 
 export default function FormsList({ initialForms, currentUser }) {
   const router = useRouter();
@@ -10,6 +11,7 @@ export default function FormsList({ initialForms, currentUser }) {
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState("");
   const [copiedId, setCopiedId] = useState("");
+  const [dialog, askConfirm] = useConfirm();
 
   async function createForm() {
     setCreating(true);
@@ -26,7 +28,12 @@ export default function FormsList({ initialForms, currentUser }) {
   }
 
   async function deleteForm(id) {
-    if (!confirm("Delete this form? Past submissions are kept, but the form itself can't be recovered.")) return;
+    const ok = await askConfirm({
+      title: "Delete this form?",
+      description: "Past submissions are kept, but the form itself can't be recovered.",
+      confirmLabel: "Delete form",
+    });
+    if (!ok) return;
     const previous = forms;
     setForms((current) => current.filter((form) => form.id !== id));
     try {
@@ -124,7 +131,8 @@ export default function FormsList({ initialForms, currentUser }) {
             ))}
           </div>
         )}
-      </div>
+            </div>
+      {dialog}
     </div>
   );
 }

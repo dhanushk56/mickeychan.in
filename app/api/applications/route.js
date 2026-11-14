@@ -5,6 +5,7 @@ import { validateResponses } from "@/lib/form-builder/schema";
 import { memberFromCookieStore } from "@/lib/members";
 import { STATUS_TEXT, applicationGate, memberSubmission, submissionsKey } from "@/lib/applications";
 import { logActivity } from "@/lib/activity-log";
+import { EMAIL_VERIFICATION_REQUIRED } from "@/lib/features";
 
 export const dynamic = "force-dynamic";
 
@@ -24,7 +25,7 @@ export async function POST(request) {
     return NextResponse.json({ error: "Please log in to submit an application." }, { status: 401 });
   }
 
-  if (member.emailVerified !== true) {
+  if (EMAIL_VERIFICATION_REQUIRED && member.emailVerified !== true) {
     return NextResponse.json(
       {
         error: "Confirm your email address before applying — open Verify your account from the menu.",

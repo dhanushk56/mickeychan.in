@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import RichTextEditor from "@/components/RichTextEditor";
+import { useConfirm } from "@/components/ConfirmDialog";
 import { LEVELS, isCurrent, isValidWindowHours, levelMeta } from "@/lib/announcements";
 import { richTextIsEmpty, richTextToPlain } from "@/lib/rich-text";
 
@@ -40,6 +41,7 @@ export default function AnnouncementsPanel() {
   const [posting, setPosting] = useState(false);
   const [busyId, setBusyId] = useState("");
   const [now, setNow] = useState(() => Date.now());
+  const [dialog, askConfirm] = useConfirm();
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -96,7 +98,12 @@ export default function AnnouncementsPanel() {
   }
 
   async function remove(announcement) {
-    if (!confirm(`Delete “${announcement.title}”? It disappears from the site immediately.`)) return;
+    const ok = await askConfirm({
+      title: "Delete this announcement?",
+      description: `“${announcement.title}” disappears from the site immediately.`,
+      confirmLabel: "Delete announcement",
+    });
+    if (!ok) return;
     setBusyId(announcement.id);
     try {
       const response = await fetch(
@@ -273,6 +280,7 @@ export default function AnnouncementsPanel() {
           );
         })
       )}
+          {dialog}
     </div>
   );
 }
