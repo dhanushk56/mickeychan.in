@@ -31,6 +31,7 @@ const SECTIONS = [
       { href: "/login", label: "Log in", note: "Username or email, plus password" },
       { href: "/register", label: "Register", note: "Create an account, or continue with Google" },
       { href: "/verify", label: "Verify your account", note: "Confirm your email address with a 6-digit code" },
+      { href: "/forgot-password", label: "Forgot password", note: "Reset your password with a code sent by email" },
     ],
   },
   {

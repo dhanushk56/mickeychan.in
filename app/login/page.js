@@ -37,6 +37,8 @@ export default async function LoginPage({ searchParams }) {
   if (member) redirect(next);
 
   const errorCode = typeof searchParams?.error === "string" ? searchParams.error : "";
+  const notice =
+    searchParams?.reset === "1" ? "Password updated — log in with your new password." : "";
 
   return (
     <MemberLogin
@@ -45,6 +47,7 @@ export default async function LoginPage({ searchParams }) {
       googleEnabled={isGoogleConfigured()}
       discordEnabled={isDiscordConfigured()}
       initialError={ERRORS[errorCode] || ""}
+      initialNotice={notice}
     />
   );
 }

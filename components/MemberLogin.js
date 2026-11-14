@@ -11,6 +11,7 @@ export default function MemberLogin({
   googleEnabled = false,
   discordEnabled = false,
   initialError = "",
+  initialNotice = "",
 }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -71,7 +72,16 @@ export default function MemberLogin({
           </label>
 
           <label className="field mt-3">
-            <span className="field-label">Password</span>
+            <span className="field-label flex items-center justify-between">
+              Password
+              <Link
+                href="/forgot-password"
+                className="hover:underline normal-case tracking-normal"
+                style={{ color: "var(--primary)", fontWeight: 600 }}
+              >
+                Forgot password?
+              </Link>
+            </span>
             <div className="relative flex items-center">
               <input
                 className="input"
@@ -94,6 +104,12 @@ export default function MemberLogin({
               </button>
             </div>
           </label>
+
+          {initialNotice && !error && (
+            <p className="badge badge-accepted mt-4 w-full justify-center" role="status">
+              {initialNotice}
+            </p>
+          )}
 
           {error && (
             <p className="badge badge-denied mt-4 w-full justify-center" role="alert">
