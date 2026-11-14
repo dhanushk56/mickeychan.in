@@ -158,6 +158,12 @@ function ApplicationCard({ entry, busy, onStatus, onDelete }) {
 function AccountRow({ account, onDelete, onPassword }) {
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
+  const verified = account.emailVerified === true;
+  const emailBadge = !account.email
+    ? { label: "No email", className: "badge-neutral" }
+    : verified
+      ? { label: "Email verified", className: "badge-accepted" }
+      : { label: "Email unverified", className: "badge-pending" };
 
   async function submit(event) {
     event.preventDefault();
@@ -180,7 +186,11 @@ function AccountRow({ account, onDelete, onPassword }) {
             >
               {account.source === "registered" ? "Registered" : "From file"}
             </span>
+            <span className={`badge ${emailBadge.className}`}>{emailBadge.label}</span>
           </div>
+          <p className="faint text-xs mt-1 break-words">
+            {account.email || "No email address on file"}
+          </p>
           <p className="faint text-xs mt-1">
             {account.createdAt ? `Joined ${formatDateTime(account.createdAt)}` : "Listed in data/users.json"}
             {account.updatedAt ? ` · password set ${formatDateTime(account.updatedAt)}` : ""}
