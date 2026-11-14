@@ -13,7 +13,7 @@ import {
   memberCookieHeader,
   registerMember,
 } from "@/lib/members";
-import { availableUsername } from "@/lib/member-handles";
+import { availableUsernameFrom } from "@/lib/member-handles";
 import { requestIps, requestLocation } from "@/lib/request-ips";
 import { logActivity } from "@/lib/activity-log";
 import { safeNextPath, siteOrigin } from "@/lib/site-url";
@@ -70,8 +70,7 @@ export async function GET(request) {
   }
 
   if (!member) {
-    const preferred = /^[a-z0-9][a-z0-9._-]{2,23}$/i.test(profile.username) ? profile.username : "";
-    const username = await availableUsername(profile.email, preferred || profile.name);
+    const username = await availableUsernameFrom(profile.username, profile.email, profile.name);
     if (!(await isUsernameTaken(username))) {
       const result = await registerMember({
         username,
