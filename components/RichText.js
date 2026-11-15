@@ -1,5 +1,19 @@
 import { normalizeRichText, richTextRunClasses } from "@/lib/rich-text";
 
+function Run({ run }) {
+  const className = richTextRunClasses(run) || undefined;
+
+  if (run.link) {
+    return (
+      <a className={className} href={run.link} target="_blank" rel="noopener noreferrer">
+        {run.text}
+      </a>
+    );
+  }
+
+  return <span className={className}>{run.text}</span>;
+}
+
 export default function RichText({ value, className = "", blockClassName = "" }) {
   const blocks = normalizeRichText(value);
   if (!blocks.length) return null;
@@ -10,11 +24,7 @@ export default function RichText({ value, className = "", blockClassName = "" })
         <p key={index} className={`rt-block ${blockClassName}`.trim()}>
           {block.runs.length === 0
             ? "\u00a0"
-            : block.runs.map((run, runIndex) => (
-                <span key={runIndex} className={richTextRunClasses(run)}>
-                  {run.text}
-                </span>
-              ))}
+            : block.runs.map((run, runIndex) => <Run key={runIndex} run={run} />)}
         </p>
       ))}
     </div>

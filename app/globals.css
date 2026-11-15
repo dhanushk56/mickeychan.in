@@ -1257,6 +1257,15 @@
 .rt-font-serif { font-family: 'Iowan Old Style', 'Palatino Linotype', Georgia, serif; }
 .rt-font-mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
 
+.rich-text a, .rte-area a {
+  color: var(--primary);
+  text-decoration-line: underline;
+  text-underline-offset: 2px;
+  word-break: break-word;
+}
+
+.rich-text a:hover, .rte-area a:hover { color: var(--primary-strong); }
+
 .rte {
   border: 1px solid var(--glass-edge);
   border-radius: .9rem;
