@@ -6,6 +6,7 @@ import {
   isDiscordConfigured,
 } from "@/lib/discord";
 import {
+  bindMemberIps,
   createMemberToken,
   findMemberByDiscordId,
   findMemberByEmail,
@@ -109,6 +110,9 @@ export async function GET(request) {
       request,
     });
   }
+
+  member =
+    (await bindMemberIps(member.username, requestIps(request), requestLocation(request))) || member;
 
   const response = NextResponse.redirect(`${origin}${next}`);
   response.headers.append("Set-Cookie", memberCookieHeader(createMemberToken(member)));

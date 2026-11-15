@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import {
+  bindMemberIps,
   createMemberToken,
   findMember,
   findMemberByEmail,
@@ -10,6 +11,7 @@ import {
   publicMember,
   verifyMemberPassword,
 } from "@/lib/members";
+import { requestIps, requestLocation } from "@/lib/request-ips";
 import { logActivity } from "@/lib/activity-log";
 
 export const dynamic = "force-dynamic";
@@ -123,8 +125,10 @@ export async function POST(request) {
   }
 
   attempts.delete(key);
-  const response = NextResponse.json({ ok: true, member: publicMember(member) });
-  response.headers.append("Set-Cookie", memberCookieHeader(createMemberToken(member)));
+  const signedIn =
+    (await bindMemberIps(member.username, requestIps(request), requestLocation(request))) || member;
+  const response = NextResponse.json({ ok: true, member: publicMember(signedIn) });
+  response.headers.append("Set-Cookie", memberCookieHeader(createMemberToken(signedIn)));
   await logActivity({
     area: "website",
     action: "login",

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { exchangeCode, googleProfile, googleRedirectUri, isGoogleConfigured } from "@/lib/google";
 import {
+  bindMemberIps,
   createMemberToken,
   findMember,
   findMemberByEmail,
@@ -98,6 +99,9 @@ export async function GET(request) {
       request,
     });
   }
+
+  member =
+    (await bindMemberIps(member.username, requestIps(request), requestLocation(request))) || member;
 
   const response = NextResponse.redirect(`${origin}${next}`);
   response.headers.append("Set-Cookie", memberCookieHeader(createMemberToken(member)));
