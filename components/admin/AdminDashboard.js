@@ -159,6 +159,13 @@ function AccountRow({ account, onDelete, onPassword }) {
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const verified = account.emailVerified === true;
+  const methodLabel =
+    account.provider === "google"
+      ? "Google"
+      : account.provider === "discord"
+        ? "Discord"
+        : "Password";
+  const connections = Array.isArray(account.ips) ? account.ips : [];
   const emailBadge = !account.email
     ? { label: "No email", className: "badge-neutral" }
     : verified
@@ -187,9 +194,17 @@ function AccountRow({ account, onDelete, onPassword }) {
               {account.source === "registered" ? "Registered" : "From file"}
             </span>
             <span className={`badge ${emailBadge.className}`}>{emailBadge.label}</span>
+            <span className="badge badge-neutral">
+              {account.createdBy === "admin" ? `${methodLabel} · added by admin` : methodLabel}
+            </span>
           </div>
           <p className="faint text-xs mt-1 break-words">
             {account.email || "No email address on file"}
+          </p>
+          <p className="faint text-xs mt-1 break-words">
+            {connections.length > 0
+              ? `Connection ${connections[0]}${connections.length > 1 ? ` +${connections.length - 1} more` : ""}${account.location?.city ? ` · ${account.location.city}` : ""}${account.location?.country ? `, ${account.location.country}` : ""}`
+              : "No connection recorded"}
           </p>
           <p className="faint text-xs mt-1">
             {account.createdAt ? `Joined ${formatDateTime(account.createdAt)}` : "Listed in data/users.json"}

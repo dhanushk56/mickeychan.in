@@ -253,8 +253,10 @@ export default function RichTextEditor({
         if (piece.href) {
           const anchor = document.createElement("a");
           anchor.setAttribute("href", piece.href);
-          anchor.setAttribute("target", "_blank");
-          anchor.setAttribute("rel", "noopener noreferrer");
+          if (/^https?:/i.test(piece.href)) {
+            anchor.setAttribute("target", "_blank");
+            anchor.setAttribute("rel", "noopener noreferrer");
+          }
           anchor.textContent = piece.text;
           fragment.appendChild(anchor);
         } else {
@@ -277,7 +279,7 @@ export default function RichTextEditor({
     const selectedText = inside && !range.collapsed ? range.toString().trim() : "";
     savedRange.current = inside ? range : null;
     setLinkSelection(selectedText);
-    setLinkValue(/^(https?:\/\/|www\.)/i.test(selectedText) ? selectedText : "");
+    setLinkValue(/^(https?:\/\/|www\.|mailto:)/i.test(selectedText) ? selectedText : "");
     setLinkOpen(true);
   }
 
@@ -301,8 +303,10 @@ export default function RichTextEditor({
 
     const anchor = document.createElement("a");
     anchor.setAttribute("href", href);
-    anchor.setAttribute("target", "_blank");
-    anchor.setAttribute("rel", "noopener noreferrer");
+    if (/^https?:/i.test(href)) {
+      anchor.setAttribute("target", "_blank");
+      anchor.setAttribute("rel", "noopener noreferrer");
+    }
     if (range && !range.collapsed) {
       anchor.appendChild(range.extractContents());
       range.insertNode(anchor);
@@ -500,7 +504,7 @@ export default function RichTextEditor({
                 className="input"
                 value={linkValue}
                 onChange={(event) => setLinkValue(event.target.value)}
-                placeholder="https://mickeychan.in"
+                placeholder="https://mickeychan.in or mailto:hello@mickeychan.in"
                 spellCheck={false}
                 autoComplete="off"
               />

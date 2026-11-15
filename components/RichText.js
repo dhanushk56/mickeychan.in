@@ -4,8 +4,13 @@ function Run({ run }) {
   const className = richTextRunClasses(run) || undefined;
 
   if (run.link) {
+    const external = /^https?:/i.test(run.link);
     return (
-      <a className={className} href={run.link} target="_blank" rel="noopener noreferrer">
+      <a
+        className={className}
+        href={run.link}
+        {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+      >
         {run.text}
       </a>
     );
