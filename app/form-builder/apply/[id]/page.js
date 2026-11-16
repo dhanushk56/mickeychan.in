@@ -126,12 +126,9 @@ export default async function ApplyPage({ params }) {
     return (
       <Card kicker={form.title} title="You've been accepted">
         <span className="badge badge-accepted self-start">Accepted</span>
-        <p className="muted text-sm leading-relaxed">{STATUS_TEXT.accepted}</p>
-        {gate.submission.reviewNote && (
-          <p className="muted text-sm leading-relaxed whitespace-pre-wrap">
-            “{gate.submission.reviewNote}”
-          </p>
-        )}
+        <p className="muted text-sm leading-relaxed whitespace-pre-wrap">
+          {gate.submission.reviewNote || STATUS_TEXT.accepted}
+        </p>
         <p className="faint text-xs">
           Submitted <LocalTime iso={gate.submission.createdAt} />
           {gate.submission.reviewedBy ? ` · reviewed by @${gate.submission.reviewedBy}` : ""}
@@ -144,11 +141,9 @@ export default async function ApplyPage({ params }) {
     return (
       <Card kicker={form.title} title="Your application was rejected">
         <span className="badge badge-denied self-start">Rejected</span>
-        {gate.submission.reviewNote && (
-          <p className="muted text-sm leading-relaxed whitespace-pre-wrap">
-            “{gate.submission.reviewNote}”
-          </p>
-        )}
+        <p className="muted text-sm leading-relaxed whitespace-pre-wrap">
+          {gate.submission.reviewNote || STATUS_TEXT.denied}
+        </p>
         <p className="muted text-sm leading-relaxed">
           You can apply again in{" "}
           {gate.availableAt ? <Countdown to={gate.availableAt} className="font-semibold" /> : "a moment"}
@@ -176,9 +171,9 @@ export default async function ApplyPage({ params }) {
             <p className="badge badge-neutral self-start">
               Your last application was rejected — you&apos;re free to apply again.
             </p>
-            {gate.submission.reviewNote && (
-              <p className="muted text-sm whitespace-pre-wrap">“{gate.submission.reviewNote}”</p>
-            )}
+            <p className="muted text-sm whitespace-pre-wrap">
+              {gate.submission.reviewNote || STATUS_TEXT.denied}
+            </p>
             {gate.submission.reviewedBy && (
               <p className="faint text-xs">{`Reviewed by @${gate.submission.reviewedBy}`}</p>
             )}

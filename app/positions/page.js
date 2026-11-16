@@ -64,10 +64,9 @@ function StatusBlock({ gate, member }) {
     return (
       <>
         <span className="badge badge-accepted">Accepted</span>
-        <p className="muted text-sm">{STATUS_TEXT.accepted}</p>
-        {gate.submission.reviewNote && (
-          <p className="muted text-sm whitespace-pre-wrap">“{gate.submission.reviewNote}”</p>
-        )}
+        <p className="muted text-sm whitespace-pre-wrap">
+          {gate.submission.reviewNote || STATUS_TEXT.accepted}
+        </p>
         {submitted}
         {gate.submission.reviewedBy && (
           <p className="faint text-xs">{`Reviewed by @${gate.submission.reviewedBy}`}</p>
@@ -79,9 +78,9 @@ function StatusBlock({ gate, member }) {
   return (
     <>
       <span className="badge badge-denied">Rejected</span>
-      {gate.submission.reviewNote && (
-        <p className="muted text-sm whitespace-pre-wrap">“{gate.submission.reviewNote}”</p>
-      )}
+      <p className="muted text-sm whitespace-pre-wrap">
+        {gate.submission.reviewNote || STATUS_TEXT.denied}
+      </p>
       {gate.canApply ? (
         <p className="muted text-sm">Your cooldown is over — you can apply again now.</p>
       ) : (
