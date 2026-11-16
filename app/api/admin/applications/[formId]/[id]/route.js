@@ -22,6 +22,8 @@ export async function PATCH(request, { params }) {
     return NextResponse.json({ error: "Invalid status." }, { status: 400 });
   }
 
+  const note = typeof body.note === "string" ? body.note.trim().slice(0, 500) : "";
+
   const key = submissionsKey(params.formId);
   const submissions = await kvGet(key, []);
   const index = submissions.findIndex((entry) => entry.id === params.id);
@@ -32,6 +34,7 @@ export async function PATCH(request, { params }) {
   submissions[index] = {
     ...submissions[index],
     status,
+    reviewNote: status === "pending" ? "" : note,
     reviewedAt: status === "pending" ? null : new Date().toISOString(),
     reviewedBy: status === "pending" ? null : session.user.username,
   };

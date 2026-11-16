@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import AnnouncementsPanel from "@/components/admin/AnnouncementsPanel";
-import { useConfirm } from "@/components/ConfirmDialog";
+import { useConfirm, usePrompt } from "@/components/ConfirmDialog";
 
 const POLL_MS = 5000;
 
@@ -146,6 +146,10 @@ function ApplicationCard({ entry, busy, onStatus, onDelete }) {
         </button>
       )}
 
+      {entry.reviewNote && (
+        <p className="muted text-sm mt-2 whitespace-pre-wrap">“{entry.reviewNote}”</p>
+      )}
+
       {entry.reviewedAt && (
         <p className="faint text-xs mt-2">
           Reviewed by {entry.reviewedBy || "an admin"} · {timeAgo(entry.reviewedAt)}
@@ -279,6 +283,7 @@ export default function AdminDashboard({ currentUser }) {
   const [creatingAccount, setCreatingAccount] = useState(false);
   const mounted = useRef(true);
   const [dialog, askConfirm] = useConfirm();
+  const [promptDialog, askPrompt] = usePrompt();
 
   const load = useCallback(async () => {
     try {
@@ -373,6 +378,23 @@ export default function AdminDashboard({ currentUser }) {
   }, [data.join, search]);
 
   async function updateStatus(entry, status) {
+    let note = "";
+    if (status !== "pending") {
+      const answer = await askPrompt({
+        title: status === "accepted" ? "Accept this application?" : "Reject this application?",
+        description: `The reason is optional and is shown to @${entry.memberUsername || "the applicant"} on their application status.`,
+        label: "Reason (optional)",
+        placeholder:
+          status === "accepted" ? "e.g. loved the portfolio" : "e.g. not enough work samples",
+        confirmLabel: status === "accepted" ? "Accept" : "Reject",
+        tone: status === "denied" ? "danger" : "default",
+        maxLength: 500,
+        multiline: true,
+      });
+      if (answer === null) return;
+      note = answer;
+    }
+
     setBusyId(entry.id);
     const previous = data.applications;
     setData((current) => ({
@@ -385,7 +407,7 @@ export default function AdminDashboard({ currentUser }) {
       const response = await fetch(`/api/admin/applications/${entry.formId}/${entry.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status }),
+        body: JSON.stringify({ status, note }),
       });
       if (!response.ok) throw new Error("Could not update that application.");
       setNotice(status === "pending" ? "Reset to pending." : `Application ${status}.`);
@@ -517,15 +539,28 @@ export default function AdminDashboard({ currentUser }) {
 
   async function toggleBlacklist(account) {
     const blocked = account.formBlocked === true;
-    const ok = await askConfirm({
-      title: blocked ? "Let this account submit forms again?" : "Block this account from forms?",
-      description: blocked
-        ? `@${account.username} will be able to apply to open positions and send join us messages again.`
-        : `@${account.username} won't be able to submit anything — every form, new or existing, and the join us message — until you unblock them.`,
-      confirmLabel: blocked ? "Allow forms" : "Block forms",
-      tone: blocked ? "default" : "danger",
-    });
-    if (!ok) return;
+    let reason = "";
+
+    if (blocked) {
+      const ok = await askConfirm({
+        title: "Let this account submit forms again?",
+        description: `@${account.username} will be able to apply to open positions and send join us messages again.`,
+        confirmLabel: "Allow forms",
+      });
+      if (!ok) return;
+    } else {
+      const answer = await askPrompt({
+        title: "Block this account from forms?",
+        description: `@${account.username} won't be able to submit anything — every form, new or existing, and the join us message — until you unblock them.`,
+        label: "Reason (optional)",
+        placeholder: "e.g. spamming applications",
+        confirmLabel: "Block forms",
+        tone: "danger",
+        maxLength: 300,
+      });
+      if (answer === null) return;
+      reason = answer;
+    }
     try {
       const response = blocked
         ? await fetch(`/api/admin/blacklist?username=${encodeURIComponent(account.username)}`, {
@@ -534,7 +569,7 @@ export default function AdminDashboard({ currentUser }) {
         : await fetch("/api/admin/blacklist", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ username: account.username }),
+            body: JSON.stringify({ username: account.username, reason }),
           });
       const result = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(result.error || "Could not update that account.");
@@ -962,6 +997,7 @@ export default function AdminDashboard({ currentUser }) {
         )}
             </div>
       {dialog}
+      {promptDialog}
     </div>
   );
 }

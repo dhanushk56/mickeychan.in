@@ -127,8 +127,14 @@ export default async function ApplyPage({ params }) {
       <Card kicker={form.title} title="You've been accepted">
         <span className="badge badge-accepted self-start">Accepted</span>
         <p className="muted text-sm leading-relaxed">{STATUS_TEXT.accepted}</p>
+        {gate.submission.reviewNote && (
+          <p className="muted text-sm leading-relaxed whitespace-pre-wrap">
+            “{gate.submission.reviewNote}”
+          </p>
+        )}
         <p className="faint text-xs">
           Submitted <LocalTime iso={gate.submission.createdAt} />
+          {gate.submission.reviewedBy ? ` · reviewed by @${gate.submission.reviewedBy}` : ""}
         </p>
       </Card>
     );
@@ -138,6 +144,11 @@ export default async function ApplyPage({ params }) {
     return (
       <Card kicker={form.title} title="Your application was rejected">
         <span className="badge badge-denied self-start">Rejected</span>
+        {gate.submission.reviewNote && (
+          <p className="muted text-sm leading-relaxed whitespace-pre-wrap">
+            “{gate.submission.reviewNote}”
+          </p>
+        )}
         <p className="muted text-sm leading-relaxed">
           You can apply again in{" "}
           {gate.availableAt ? <Countdown to={gate.availableAt} className="font-semibold" /> : "a moment"}
@@ -146,6 +157,7 @@ export default async function ApplyPage({ params }) {
         <p className="faint text-xs">
           Submitted <LocalTime iso={gate.submission.createdAt} />
           {gate.submission.reviewedAt ? <> · reviewed <LocalTime iso={gate.submission.reviewedAt} /></> : null}
+          {gate.submission.reviewedBy ? ` · by @${gate.submission.reviewedBy}` : ""}
         </p>
       </Card>
     );
@@ -160,9 +172,17 @@ export default async function ApplyPage({ params }) {
           </Link>
         </div>
         {gate.status === "denied" && gate.canApply && (
-          <p className="badge badge-neutral mb-4">
-            Your last application was rejected — you&apos;re free to apply again.
-          </p>
+          <div className="grid gap-2 mb-4">
+            <p className="badge badge-neutral self-start">
+              Your last application was rejected — you&apos;re free to apply again.
+            </p>
+            {gate.submission.reviewNote && (
+              <p className="muted text-sm whitespace-pre-wrap">“{gate.submission.reviewNote}”</p>
+            )}
+            {gate.submission.reviewedBy && (
+              <p className="faint text-xs">{`Reviewed by @${gate.submission.reviewedBy}`}</p>
+            )}
+          </div>
         )}
         <ApplyForm form={form} formId={params.id} />
       </div>
