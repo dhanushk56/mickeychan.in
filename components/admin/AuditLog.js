@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -29,6 +29,44 @@ const ACTION_LABEL = {
   announcement: "Announcement posted",
   "announcement-deleted": "Announcement deleted",
 };
+
+const LOGIN_ACTIONS = [
+  "login",
+  "login-failed",
+  "login-denied",
+  "logout",
+  "register",
+  "signup-blocked",
+  "email-verified",
+  "verify-code-sent",
+];
+
+const SCOPE_OPTIONS = [
+  { id: "all", label: "Everything" },
+  { id: "login", label: "Sign-ins and accounts" },
+  { id: "admin", label: "Admin console" },
+  { id: "website", label: "Website" },
+];
+
+const OUTCOME_OPTIONS = [
+  { id: "all", label: "Any result" },
+  { id: "ok", label: "Successful only" },
+  { id: "failed", label: "Failed only" },
+];
+
+const RANGE_OPTIONS = [
+  { id: "all", label: "Any time", ms: null },
+  { id: "hour", label: "Last hour", ms: 60 * 60 * 1000 },
+  { id: "day", label: "Last 24 hours", ms: 24 * 60 * 60 * 1000 },
+  { id: "week", label: "Last 7 days", ms: 7 * 24 * 60 * 60 * 1000 },
+  { id: "month", label: "Last 30 days", ms: 30 * 24 * 60 * 60 * 1000 },
+];
+
+function countBy(entries, key) {
+  const counts = new Map();
+  for (const entry of entries) counts.set(entry[key], (counts.get(entry[key]) || 0) + 1);
+  return counts;
+}
 
 function timeAgo(iso) {
   if (!iso) return "—";
@@ -62,6 +100,10 @@ export default function AuditLog({ currentUser }) {
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
   const [scope, setScope] = useState("all");
+  const [action, setAction] = useState("all");
+  const [who, setWho] = useState("all");
+  const [outcome, setOutcome] = useState("all");
+  const [range, setRange] = useState("all");
   const [syncedAt, setSyncedAt] = useState(null);
   const mounted = useRef(true);
 
@@ -94,17 +136,32 @@ export default function AuditLog({ currentUser }) {
     };
   }, [load]);
 
+  const actionOptions = useMemo(() => {
+    const counts = countBy(activity, "action");
+    return Array.from(counts.entries())
+      .map(([id, count]) => ({ id, count, label: ACTION_LABEL[id] || id }))
+      .sort((a, b) => a.label.localeCompare(b.label));
+  }, [activity]);
+
+  const accountOptions = useMemo(() => {
+    const counts = countBy(activity, "username");
+    return Array.from(counts.entries())
+      .map(([id, count]) => ({ id, count }))
+      .sort((a, b) => a.id.localeCompare(b.id));
+  }, [activity]);
+
+  const rangeMs = RANGE_OPTIONS.find((option) => option.id === range)?.ms ?? null;
+  const now = Date.now();
+
   const filtered = activity.filter((entry) => {
     if (scope === "admin" && entry.area !== "admin") return false;
     if (scope === "website" && entry.area !== "website") return false;
-    if (
-      scope === "login" &&
-      !["login", "login-failed", "login-denied", "logout", "register", "signup-blocked"].includes(
-        entry.action
-      )
-    ) {
-      return false;
-    }
+    if (scope === "login" && !LOGIN_ACTIONS.includes(entry.action)) return false;
+    if (action !== "all" && entry.action !== action) return false;
+    if (who !== "all" && entry.username !== who) return false;
+    if (outcome === "ok" && !entry.ok) return false;
+    if (outcome === "failed" && entry.ok) return false;
+    if (rangeMs != null && now - entry.at > rangeMs) return false;
     const term = search.trim().toLowerCase();
     if (!term) return true;
     return [entry.username, entry.detail, entry.action, entry.ip, entry.city, entry.country]
@@ -113,6 +170,23 @@ export default function AuditLog({ currentUser }) {
       .toLowerCase()
       .includes(term);
   });
+
+  const filtersActive =
+    scope !== "all" ||
+    action !== "all" ||
+    who !== "all" ||
+    outcome !== "all" ||
+    range !== "all" ||
+    search.trim().length > 0;
+
+  const clearFilters = () => {
+    setScope("all");
+    setAction("all");
+    setWho("all");
+    setOutcome("all");
+    setRange("all");
+    setSearch("");
+  };
 
   return (
     <div className="page">
@@ -165,30 +239,93 @@ export default function AuditLog({ currentUser }) {
             newest first. Times use your own local clock. The log is append-only: there are no
             controls to edit or delete entries, by design.
           </p>
-          <div className="flex flex-wrap items-center gap-2 mt-3">
-            {[
-              { id: "all", label: "Everything" },
-              { id: "login", label: "Sign-ins" },
-              { id: "admin", label: "Admin console" },
-              { id: "website", label: "Website" },
-            ].map((option) => (
-              <button
-                key={option.id}
-                type="button"
-                className="chip"
-                data-active={scope === option.id}
-                onClick={() => setScope(option.id)}
+          <div className="grid gap-2 mt-3 sm:grid-cols-2 lg:grid-cols-3">
+            <label className="field">
+              <span className="field-label">Show</span>
+              <select className="select" value={scope} onChange={(event) => setScope(event.target.value)}>
+                {SCOPE_OPTIONS.map((option) => (
+                  <option key={option.id} value={option.id}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="field">
+              <span className="field-label">Action</span>
+              <select className="select" value={action} onChange={(event) => setAction(event.target.value)}>
+                <option value="all">All actions</option>
+                {actionOptions.map((option) => (
+                  <option key={option.id} value={option.id}>
+                    {option.label} ({option.count})
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="field">
+              <span className="field-label">Account</span>
+              <select className="select" value={who} onChange={(event) => setWho(event.target.value)}>
+                <option value="all">Anyone</option>
+                {accountOptions.map((option) => (
+                  <option key={option.id} value={option.id}>
+                    @{option.id} ({option.count})
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="field">
+              <span className="field-label">Result</span>
+              <select
+                className="select"
+                value={outcome}
+                onChange={(event) => setOutcome(event.target.value)}
               >
-                {option.label}
-              </button>
-            ))}
-            <input
-              className="input"
-              style={{ maxWidth: "16rem" }}
-              placeholder="Search names, actions, addresses…"
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-            />
+                {OUTCOME_OPTIONS.map((option) => (
+                  <option key={option.id} value={option.id}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="field">
+              <span className="field-label">When</span>
+              <select className="select" value={range} onChange={(event) => setRange(event.target.value)}>
+                {RANGE_OPTIONS.map((option) => (
+                  <option key={option.id} value={option.id}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="field">
+              <span className="field-label">Search</span>
+              <input
+                className="input"
+                placeholder="Names, actions, addresses…"
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+              />
+            </label>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2 mt-3">
+            <button
+              type="button"
+              className="btn btn-ghost btn-sm"
+              onClick={clearFilters}
+              disabled={!filtersActive}
+            >
+              Clear filters
+            </button>
+            <span className="faint text-xs">
+              {filtersActive
+                ? `${filtered.length} of ${activity.length} match`
+                : "No filters applied — every recorded action is listed"}
+            </span>
           </div>
         </div>
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   RICH_TEXT_FONTS,
   RICH_TEXT_SIZES,
@@ -292,6 +293,7 @@ export default function RichTextEditor({
 
   function applyLink(event) {
     event?.preventDefault();
+    event?.stopPropagation();
     const area = areaRef.current;
     const href = safeLinkHref(linkValue);
     if (!area || !href) return;
@@ -343,6 +345,15 @@ export default function RichTextEditor({
     emit();
     closeLinkDialog();
     area.focus();
+  }
+
+  function handleDialogKey(event) {
+    if (event.key !== "Enter") return;
+    if (event.target && event.target.tagName === "INPUT") {
+      event.preventDefault();
+      event.stopPropagation();
+      applyLink(event);
+    }
   }
 
   function handleKeyUp(event) {
@@ -469,7 +480,9 @@ export default function RichTextEditor({
         onPaste={handlePaste}
       />
 
-      {linkOpen && (
+      {linkOpen &&
+        typeof document !== "undefined" &&
+        createPortal(
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4"
           role="dialog"
@@ -483,10 +496,10 @@ export default function RichTextEditor({
             style={{ background: "rgba(9, 6, 18, 0.55)", backdropFilter: "blur(12px)", cursor: "default" }}
             onClick={closeLinkDialog}
           />
-          <form
-            onSubmit={applyLink}
+          <div
             className="glass-card p-6 relative w-full animate-rise"
             style={{ maxWidth: "26rem" }}
+            onKeyDown={handleDialogKey}
           >
             <span className="badge badge-neutral">Link</span>
             <h2 id="rte-link-title" className="font-display text-xl font-bold mt-3">
@@ -511,9 +524,10 @@ export default function RichTextEditor({
             </label>
             <div className="flex flex-wrap gap-2 mt-5">
               <button
-                type="submit"
+                type="button"
                 className="btn btn-primary btn-sm"
                 disabled={!safeLinkHref(linkValue)}
+                onClick={applyLink}
               >
                 Add link
               </button>
@@ -526,9 +540,10 @@ export default function RichTextEditor({
                 Cancel
               </button>
             </div>
-          </form>
-        </div>
-      )}
+          </div>
+        </div>,
+          document.body
+        )}
     </div>
   );
 }
