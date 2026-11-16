@@ -96,12 +96,13 @@ export default async function ApplyPage({ params }) {
     );
   }
 
-  if (await blacklistEntry(member.username)) {
+  const blocked = await blacklistEntry(member.username);
+  if (blocked) {
     return (
       <Card kicker="Restricted" title="You can't submit applications right now">
-        <p className="muted text-sm leading-relaxed">
-          This account has been blocked from sending forms to the team. If you think this is a
-          mistake, get in touch and we&apos;ll take another look.
+        <p className="muted text-sm leading-relaxed whitespace-pre-wrap">
+          {blocked.reason ||
+            "You've been blocked from submitting applications at this moment. Contact an administrator if you think this is a mistake."}
         </p>
       </Card>
     );

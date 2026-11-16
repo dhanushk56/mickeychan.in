@@ -76,16 +76,17 @@ export default async function JoinPage() {
     );
   }
 
-  if (await blacklistEntry(member.username)) {
+  const blocked = await blacklistEntry(member.username);
+  if (blocked) {
     return (
       <main className="page">
         <div className="shell" style={{ maxWidth: "34rem" }}>
           <div className="glass-card p-8 grid gap-3 animate-rise">
             <p className="kicker">Restricted</p>
             <h1 className="font-display text-2xl font-bold">You can&apos;t send messages right now</h1>
-            <p className="muted text-sm leading-relaxed">
-              This account has been blocked from sending forms to the team. If you think this is a
-              mistake, get in touch and we&apos;ll take another look.
+            <p className="muted text-sm leading-relaxed whitespace-pre-wrap">
+              {blocked.reason ||
+                "You've been blocked from submitting applications at this moment. Contact an administrator if you think this is a mistake."}
             </p>
             <Link href="/positions" className="btn btn-secondary btn-sm mt-2 self-start">
               See open positions
