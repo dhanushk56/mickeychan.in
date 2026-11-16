@@ -675,6 +675,9 @@ export default function AdminDashboard({ currentUser }) {
             <Link href="/audit" className="btn btn-secondary btn-sm">
               Audit log ↗
             </Link>
+            <Link href="/sitemap" className="btn btn-secondary btn-sm">
+              Sitemap ↗
+            </Link>
             <Link href="/form-builder" className="btn btn-primary btn-sm">
               Form builder ↗
             </Link>

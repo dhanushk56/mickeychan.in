@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getChannelSubscribers, getVideos, channelUrl } from "@/lib/content";
+import { channels, getChannelSubscribers, getVideos } from "@/lib/content";
 import { kvGet } from "@/lib/kv";
 import { socials } from "@/data/socials";
 import SocialIcon from "@/components/SocialIcon";
@@ -10,6 +10,14 @@ export const fetchCache = "force-no-store";
 
 function shortName(social) {
   return social.short || social.name.split(" (")[0];
+}
+
+function channelName(channel) {
+  const handle = String(channel.handle || "").toLowerCase();
+  const social = socials.find((entry) =>
+    String(entry.href || "").toLowerCase().endsWith(`/@${handle}`)
+  );
+  return social ? shortName(social) : channel.label;
 }
 
 function VideoMini({ video }) {
@@ -84,7 +92,9 @@ export default async function Home() {
   const latest = videos.slice(0, 3);
   const shortsStrip = shorts.slice(0, 5);
   const openRoles = forms.filter((form) => form.published !== false);
-  const hero = videos[0];
+  const featured = channels
+    .map((channel) => ({ channel, video: videos.find((video) => video.channel === channel.id) }))
+    .filter((entry) => entry.video);
 
   return (
     <>
@@ -150,44 +160,47 @@ export default async function Home() {
             </div>
           </div>
 
-          {hero && (
+          {featured.length > 0 && (
             <div className="animate-rise delay-2">
               <div className="flex items-center justify-between gap-3 mb-3">
-                <p className="kicker">Latest upload</p>
+                <p className="kicker">Latest uploads</p>
                 <span className="badge badge-neutral">
-                  {[hero.published, hero.views && `${hero.views} views`].filter(Boolean).join(" · ") || "New"}
+                  {featured.length > 1 ? "Both channels" : featured[0].video.channelLabel || "New"}
                 </span>
               </div>
-              <Link href={`/videos?v=${hero.id}`} className="glass-card lift block overflow-hidden">
-                <div
-                  className="video-thumb"
-                  style={{ backgroundImage: `url(${hero.thumbnail})`, aspectRatio: "16 / 10" }}
-                >
-                  <span className="play-badge" style={{ opacity: 1 }} aria-hidden="true">▶</span>
-                  {hero.duration && <span className="thumb-badge">{hero.duration}</span>}
-                  <span className="thumb-pill">New</span>
-                </div>
-                <div className="p-5">
-                  <p className="font-display text-lg font-bold leading-snug">{hero.title}</p>
-                  <p className="faint text-sm mt-2">
-                    {[hero.views && `${hero.views} views`, hero.published].filter(Boolean).join(" · ") || "Watch now"}
-                  </p>
-                  <div className="flex items-center justify-between mt-4">
-                    <span className="text-xs font-bold" style={{ color: "var(--primary)" }}>
-                      Watch on the channel ↗
-                    </span>
-                    <span className="badge badge-neutral">YouTube</span>
+              <div className={`grid gap-3 ${featured.length > 1 ? "sm:grid-cols-2" : ""}`}>
+                {featured.map(({ channel, video }) => (
+                  <div key={channel.id} className="grid gap-2 content-start">
+                    <Link href={`/videos?v=${video.id}`} className="glass-card lift block overflow-hidden">
+                      <div
+                        className="video-thumb"
+                        style={{ backgroundImage: `url(${video.thumbnail})`, aspectRatio: "16 / 10" }}
+                      >
+                        <span className="play-badge" style={{ opacity: 1 }} aria-hidden="true">▶</span>
+                        {video.duration && <span className="thumb-badge">{video.duration}</span>}
+                        <span className="thumb-pill">{video.type === "short" ? "Short" : "New"}</span>
+                      </div>
+                      <div className="p-4">
+                        <p className="faint text-xs font-bold" style={{ letterSpacing: ".1em", textTransform: "uppercase" }}>
+                          {channelName(channel)}
+                        </p>
+                        <p className="font-display text-base font-bold leading-snug mt-1">{video.title}</p>
+                        <p className="faint text-xs mt-2">
+                          {[video.views && `${video.views} views`, video.published].filter(Boolean).join(" · ") || "Watch now"}
+                        </p>
+                      </div>
+                    </Link>
+                    <a
+                      href={video.channelUrl || channel.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="btn btn-secondary btn-sm w-full"
+                    >
+                      {`Open ${channelName(channel)} ↗`}
+                    </a>
                   </div>
-                </div>
-              </Link>
-              <a
-                href={channelUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="btn btn-secondary w-full mt-3"
-              >
-                Open the channel ↗
-              </a>
+                ))}
+              </div>
             </div>
           )}
         </div>
