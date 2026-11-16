@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSessionFromCookies } from "@/lib/auth";
 import { listMembers, publicMember, registerMember } from "@/lib/members";
+import { annotateBlacklist } from "@/lib/blacklist";
 import { logActivity } from "@/lib/activity-log";
 
 export const dynamic = "force-dynamic";
@@ -15,7 +16,7 @@ export async function GET() {
   }
 
   return NextResponse.json(
-    { accounts: await listMembers() },
+    { accounts: await annotateBlacklist(await listMembers()) },
     { headers: { "Cache-Control": "no-store, max-age=0" } }
   );
 }

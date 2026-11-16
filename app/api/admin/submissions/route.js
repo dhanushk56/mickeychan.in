@@ -3,6 +3,7 @@ import { kvGet, kvSet } from "@/lib/kv";
 import { getSessionFromCookies } from "@/lib/auth";
 import { submissionsKey } from "@/lib/applications";
 import { listMembers } from "@/lib/members";
+import { annotateBlacklist } from "@/lib/blacklist";
 import { logActivity } from "@/lib/activity-log";
 
 function isAuthorizedRequest() {
@@ -16,11 +17,12 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const [join, index, accounts] = await Promise.all([
+  const [join, index, members] = await Promise.all([
     kvGet("submissions:join", []),
     kvGet("formbuilder:index", []),
     listMembers(),
   ]);
+  const accounts = await annotateBlacklist(members);
 
   const perForm = await Promise.all(
     index.map(async (entry) => {

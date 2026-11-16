@@ -9,6 +9,7 @@ import { unstable_noStore as noStore } from "next/cache";
 import Countdown from "@/components/Countdown";
 import LocalTime from "@/components/LocalTime";
 import { EMAIL_VERIFICATION_REQUIRED } from "@/lib/features";
+import { blacklistEntry } from "@/lib/blacklist";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -91,6 +92,17 @@ export default async function ApplyPage({ params }) {
         >
           Verify my email <span aria-hidden="true">↗</span>
         </Link>
+      </Card>
+    );
+  }
+
+  if (await blacklistEntry(member.username)) {
+    return (
+      <Card kicker="Restricted" title="You can't submit applications right now">
+        <p className="muted text-sm leading-relaxed">
+          This account has been blocked from sending forms to the team. If you think this is a
+          mistake, get in touch and we&apos;ll take another look.
+        </p>
       </Card>
     );
   }

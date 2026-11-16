@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { memberFromCookieStore } from "@/lib/members";
 import JoinForm from "@/components/JoinForm";
 import { EMAIL_VERIFICATION_REQUIRED } from "@/lib/features";
+import { blacklistEntry } from "@/lib/blacklist";
 
 export const dynamic = "force-dynamic";
 
@@ -69,6 +70,26 @@ export default async function JoinPage() {
                 See open positions
               </Link>
             </div>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  if (await blacklistEntry(member.username)) {
+    return (
+      <main className="page">
+        <div className="shell" style={{ maxWidth: "34rem" }}>
+          <div className="glass-card p-8 grid gap-3 animate-rise">
+            <p className="kicker">Restricted</p>
+            <h1 className="font-display text-2xl font-bold">You can&apos;t send messages right now</h1>
+            <p className="muted text-sm leading-relaxed">
+              This account has been blocked from sending forms to the team. If you think this is a
+              mistake, get in touch and we&apos;ll take another look.
+            </p>
+            <Link href="/positions" className="btn btn-secondary btn-sm mt-2 self-start">
+              See open positions
+            </Link>
           </div>
         </div>
       </main>

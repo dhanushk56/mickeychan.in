@@ -155,7 +155,7 @@ function ApplicationCard({ entry, busy, onStatus, onDelete }) {
   );
 }
 
-function AccountRow({ account, onDelete, onPassword }) {
+function AccountRow({ account, onDelete, onPassword, onBlacklist }) {
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const verified = account.emailVerified === true;
@@ -197,6 +197,7 @@ function AccountRow({ account, onDelete, onPassword }) {
             <span className="badge badge-neutral">
               {account.createdBy === "admin" ? `${methodLabel} · added by admin` : methodLabel}
             </span>
+            {account.formBlocked && <span className="badge badge-denied">Forms blocked</span>}
           </div>
           <p className="faint text-xs mt-1 break-words">
             {account.email || "No email address on file"}
@@ -206,20 +207,37 @@ function AccountRow({ account, onDelete, onPassword }) {
               ? `Connection ${connections[0]}${connections.length > 1 ? ` +${connections.length - 1} more` : ""}${account.location?.city ? ` · ${account.location.city}` : ""}${account.location?.country ? `, ${account.location.country}` : ""}`
               : "No connection recorded"}
           </p>
+          {account.formBlocked && (
+            <p className="faint text-xs mt-1">
+              Can&apos;t submit any form or the join us message
+              {account.blacklistReason ? ` · ${account.blacklistReason}` : ""}
+            </p>
+          )}
           <p className="faint text-xs mt-1">
             {account.createdAt ? `Joined ${formatDateTime(account.createdAt)}` : "Listed in data/users.json"}
             {account.updatedAt ? ` · password set ${formatDateTime(account.updatedAt)}` : ""}
           </p>
         </div>
-        <button
-          type="button"
-          className="btn btn-ghost"
-          style={{ color: "var(--danger)" }}
-          disabled={busy}
-          onClick={() => onDelete(account)}
-        >
-          Delete account
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            className="btn btn-ghost"
+            style={account.formBlocked ? undefined : { color: "var(--danger)" }}
+            disabled={busy}
+            onClick={() => onBlacklist(account)}
+          >
+            {account.formBlocked ? "Allow forms" : "Block forms"}
+          </button>
+          <button
+            type="button"
+            className="btn btn-ghost"
+            style={{ color: "var(--danger)" }}
+            disabled={busy}
+            onClick={() => onDelete(account)}
+          >
+            Delete account
+          </button>
+        </div>
       </div>
 
       <form onSubmit={submit} className="flex flex-wrap items-end gap-2 mt-3">
@@ -491,6 +509,41 @@ export default function AdminDashboard({ currentUser }) {
         accounts: current.accounts.filter((item) => item.username !== account.username),
       }));
       setNotice(`@${account.username} deleted.`);
+      load();
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
+  async function toggleBlacklist(account) {
+    const blocked = account.formBlocked === true;
+    const ok = await askConfirm({
+      title: blocked ? "Let this account submit forms again?" : "Block this account from forms?",
+      description: blocked
+        ? `@${account.username} will be able to apply to open positions and send join us messages again.`
+        : `@${account.username} won't be able to submit anything — every form, new or existing, and the join us message — until you unblock them.`,
+      confirmLabel: blocked ? "Allow forms" : "Block forms",
+      tone: blocked ? "default" : "danger",
+    });
+    if (!ok) return;
+    try {
+      const response = blocked
+        ? await fetch(`/api/admin/blacklist?username=${encodeURIComponent(account.username)}`, {
+            method: "DELETE",
+          })
+        : await fetch("/api/admin/blacklist", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username: account.username }),
+          });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(result.error || "Could not update that account.");
+      setError("");
+      setNotice(
+        blocked
+          ? `@${account.username} can submit forms again.`
+          : `@${account.username} is blocked from submitting forms.`
+      );
       load();
     } catch (err) {
       setError(err.message);
@@ -839,6 +892,7 @@ export default function AdminDashboard({ currentUser }) {
                   account={account}
                   onDelete={deleteAccount}
                   onPassword={changeAccountPassword}
+                  onBlacklist={toggleBlacklist}
                 />
               ))
             )}

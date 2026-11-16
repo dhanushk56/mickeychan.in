@@ -4,6 +4,7 @@ import { kvGet, kvSet } from "@/lib/kv";
 import { memberFromCookieStore } from "@/lib/members";
 import { logActivity } from "@/lib/activity-log";
 import { EMAIL_VERIFICATION_REQUIRED } from "@/lib/features";
+import { blacklistEntry } from "@/lib/blacklist";
 
 const SUBMISSIONS_KEY = "submissions:join";
 
@@ -37,6 +38,25 @@ export async function POST(request) {
       {
         error: "Confirm your email address before sending a message — open Verify your account from the menu.",
         code: "email_unverified",
+      },
+      { status: 403 }
+    );
+  }
+
+  const block = await blacklistEntry(member.username);
+  if (block) {
+    await logActivity({
+      area: "website",
+      action: "form-blocked",
+      username: member.username,
+      detail: "Blocked: this account can't send messages",
+      ok: false,
+      request,
+    });
+    return NextResponse.json(
+      {
+        error: "Your account can't submit forms right now. Contact the team if you think this is a mistake.",
+        code: "blacklisted",
       },
       { status: 403 }
     );
