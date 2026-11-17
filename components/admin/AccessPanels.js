@@ -19,15 +19,14 @@ function formatWhen(iso) {
 
 function sourceLabel(entry) {
   if (entry.owner) return "Built in · can't be removed or changed";
-  if (entry.source === "manual") {
-    const when = formatWhen(entry.grantedAt);
-    return entry.grantedBy ? `Granted by ${entry.grantedBy}${when ? ` · ${when}` : ""}` : "Granted manually";
-  }
-  return "Built into the server allowlist · change the role instead";
+  const when = formatWhen(entry.grantedAt);
+  return entry.grantedBy
+    ? `Granted by ${entry.grantedBy}${when ? ` · ${when}` : ""}`
+    : "Granted from the Accounts tab";
 }
 
 function RoleBadge({ entry }) {
-  const tone = entry.owner ? "badge-accepted" : entry.source === "manual" ? "badge-pending" : "badge-neutral";
+  const tone = entry.owner ? "badge-accepted" : "badge-pending";
   return <span className={`badge ${tone}`}>{entry.owner ? "Super owner" : entry.roleName}</span>;
 }
 
@@ -110,7 +109,7 @@ export function AdminsPanel({ canManage }) {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="muted text-sm max-w-xl">
           Every account that can open this console and the role it holds. The super owner is always
-          here; everyone else is either built into the server allowlist or granted access by hand.
+          here; everyone else needs a role set from the Accounts tab.
         </p>
         <button type="button" className="btn btn-secondary btn-sm" onClick={load} disabled={loading}>
           {loading ? "Loading…" : "Refresh"}
@@ -154,7 +153,7 @@ export function AdminsPanel({ canManage }) {
                     </option>
                   ))}
                 </select>
-                {canManage && !entry.owner && entry.source === "manual" && (
+                {canManage && !entry.owner && (
                   <button
                     type="button"
                     className="btn btn-ghost"

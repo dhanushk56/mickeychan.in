@@ -62,12 +62,12 @@ export async function POST(request) {
   const role = roles.find((entry) => entry.id === roleId);
   if (!role) return NextResponse.json({ error: "Pick a role for that account." }, { status: 400 });
 
-  const member = await findMember(username);
+  const grants = await loadGrants();
+  const member = grants[username] ? true : await findMember(username);
   if (!member) {
     return NextResponse.json({ error: "No account with that username." }, { status: 404 });
   }
 
-  const grants = await loadGrants();
   const previous = grants[username]?.roleId || null;
   grants[username] = {
     roleId: role.id,
@@ -113,10 +113,7 @@ export async function DELETE(request) {
   const grants = await loadGrants();
   if (!grants[username]) {
     return NextResponse.json(
-      {
-        error:
-          "That account is built into the server allowlist. Change its role instead of removing it.",
-      },
+      { error: "That account doesn't have console access." },
       { status: 400 }
     );
   }
