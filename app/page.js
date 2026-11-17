@@ -251,7 +251,7 @@ export default async function Home() {
             <h2 className="display-lg mt-2 mb-3">Three kinds of chaos, one channel.</h2>
             <p className="muted leading-relaxed">
               Long-form episodes built around one ridiculous rule, shorts made for a quick scroll,
-              and SMP stories that keep going long after the episode ends.
+              and ARG stories that keep going long after the episode ends.
             </p>
           </div>
 
@@ -275,9 +275,9 @@ export default async function Home() {
               },
               {
                 glyph: "◎",
-                title: "SMP stories",
-                body: "Girls SMP, Titan Only, haunted servers and unbanning players — the long-running worlds where the community actually lives.",
-                meta: ["Community servers", "Collabs", "Story arcs"],
+                title: "ARG stories",
+                body: "Hidden codes, cryptic clues and puzzles that spill off the screen — the storylines you piece together with everyone else watching.",
+                meta: ["Hidden clues", "Puzzles", "Story arcs"],
                 href: "/videos",
                 cta: "Follow the story",
               },
@@ -359,7 +359,7 @@ export default async function Home() {
               contact form is open.
             </p>
             <div className="flex flex-wrap gap-1.5 mt-6">
-              {["Minecraft", "Challenges", "SMPs", "Shorts", "Collabs", "Community"].map((tag) => (
+              {["Minecraft", "Challenges", "ARGs", "Shorts", "Collabs", "Community"].map((tag) => (
                 <span key={tag} className="chip">{tag}</span>
               ))}
             </div>
@@ -369,9 +369,8 @@ export default async function Home() {
             <p className="kicker mb-4">Fast facts</p>
             <dl className="fact-list">
               {[
-                ["Focus", "Minecraft challenges & SMPs"],
+                ["Focus", "Minecraft challenges & ARGs"],
                 ["Formats", "Long-form + shorts"],
-                ["Collabs", "Mitsuha Gaming · Niz Unfiltered"],
                 ["Team", openRoles.length > 0 ? `${openRoles.length} open role${openRoles.length === 1 ? "" : "s"}` : "Open to good people"],
                 ["Business", "business@mickeychan.in"],
               ].map(([label, value]) => (
