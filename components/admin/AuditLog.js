@@ -28,6 +28,12 @@ const ACTION_LABEL = {
   "form-deleted": "Form deleted",
   announcement: "Announcement posted",
   "announcement-deleted": "Announcement deleted",
+  "admin-granted": "Console access granted",
+  "admin-role": "Console role changed",
+  "admin-revoked": "Console access removed",
+  "role-created": "Role created",
+  "role-edited": "Role edited",
+  "role-deleted": "Role deleted",
 };
 
 const LOGIN_ACTIONS = [

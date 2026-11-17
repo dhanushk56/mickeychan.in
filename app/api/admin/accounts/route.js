@@ -1,19 +1,14 @@
 import { NextResponse } from "next/server";
-import { getSessionFromCookies } from "@/lib/auth";
+import { authorize } from "@/lib/admin-guard";
 import { listMembers, publicMember, registerMember } from "@/lib/members";
 import { annotateBlacklist } from "@/lib/blacklist";
 import { logActivity } from "@/lib/activity-log";
 
 export const dynamic = "force-dynamic";
 
-function actor() {
-  return getSessionFromCookies()?.user?.username || "Admin";
-}
-
 export async function GET() {
-  if (!getSessionFromCookies()) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const gate = await authorize("accounts.view");
+  if (gate.response) return gate.response;
 
   return NextResponse.json(
     { accounts: await annotateBlacklist(await listMembers()) },
@@ -22,9 +17,8 @@ export async function GET() {
 }
 
 export async function POST(request) {
-  if (!getSessionFromCookies()) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const gate = await authorize("accounts.create");
+  if (gate.response) return gate.response;
 
   const body = await request.json().catch(() => ({}));
   const username = typeof body.username === "string" ? body.username : "";
@@ -47,7 +41,7 @@ export async function POST(request) {
   await logActivity({
     area: "admin",
     action: "account-created",
-    username: actor(),
+    username: gate.access.username,
     detail: `Created the account @${result.member.username}`,
     request,
   });

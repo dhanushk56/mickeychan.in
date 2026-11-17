@@ -1,13 +1,12 @@
 import { NextResponse } from "next/server";
-import { getSessionFromCookies } from "@/lib/auth";
+import { authorize } from "@/lib/admin-guard";
 import { AREA_LABEL, readActivity } from "@/lib/activity-log";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(request) {
-  if (!getSessionFromCookies()) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const gate = await authorize("audit.view");
+  if (gate.response) return gate.response;
 
   const { searchParams } = new URL(request.url);
   const entries = await readActivity(searchParams.get("limit") || undefined);

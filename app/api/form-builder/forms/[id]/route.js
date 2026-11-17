@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { kvGet, kvSet, kvDel } from "@/lib/kv";
 import { getSessionFromCookies } from "@/lib/auth";
+import { authorize } from "@/lib/admin-guard";
 import { formChangeSummary, logActivity } from "@/lib/activity-log";
 import { normalizeRichText } from "@/lib/rich-text";
 
@@ -8,10 +9,6 @@ const INDEX_KEY = "formbuilder:index";
 
 function actor() {
   return getSessionFromCookies()?.user?.username || "Admin";
-}
-
-function isAuthorizedRequest() {
-  return Boolean(getSessionFromCookies());
 }
 
 export const dynamic = "force-dynamic";
@@ -25,9 +22,8 @@ export async function GET(request, { params }) {
 }
 
 export async function PUT(request, { params }) {
-  if (!isAuthorizedRequest()) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const gate = await authorize("forms.edit");
+  if (gate.response) return gate.response;
 
   const body = await request.json().catch(() => null);
   if (!body || typeof body.title !== "string" || !Array.isArray(body.sections)) {
@@ -85,9 +81,8 @@ export async function PUT(request, { params }) {
 }
 
 export async function DELETE(request, { params }) {
-  if (!isAuthorizedRequest()) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const gate = await authorize("forms.delete");
+  if (gate.response) return gate.response;
 
   const existing = await kvGet(`formbuilder:form:${params.id}`, null);
   await kvDel(`formbuilder:form:${params.id}`);

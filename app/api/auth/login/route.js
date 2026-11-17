@@ -6,7 +6,7 @@ import {
   sessionCookieHeader,
 } from "@/lib/auth";
 import { logActivity } from "@/lib/activity-log";
-import { isAdminUsername } from "@/lib/admin-access";
+import { resolveAdmin } from "@/lib/roles";
 
 export const dynamic = "force-dynamic";
 
@@ -85,13 +85,14 @@ export async function POST(request) {
     return NextResponse.json({ error: "That password didn't work." }, { status: 401 });
   }
 
-  if (!isAdminUsername(typedName)) {
+  const access = await resolveAdmin(typedName);
+  if (!access) {
     recordFailure(key);
     await logActivity({
       area: "admin",
       action: "login-denied",
       username: typedName || "Unknown",
-      detail: "Username is not on the admin allowlist",
+      detail: "Username has no role and no console access",
       ok: false,
       request,
     });
@@ -105,14 +106,24 @@ export async function POST(request) {
   }
 
   attempts.delete(key);
-  const actor = typedName;
-  const response = NextResponse.json({ ok: true, user: { username: actor } });
-  response.headers.append("Set-Cookie", sessionCookieHeader(createSessionToken(actor)));
+  const response = NextResponse.json({
+    ok: true,
+    user: {
+      username: access.username,
+      role: access.roleName,
+      owner: access.owner,
+      permissions: access.permissions,
+    },
+  });
+  response.headers.append(
+    "Set-Cookie",
+    sessionCookieHeader(createSessionToken(access.username, access))
+  );
   await logActivity({
     area: "admin",
     action: "login",
-    username: actor,
-    detail: "Signed in to the admin console",
+    username: access.username,
+    detail: `Signed in to the admin console as ${access.roleName}`,
     request,
   });
   return response;

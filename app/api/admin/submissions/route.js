@@ -1,21 +1,21 @@
 import { NextResponse } from "next/server";
 import { kvGet, kvSet } from "@/lib/kv";
-import { getSessionFromCookies } from "@/lib/auth";
+import { authorize, authorizeAny } from "@/lib/admin-guard";
 import { submissionsKey } from "@/lib/applications";
 import { listMembers } from "@/lib/members";
 import { annotateBlacklist } from "@/lib/blacklist";
 import { logActivity } from "@/lib/activity-log";
 
-function isAuthorizedRequest() {
-  return Boolean(getSessionFromCookies());
-}
-
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  if (!isAuthorizedRequest()) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const gate = await authorizeAny([
+    "applications.view",
+    "messages.view",
+    "forms.view",
+    "accounts.view",
+  ]);
+  if (gate.response) return gate.response;
 
   const [join, index, members] = await Promise.all([
     kvGet("submissions:join", []),
@@ -58,10 +58,9 @@ export async function GET() {
 }
 
 export async function DELETE(request) {
-  const session = getSessionFromCookies();
-  if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const gate = await authorize("applications.clear");
+  if (gate.response) return gate.response;
+  const session = gate.session;
 
   const index = await kvGet("formbuilder:index", []);
   const cleared = await Promise.all(

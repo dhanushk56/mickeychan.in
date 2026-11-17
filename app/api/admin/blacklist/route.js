@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getSessionFromCookies } from "@/lib/auth";
+import { authorize } from "@/lib/admin-guard";
 import { addToBlacklist, readBlacklist, removeFromBlacklist } from "@/lib/blacklist";
 import { findMember } from "@/lib/members";
 import { logActivity } from "@/lib/activity-log";
@@ -7,9 +7,8 @@ import { logActivity } from "@/lib/activity-log";
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  if (!getSessionFromCookies()) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const gate = await authorize("accounts.view");
+  if (gate.response) return gate.response;
 
   return NextResponse.json(
     { entries: await readBlacklist() },
@@ -18,10 +17,9 @@ export async function GET() {
 }
 
 export async function POST(request) {
-  const session = getSessionFromCookies();
-  if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const gate = await authorize("accounts.block");
+  if (gate.response) return gate.response;
+  const session = gate.session;
 
   const body = await request.json().catch(() => ({}));
   const username = typeof body.username === "string" ? body.username.trim() : "";
@@ -58,10 +56,9 @@ export async function POST(request) {
 }
 
 export async function DELETE(request) {
-  const session = getSessionFromCookies();
-  if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const gate = await authorize("accounts.block");
+  if (gate.response) return gate.response;
+  const session = gate.session;
 
   const { searchParams } = new URL(request.url);
   const username = searchParams.get("username") || "";

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { kvGet, kvSet } from "@/lib/kv";
 import { getSessionFromCookies } from "@/lib/auth";
+import { authorize } from "@/lib/admin-guard";
 import { logActivity } from "@/lib/activity-log";
 import {
   ANNOUNCEMENTS_KEY,
@@ -20,14 +21,9 @@ function actor() {
   return getSessionFromCookies()?.user?.username || "Admin";
 }
 
-function isAuthorizedRequest() {
-  return Boolean(getSessionFromCookies());
-}
-
 export async function GET() {
-  if (!isAuthorizedRequest()) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const gate = await authorize("announcements.view");
+  if (gate.response) return gate.response;
   const announcements = readAnnouncements(await kvGet(ANNOUNCEMENTS_KEY, []));
   return NextResponse.json({ announcements, now: Date.now() }, {
     headers: { "Cache-Control": "no-store" },
@@ -35,9 +31,8 @@ export async function GET() {
 }
 
 export async function POST(request) {
-  if (!isAuthorizedRequest()) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const gate = await authorize("announcements.create");
+  if (gate.response) return gate.response;
 
   const body = await request.json().catch(() => null);
   if (!body || typeof body !== "object") {
@@ -86,9 +81,8 @@ export async function POST(request) {
 }
 
 export async function DELETE(request) {
-  if (!isAuthorizedRequest()) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const gate = await authorize("announcements.delete");
+  if (gate.response) return gate.response;
 
   const id = new URL(request.url).searchParams.get("id");
   if (!id) {

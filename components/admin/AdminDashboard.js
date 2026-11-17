@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import AnnouncementsPanel from "@/components/admin/AnnouncementsPanel";
+import { AdminsPanel, RolesPanel } from "@/components/admin/AccessPanels";
 import { useConfirm, usePrompt } from "@/components/ConfirmDialog";
 
 const POLL_MS = 5000;
@@ -59,7 +60,7 @@ function Stat({ label, value, accent }) {
   );
 }
 
-function ApplicationCard({ entry, busy, onStatus, onDelete }) {
+function ApplicationCard({ entry, busy, onStatus, onDelete, canReview, canDelete }) {
   const [expanded, setExpanded] = useState(false);
   const questions = entry.questions || [];
   const shown = expanded ? questions : questions.slice(0, 3);
@@ -86,7 +87,7 @@ function ApplicationCard({ entry, busy, onStatus, onDelete }) {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          {entry.status !== "accepted" && (
+          {canReview && entry.status !== "accepted" && (
             <button
               type="button"
               className="btn btn-success btn-sm"
@@ -96,7 +97,7 @@ function ApplicationCard({ entry, busy, onStatus, onDelete }) {
               ✓ Accept
             </button>
           )}
-          {entry.status !== "denied" && (
+          {canReview && entry.status !== "denied" && (
             <button
               type="button"
               className="btn btn-danger btn-sm"
@@ -106,7 +107,7 @@ function ApplicationCard({ entry, busy, onStatus, onDelete }) {
               ✕ Reject
             </button>
           )}
-          {entry.status !== "pending" && (
+          {canReview && entry.status !== "pending" && (
             <button
               type="button"
               className="btn btn-ghost"
@@ -116,15 +117,17 @@ function ApplicationCard({ entry, busy, onStatus, onDelete }) {
               Undo
             </button>
           )}
-          <button
-            type="button"
-            className="btn btn-ghost"
-            style={{ color: "var(--danger)" }}
-            disabled={busy}
-            onClick={() => onDelete(entry)}
-          >
-            Delete
-          </button>
+          {canDelete && (
+            <button
+              type="button"
+              className="btn btn-ghost"
+              style={{ color: "var(--danger)" }}
+              disabled={busy}
+              onClick={() => onDelete(entry)}
+            >
+              Delete
+            </button>
+          )}
         </div>
       </div>
 
@@ -159,7 +162,19 @@ function ApplicationCard({ entry, busy, onStatus, onDelete }) {
   );
 }
 
-function AccountRow({ account, onDelete, onPassword, onBlacklist }) {
+function AccountRow({
+  account,
+  onDelete,
+  onPassword,
+  onBlacklist,
+  adminEntry,
+  roles,
+  canManageAdmins,
+  canBlock,
+  canDelete,
+  canPassword,
+  onRoleChange,
+}) {
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const verified = account.emailVerified === true;
@@ -202,6 +217,11 @@ function AccountRow({ account, onDelete, onPassword, onBlacklist }) {
               {account.createdBy === "admin" ? `${methodLabel} · added by admin` : methodLabel}
             </span>
             {account.formBlocked && <span className="badge badge-denied">Forms blocked</span>}
+            {adminEntry && (
+              <span className={`badge ${adminEntry.owner ? "badge-accepted" : "badge-pending"}`}>
+                {adminEntry.owner ? "Super owner" : `Console · ${adminEntry.roleName}`}
+              </span>
+            )}
           </div>
           <p className="faint text-xs mt-1 break-words">
             {account.email || "No email address on file"}
@@ -227,16 +247,35 @@ function AccountRow({ account, onDelete, onPassword, onBlacklist }) {
             type="button"
             className="btn btn-ghost"
             style={account.formBlocked ? undefined : { color: "var(--danger)" }}
-            disabled={busy}
+            disabled={busy || !canBlock}
             onClick={() => onBlacklist(account)}
           >
             {account.formBlocked ? "Allow forms" : "Block forms"}
           </button>
+          {canManageAdmins && (
+            <select
+              className="select"
+              style={{ maxWidth: "11rem" }}
+              value={adminEntry ? (adminEntry.owner ? "owner" : adminEntry.roleId) : ""}
+              disabled={busy || adminEntry?.owner}
+              onChange={(event) => onRoleChange(account, event.target.value)}
+            >
+              <option value="">No console access</option>
+              {adminEntry?.owner && <option value="owner">Super owner</option>}
+              {roles
+                .filter((role) => !role.locked)
+                .map((role) => (
+                  <option key={role.id} value={role.id}>
+                    {role.name}
+                  </option>
+                ))}
+            </select>
+          )}
           <button
             type="button"
             className="btn btn-ghost"
             style={{ color: "var(--danger)" }}
-            disabled={busy}
+            disabled={busy || !canDelete}
             onClick={() => onDelete(account)}
           >
             Delete account
@@ -251,12 +290,17 @@ function AccountRow({ account, onDelete, onPassword, onBlacklist }) {
             className="input"
             type="password"
             value={password}
+            disabled={!canPassword}
             onChange={(event) => setPassword(event.target.value)}
             placeholder="At least 8 characters"
             autoComplete="new-password"
           />
         </label>
-        <button type="submit" className="btn btn-secondary btn-sm" disabled={busy || password.length < 8}>
+        <button
+          type="submit"
+          className="btn btn-secondary btn-sm"
+          disabled={busy || password.length < 8 || !canPassword}
+        >
           {busy ? "Saving…" : "Set password"}
         </button>
       </form>
@@ -284,6 +328,7 @@ export default function AdminDashboard({ currentUser }) {
   const mounted = useRef(true);
   const [dialog, askConfirm] = useConfirm();
   const [promptDialog, askPrompt] = usePrompt();
+  const [adminState, setAdminState] = useState({ admins: [], roles: [] });
 
   const load = useCallback(async () => {
     try {
@@ -313,13 +358,28 @@ export default function AdminDashboard({ currentUser }) {
     }
   }, [router]);
 
+  const loadAdmins = useCallback(async () => {
+    try {
+      const response = await fetch("/api/admin/admins", { cache: "no-store" });
+      if (!response.ok) return;
+      const next = await response.json();
+      if (!mounted.current) return;
+      setAdminState({
+        admins: Array.isArray(next.admins) ? next.admins : [],
+        roles: Array.isArray(next.roles) ? next.roles : [],
+      });
+    } catch {
+    }
+  }, []);
+
   useEffect(() => {
     mounted.current = true;
     load();
+    loadAdmins();
     return () => {
       mounted.current = false;
     };
-  }, [load]);
+  }, [load, loadAdmins]);
 
   useEffect(() => {
     const id = setInterval(() => {
@@ -351,6 +411,23 @@ export default function AdminDashboard({ currentUser }) {
       messages: data.join.length,
     };
   }, [data]);
+
+  const can = useCallback(
+    (permission) => {
+      if (currentUser?.owner === true) return true;
+      const list = Array.isArray(currentUser?.permissions) ? currentUser.permissions : [];
+      return list.includes("*") || list.includes(permission);
+    },
+    [currentUser]
+  );
+
+  const adminByUsername = useMemo(() => {
+    const map = new Map();
+    for (const entry of adminState.admins) map.set(String(entry.username).toLowerCase(), entry);
+    return map;
+  }, [adminState.admins]);
+
+  const canManageAdmins = currentUser?.owner === true;
 
   const filteredApplications = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -610,8 +687,37 @@ export default function AdminDashboard({ currentUser }) {
     }
   }
 
+  async function changeAdminRole(account, roleId) {
+    const username = account.username;
+    try {
+      const response = roleId
+        ? await fetch("/api/admin/admins", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username, roleId }),
+          })
+        : await fetch(`/api/admin/admins?username=${encodeURIComponent(username)}`, {
+            method: "DELETE",
+          });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(result.error || "Could not change that access.");
+      const roleName = adminState.roles.find((role) => role.id === roleId)?.name;
+      setError("");
+      setNotice(
+        roleId
+          ? `@${username} can open the console as ${roleName || roleId}.`
+          : `@${username} no longer has console access.`
+      );
+      setAdminState((current) => ({ ...current, admins: result.admins || current.admins }));
+      loadAdmins();
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
   function refreshAll() {
     load();
+    loadAdmins();
   }
 
   async function createForm() {
@@ -689,7 +795,11 @@ export default function AdminDashboard({ currentUser }) {
             <span className="glass-inset icon-button" aria-hidden="true">⚿</span>
             <div className="text-sm">
               <p className="font-semibold leading-tight">{currentUser?.username || "Admin"}</p>
-              <p className="faint text-xs">Password session · 12h</p>
+              <p className="faint text-xs">
+                {currentUser?.owner
+                  ? "Super owner · full access"
+                  : `${currentUser?.roleName || "Admin"} · 12h session`}
+              </p>
             </div>
           </div>
           <a href="/api/auth/logout" className="btn btn-secondary btn-sm">
@@ -709,12 +819,16 @@ export default function AdminDashboard({ currentUser }) {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="tabbar" role="tablist">
             {[
-              { id: "applications", label: "Applications", count: counts.total },
-              { id: "messages", label: "Messages", count: counts.messages },
-              { id: "forms", label: "Forms", count: data.forms.length },
-              { id: "accounts", label: "Accounts", count: data.accounts.length },
-              { id: "announcements", label: "Announcements" },
-            ].map((item) => (
+              { id: "applications", label: "Applications", count: counts.total, show: can("applications.view") },
+              { id: "messages", label: "Messages", count: counts.messages, show: can("messages.view") },
+              { id: "forms", label: "Forms", count: data.forms.length, show: can("forms.view") },
+              { id: "accounts", label: "Accounts", count: data.accounts.length, show: can("accounts.view") },
+              { id: "announcements", label: "Announcements", show: can("announcements.view") },
+              { id: "admins", label: "Admins", count: adminState.admins.length, show: can("admins.view") },
+              { id: "roles", label: "Roles", show: currentUser?.owner === true },
+            ]
+              .filter((item) => item.show)
+              .map((item) => (
               <button
                 key={item.id}
                 role="tab"
@@ -729,7 +843,7 @@ export default function AdminDashboard({ currentUser }) {
             ))}
           </div>
 
-          {tab !== "forms" && tab !== "accounts" && tab !== "announcements" && (
+          {["applications", "messages"].includes(tab) && (
             <input
               className="input"
               style={{ maxWidth: "16rem" }}
@@ -798,6 +912,8 @@ export default function AdminDashboard({ currentUser }) {
                     busy={busyId === entry.id}
                     onStatus={updateStatus}
                     onDelete={deleteApplication}
+                    canReview={can("applications.review")}
+                    canDelete={can("applications.delete")}
                   />
                 ))}
               </div>
@@ -931,6 +1047,13 @@ export default function AdminDashboard({ currentUser }) {
                   onDelete={deleteAccount}
                   onPassword={changeAccountPassword}
                   onBlacklist={toggleBlacklist}
+                  adminEntry={adminByUsername.get(String(account.username).toLowerCase())}
+                  roles={adminState.roles}
+                  canManageAdmins={canManageAdmins}
+                  canBlock={can("accounts.block")}
+                  canDelete={can("accounts.delete")}
+                  canPassword={can("accounts.password")}
+                  onRoleChange={changeAdminRole}
                 />
               ))
             )}
@@ -938,6 +1061,10 @@ export default function AdminDashboard({ currentUser }) {
         )}
 
         {tab === "announcements" && <AnnouncementsPanel />}
+
+        {tab === "admins" && <AdminsPanel canManage={canManageAdmins} />}
+
+        {tab === "roles" && <RolesPanel canManage={canManageAdmins} />}
 
         {tab === "forms" && (
           <div className="grid gap-3">

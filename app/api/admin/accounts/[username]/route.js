@@ -1,23 +1,27 @@
 import { NextResponse } from "next/server";
-import { getSessionFromCookies } from "@/lib/auth";
+import { authorize } from "@/lib/admin-guard";
 import { deleteMember, setMemberPassword } from "@/lib/members";
+import { isSuperOwner } from "@/lib/roles";
 import { logActivity } from "@/lib/activity-log";
 
 export const dynamic = "force-dynamic";
 
-function actor() {
-  return getSessionFromCookies()?.user?.username || "Admin";
-}
-
 export async function PATCH(request, { params }) {
-  if (!getSessionFromCookies()) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const gate = await authorize("accounts.password");
+  if (gate.response) return gate.response;
+
+  const target = decodeURIComponent(params.username);
+  if (isSuperOwner(target) && !gate.access.owner) {
+    return NextResponse.json(
+      { error: "Only the super owner can change the super owner password." },
+      { status: 403 }
+    );
   }
 
   const body = await request.json().catch(() => ({}));
   const password = typeof body.password === "string" ? body.password : "";
 
-  const result = await setMemberPassword(decodeURIComponent(params.username), password);
+  const result = await setMemberPassword(target, password);
   if (result.error) {
     const missing = result.error.startsWith("No account");
     return NextResponse.json({ error: result.error }, { status: missing ? 404 : 400 });
@@ -26,8 +30,8 @@ export async function PATCH(request, { params }) {
   await logActivity({
     area: "admin",
     action: "account-password",
-    username: actor(),
-    detail: `Changed the password for @${decodeURIComponent(params.username)}`,
+    username: gate.access.username,
+    detail: `Changed the password for @${target}`,
     request,
   });
 
@@ -35,11 +39,18 @@ export async function PATCH(request, { params }) {
 }
 
 export async function DELETE(request, { params }) {
-  if (!getSessionFromCookies()) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const gate = await authorize("accounts.delete");
+  if (gate.response) return gate.response;
+
+  const target = decodeURIComponent(params.username);
+  if (isSuperOwner(target)) {
+    return NextResponse.json(
+      { error: "The super owner account can't be deleted by anyone." },
+      { status: 403 }
+    );
   }
 
-  const result = await deleteMember(decodeURIComponent(params.username));
+  const result = await deleteMember(target);
   if (result.error) {
     return NextResponse.json({ error: result.error }, { status: 404 });
   }
@@ -47,7 +58,7 @@ export async function DELETE(request, { params }) {
   await logActivity({
     area: "admin",
     action: "account-deleted",
-    username: actor(),
+    username: gate.access.username,
     detail: `Deleted the account @${result.member.username}`,
     request,
   });

@@ -1,20 +1,15 @@
 import { NextResponse } from "next/server";
 import { kvGet, kvSet } from "@/lib/kv";
-import { getSessionFromCookies } from "@/lib/auth";
+import { authorize } from "@/lib/admin-guard";
 import { submissionsKey } from "@/lib/applications";
 import { logActivity } from "@/lib/activity-log";
-
-function readSession() {
-  return getSessionFromCookies();
-}
 
 export const dynamic = "force-dynamic";
 
 export async function PATCH(request, { params }) {
-  const session = readSession();
-  if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const gate = await authorize("applications.review");
+  if (gate.response) return gate.response;
+  const session = gate.session;
 
   const body = await request.json().catch(() => ({}));
   const status = typeof body.status === "string" ? body.status : "";
@@ -57,10 +52,9 @@ export async function PATCH(request, { params }) {
 }
 
 export async function DELETE(request, { params }) {
-  const session = readSession();
-  if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const gate = await authorize("applications.delete");
+  if (gate.response) return gate.response;
+  const session = gate.session;
 
   const key = submissionsKey(params.formId);
   const submissions = await kvGet(key, []);
