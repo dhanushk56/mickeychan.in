@@ -8,6 +8,8 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 export const fetchCache = "force-no-store";
 
+const HIDDEN_COLLABS = /mitsuha|niz unfiltered/i;
+
 function shortName(social) {
   return social.short || social.name.split(" (")[0];
 }
@@ -87,13 +89,14 @@ export default async function Home() {
     getChannelSubscribers(),
   ]);
 
-  const longForm = videos.filter((video) => video.type !== "short");
-  const shorts = videos.filter((video) => video.type === "short");
-  const latest = videos.slice(0, 3);
+  const shown = videos.filter((video) => !HIDDEN_COLLABS.test(video.title || ""));
+  const longForm = shown.filter((video) => video.type !== "short");
+  const shorts = shown.filter((video) => video.type === "short");
+  const latest = shown.slice(0, 3);
   const shortsStrip = shorts.slice(0, 5);
   const openRoles = forms.filter((form) => form.published !== false);
   const featured = channels
-    .map((channel) => ({ channel, video: videos.find((video) => video.channel === channel.id) }))
+    .map((channel) => ({ channel, video: shown.find((video) => video.channel === channel.id) }))
     .filter((entry) => entry.video);
 
   return (
