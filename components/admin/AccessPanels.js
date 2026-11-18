@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useConfirm } from "@/components/ConfirmDialog";
 
 async function call(url, options) {
@@ -18,7 +18,8 @@ function formatWhen(iso) {
 }
 
 function sourceLabel(entry) {
-  if (entry.owner) return "Built in · can't be removed or changed";
+  if (entry.root) return "Founder · can't be removed or changed";
+  if (entry.owner) return "Super owner · only the founder can change this";
   const when = formatWhen(entry.grantedAt);
   return entry.grantedBy
     ? `Granted by ${entry.grantedBy}${when ? ` · ${when}` : ""}`
@@ -73,6 +74,7 @@ export function AdminsPanel({ canManage }) {
         body: JSON.stringify({ username: entry.username, roleId }),
       });
       setAdmins(data.admins || []);
+      setRoles(data.roles || roles);
       setNotice(`@${entry.username} is now ${roles.find((role) => role.id === roleId)?.name || roleId}.`);
       setError("");
     } catch (err) {
@@ -95,6 +97,7 @@ export function AdminsPanel({ canManage }) {
         method: "DELETE",
       });
       setAdmins(data.admins || []);
+      setRoles(data.roles || roles);
       setNotice(`@${entry.username} no longer has console access.`);
       setError("");
     } catch (err) {
@@ -108,8 +111,8 @@ export function AdminsPanel({ canManage }) {
     <div className="grid gap-3">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="muted text-sm max-w-xl">
-          Every account that can open this console and the role it holds. The super owner is always
-          here; everyone else needs a role set from the Accounts tab.
+          Every account that can open this console and the role it holds. Higher roles sit above
+          lower ones, so an admin can only change people below their own role.
         </p>
         <button type="button" className="btn btn-secondary btn-sm" onClick={load} disabled={loading}>
           {loading ? "Loading…" : "Refresh"}
@@ -125,56 +128,108 @@ export function AdminsPanel({ canManage }) {
           <p className="muted text-sm">Grant access from the Accounts tab.</p>
         </div>
       ) : (
-        admins.map((entry) => (
-          <article key={entry.username} className="glass-card application-card">
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div className="min-w-0">
-                <div className="flex flex-wrap items-center gap-2">
-                  <h3 className="font-display font-bold">@{entry.username}</h3>
-                  <RoleBadge entry={entry} />
-                  <span className="badge badge-neutral">{permissionCount(entry.permissions)} permissions</span>
-                  {entry.owner && <span className="badge badge-accepted">Protected</span>}
+        admins.map((entry) => {
+          const canChange = canManage && entry.root !== true && entry.manageable !== false;
+          return (
+            <article key={entry.username} className="glass-card application-card">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h3 className="font-display font-bold">@{entry.username}</h3>
+                    <RoleBadge entry={entry} />
+                    <span className="badge badge-neutral">{permissionCount(entry.permissions)} permissions</span>
+                    {entry.root && <span className="badge badge-accepted">Protected</span>}
+                    {entry.manageable === false && (
+                      <span className="badge badge-neutral">Above your role</span>
+                    )}
+                  </div>
+                  <p className="faint text-xs mt-1">{sourceLabel(entry)}</p>
+                  {entry.description && <p className="muted text-sm mt-2">{entry.description}</p>}
                 </div>
-                <p className="faint text-xs mt-1">{sourceLabel(entry)}</p>
-                {entry.description && <p className="muted text-sm mt-2">{entry.description}</p>}
-              </div>
-              <div className="flex flex-wrap items-center gap-2">
-                <select
-                  className="select"
-                  style={{ maxWidth: "12rem" }}
-                  value={entry.owner ? "owner" : entry.roleId}
-                  disabled={!canManage || entry.owner || busy === entry.username}
-                  onChange={(event) => setRole(entry, event.target.value)}
-                >
-                  {entry.owner && <option value="owner">Super owner</option>}
-                  {roles.map((role) => (
-                    <option key={role.id} value={role.id}>
-                      {role.name}
-                    </option>
-                  ))}
-                </select>
-                {canManage && !entry.owner && (
-                  <button
-                    type="button"
-                    className="btn btn-ghost"
-                    style={{ color: "var(--danger)" }}
-                    disabled={busy === entry.username}
-                    onClick={() => remove(entry)}
+                <div className="flex flex-wrap items-center gap-2">
+                  <select
+                    className="select"
+                    style={{ maxWidth: "12rem" }}
+                    value={entry.owner ? "owner" : entry.roleId}
+                    disabled={!canChange || busy === entry.username}
+                    onChange={(event) => setRole(entry, event.target.value)}
                   >
-                    Remove access
-                  </button>
-                )}
+                    {entry.owner && <option value="owner">Super owner</option>}
+                    {roles
+                      .filter((role) => !(entry.owner && role.id === "owner"))
+                      .map((role) => (
+                        <option key={role.id} value={role.id}>
+                          {role.name}
+                        </option>
+                      ))}
+                  </select>
+                  {canChange && (
+                    <button
+                      type="button"
+                      className="btn btn-ghost"
+                      style={{ color: "var(--danger)" }}
+                      disabled={busy === entry.username}
+                      onClick={() => remove(entry)}
+                    >
+                      Remove access
+                    </button>
+                  )}
+                </div>
               </div>
-            </div>
-          </article>
-        ))
+            </article>
+          );
+        })
       )}
       {dialog}
     </div>
   );
 }
 
-function RoleEditor({ role, catalog, canManage, onSaved, onDeleted, onError, onNotice }) {
+function ReorderHandle({ role, onArm, onMove }) {
+  return (
+    <button
+      type="button"
+      className="btn btn-ghost btn-sm"
+      style={{ cursor: "grab", letterSpacing: ".18em", lineHeight: 1 }}
+      aria-label={`Move the ${role.name} role`}
+      title="Drag to set the hierarchy, or press the up and down arrows"
+      onMouseDown={() => onArm(role.id)}
+      onTouchStart={() => onArm(role.id)}
+      onKeyDown={(event) => {
+        if (event.key === "ArrowUp") {
+          event.preventDefault();
+          onMove(role.id, -1);
+        }
+        if (event.key === "ArrowDown") {
+          event.preventDefault();
+          onMove(role.id, 1);
+        }
+      }}
+    >
+      ⠿
+    </button>
+  );
+}
+
+function RoleEditor({
+  role,
+  index,
+  canManage,
+  reorderable,
+  dragging,
+  dropping,
+  catalog,
+  onArm,
+  onDragStart,
+  onDragEnd,
+  onDragOver,
+  onDrop,
+  onMove,
+  onSaved,
+  onDeleted,
+  onError,
+  onNotice,
+}) {
   const [draft, setDraft] = useState({
     name: role.name,
     description: role.description,
@@ -183,6 +238,7 @@ function RoleEditor({ role, catalog, canManage, onSaved, onDeleted, onError, onN
   const [busy, setBusy] = useState(false);
   const [dialog, askConfirm] = useConfirm();
   const locked = role.locked;
+  const canEdit = canManage && role.editable !== false;
 
   function toggle(id) {
     setDraft((current) => ({
@@ -230,17 +286,40 @@ function RoleEditor({ role, catalog, canManage, onSaved, onDeleted, onError, onN
   }
 
   return (
-    <article className="glass-card application-card" data-locked={locked}>
+    <article
+      className="glass-card application-card"
+      data-locked={locked}
+      draggable={reorderable}
+      onDragStart={(event) => reorderable && onDragStart(event, role.id)}
+      onDragEnd={onDragEnd}
+      onDragOver={(event) => {
+        if (!reorderable) return;
+        event.preventDefault();
+        onDragOver(role.id);
+      }}
+      onDrop={(event) => {
+        event.preventDefault();
+        onDrop(role.id);
+      }}
+      style={{
+        opacity: dragging ? 0.55 : undefined,
+        outline: dropping ? "1px solid var(--accent)" : undefined,
+      }}
+    >
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex flex-wrap items-center gap-2">
+          {reorderable && <ReorderHandle role={role} onArm={onArm} onMove={onMove} />}
           <h3 className="font-display font-bold">{role.name}</h3>
           {locked && <span className="badge badge-accepted">Locked</span>}
+          <span className="badge badge-neutral">
+            {index === 0 ? "Top of the hierarchy" : `Level ${index + 1}`}
+          </span>
           <span className="badge badge-neutral">{permissionCount(role.permissions)} permissions</span>
           <span className="badge badge-neutral">
             {role.members} {role.members === 1 ? "account" : "accounts"}
           </span>
         </div>
-        {canManage && !locked && (
+        {canEdit && !locked && (
           <div className="flex flex-wrap items-center gap-2">
             <button type="button" className="btn btn-primary btn-sm" onClick={save} disabled={busy}>
               {busy ? "Saving…" : "Save role"}
@@ -264,7 +343,7 @@ function RoleEditor({ role, catalog, canManage, onSaved, onDeleted, onError, onN
           <input
             className="input"
             value={draft.name}
-            disabled={!canManage || locked}
+            disabled={!canEdit || locked}
             onChange={(event) => setDraft((current) => ({ ...current, name: event.target.value }))}
           />
         </label>
@@ -273,7 +352,7 @@ function RoleEditor({ role, catalog, canManage, onSaved, onDeleted, onError, onN
           <input
             className="input"
             value={draft.description}
-            disabled={!canManage || locked}
+            disabled={!canEdit || locked}
             onChange={(event) => setDraft((current) => ({ ...current, description: event.target.value }))}
           />
         </label>
@@ -281,7 +360,8 @@ function RoleEditor({ role, catalog, canManage, onSaved, onDeleted, onError, onN
 
       {locked ? (
         <p className="muted text-sm mt-3">
-          The super owner holds every permission and nothing here can be turned off.
+          Every permission is on and nothing here can be turned off. Only the founder decides who
+          holds this role.
         </p>
       ) : (
         <div className="grid gap-3 mt-4">
@@ -294,7 +374,7 @@ function RoleEditor({ role, catalog, canManage, onSaved, onDeleted, onError, onN
                     <input
                       type="checkbox"
                       checked={draft.permissions.includes(permission.id)}
-                      disabled={!canManage}
+                      disabled={!canEdit}
                       onChange={() => toggle(permission.id)}
                     />
                     <span>{permission.label}</span>
@@ -314,12 +394,16 @@ export function RolesPanel({ canManage }) {
   const [roles, setRoles] = useState([]);
   const [catalog, setCatalog] = useState([]);
   const [admins, setAdmins] = useState([]);
+  const [canGrantOwner, setCanGrantOwner] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState("");
   const [creating, setCreating] = useState(false);
   const [draft, setDraft] = useState({ name: "", description: "", permissions: [] });
+  const [dragId, setDragId] = useState("");
+  const [dropId, setDropId] = useState("");
+  const armed = useRef("");
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -327,6 +411,7 @@ export function RolesPanel({ canManage }) {
       const [roleData, adminData] = await Promise.all([call("/api/admin/roles"), call("/api/admin/admins")]);
       setRoles(Array.isArray(roleData.roles) ? roleData.roles : []);
       setCatalog(Array.isArray(roleData.catalog) ? roleData.catalog : []);
+      setCanGrantOwner(roleData.canGrantOwner === true);
       setAdmins(Array.isArray(adminData.admins) ? adminData.admins : []);
       setError("");
     } catch (err) {
@@ -361,7 +446,7 @@ export function RolesPanel({ canManage }) {
       });
       setRoles(data.roles || []);
       setDraft({ name: "", description: "", permissions: [] });
-      setNotice(`Created the ${draft.name} role.`);
+      setNotice(`Created the ${draft.name} role. It sits at the bottom until you move it.`);
       setError("");
     } catch (err) {
       setError(err.message);
@@ -390,6 +475,65 @@ export function RolesPanel({ canManage }) {
     }
   }
 
+  async function saveOrder(list) {
+    try {
+      const data = await call("/api/admin/roles", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ order: list.map((role) => role.id) }),
+      });
+      setRoles(Array.isArray(data.roles) ? data.roles : list);
+      setNotice("Saved the role hierarchy.");
+      setError("");
+    } catch (err) {
+      setError(err.message);
+      load();
+    }
+  }
+
+  function reorder(fromId, toId) {
+    if (!fromId || !toId || fromId === toId) return;
+    const from = roles.findIndex((role) => role.id === fromId);
+    const to = roles.findIndex((role) => role.id === toId);
+    if (from === -1 || to === -1) return;
+    if (roles[from].locked || roles[to].locked) return;
+    const next = [...roles];
+    const [moved] = next.splice(from, 1);
+    next.splice(to, 0, moved);
+    setRoles(next);
+    saveOrder(next);
+  }
+
+  function move(id, delta) {
+    const from = roles.findIndex((role) => role.id === id);
+    const to = from + delta;
+    if (from === -1 || to < 0 || to >= roles.length) return;
+    if (roles[from].locked || roles[to].locked) return;
+    reorder(id, roles[to].id);
+  }
+
+  function startDrag(event, id) {
+    if (armed.current !== id) {
+      event.preventDefault();
+      return;
+    }
+    event.dataTransfer.effectAllowed = "move";
+    event.dataTransfer.setData("text/plain", id);
+    setDragId(id);
+    setDropId("");
+  }
+
+  function endDrag() {
+    armed.current = "";
+    setDragId("");
+    setDropId("");
+  }
+
+  function dropOn(id) {
+    if (dragId && dragId !== id) reorder(dragId, id);
+    endDrag();
+  }
+
   if (loading && roles.length === 0) {
     return <div className="glass-card p-8 muted">Loading roles…</div>;
   }
@@ -398,8 +542,9 @@ export function RolesPanel({ canManage }) {
     <div className="grid gap-3">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="muted text-sm max-w-xl">
-          Roles decide what each admin can do. Edit the checkboxes and save; the change applies the
-          next time that admin loads a page. Only the super owner can open this tab.
+          Roles decide what each admin can do, and their order is the hierarchy: higher roles sit
+          above lower ones. Drag a role by its handle to move it. An admin can only manage roles and
+          admins below their own, never their own role or anyone at or above it.
         </p>
         <button type="button" className="btn btn-secondary btn-sm" onClick={load}>
           Refresh
@@ -409,73 +554,87 @@ export function RolesPanel({ canManage }) {
       {error && <p className="badge badge-denied">{error}</p>}
       {notice && <p className="badge badge-accepted">{notice}</p>}
 
-      <form onSubmit={create} className="glass-card application-card grid gap-3">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <h3 className="font-display font-bold">Create a role</h3>
-          <span className="badge badge-neutral">Super owner only</span>
-        </div>
-        <div className="flex flex-wrap items-end gap-2">
-          <label className="field flex-1" style={{ minWidth: "12rem" }}>
-            <span className="field-label">Name</span>
-            <input
-              className="input"
-              value={draft.name}
-              onChange={(event) => setDraft((current) => ({ ...current, name: event.target.value }))}
-              placeholder="e.g. Editor"
-              maxLength={48}
-              required
-            />
-          </label>
-          <label className="field flex-1" style={{ minWidth: "14rem" }}>
-            <span className="field-label">What it is for (optional)</span>
-            <input
-              className="input"
-              value={draft.description}
-              onChange={(event) => setDraft((current) => ({ ...current, description: event.target.value }))}
-              placeholder="One line the other admins will read"
-              maxLength={200}
-            />
-          </label>
-        </div>
-        <div className="grid gap-3">
-          {catalog.map((group) => (
-            <div key={group.id}>
-              <p className="faint text-xs font-bold uppercase tracking-wide">{group.label}</p>
-              <div className="grid gap-1.5 sm:grid-cols-2 mt-1.5">
-                {group.permissions.map((permission) => (
-                  <label key={permission.id} className="flex items-center gap-2 text-sm">
-                    <input
-                      type="checkbox"
-                      checked={draft.permissions.includes(permission.id)}
-                      onChange={() => toggleDraft(permission.id)}
-                    />
-                    <span>{permission.label}</span>
-                  </label>
-                ))}
+      {canManage && (
+        <form onSubmit={create} className="glass-card application-card grid gap-3">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h3 className="font-display font-bold">Create a role</h3>
+            <span className="badge badge-neutral">Lands at the bottom</span>
+          </div>
+          <div className="flex flex-wrap items-end gap-2">
+            <label className="field flex-1" style={{ minWidth: "12rem" }}>
+              <span className="field-label">Name</span>
+              <input
+                className="input"
+                value={draft.name}
+                onChange={(event) => setDraft((current) => ({ ...current, name: event.target.value }))}
+                placeholder="e.g. Editor"
+                maxLength={48}
+                required
+              />
+            </label>
+            <label className="field flex-1" style={{ minWidth: "14rem" }}>
+              <span className="field-label">What it is for (optional)</span>
+              <input
+                className="input"
+                value={draft.description}
+                onChange={(event) => setDraft((current) => ({ ...current, description: event.target.value }))}
+                placeholder="One line the other admins will read"
+                maxLength={200}
+              />
+            </label>
+          </div>
+          <div className="grid gap-3">
+            {catalog.map((group) => (
+              <div key={group.id}>
+                <p className="faint text-xs font-bold uppercase tracking-wide">{group.label}</p>
+                <div className="grid gap-1.5 sm:grid-cols-2 mt-1.5">
+                  {group.permissions.map((permission) => (
+                    <label key={permission.id} className="flex items-center gap-2 text-sm">
+                      <input
+                        type="checkbox"
+                        checked={draft.permissions.includes(permission.id)}
+                        onChange={() => toggleDraft(permission.id)}
+                      />
+                      <span>{permission.label}</span>
+                    </label>
+                  ))}
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <button
-            type="submit"
-            className="btn btn-primary btn-sm"
-            disabled={creating || draft.name.trim().length < 2}
-          >
-            {creating ? "Creating…" : "Create role"}
-          </button>
-          <span className="faint text-xs">
-            {draft.permissions.length} permission{draft.permissions.length === 1 ? "" : "s"} selected
-          </span>
-        </div>
-      </form>
+            ))}
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="submit"
+              className="btn btn-primary btn-sm"
+              disabled={creating || draft.name.trim().length < 2}
+            >
+              {creating ? "Creating…" : "Create role"}
+            </button>
+            <span className="faint text-xs">
+              {draft.permissions.length} permission{draft.permissions.length === 1 ? "" : "s"} selected
+            </span>
+          </div>
+        </form>
+      )}
 
-      {roles.map((role) => (
+      {roles.map((role, index) => (
         <RoleEditor
           key={role.id}
           role={role}
-          catalog={catalog}
+          index={index}
           canManage={canManage}
+          reorderable={canManage && !role.locked && role.editable !== false}
+          dragging={dragId === role.id}
+          dropping={dropId === role.id && dragId !== role.id}
+          catalog={catalog}
+          onArm={(id) => {
+            armed.current = id;
+          }}
+          onDragStart={startDrag}
+          onDragEnd={endDrag}
+          onDragOver={setDropId}
+          onDrop={dropOn}
+          onMove={move}
           onSaved={setRoles}
           onDeleted={setRoles}
           onError={setError}
@@ -490,30 +649,37 @@ export function RolesPanel({ canManage }) {
           Accounts tab.
         </p>
         <div className="grid gap-2 mt-3">
-          {admins.map((entry) => (
-            <div key={entry.username} className="flex flex-wrap items-center justify-between gap-2">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="badge badge-neutral">@{entry.username}</span>
-                <RoleBadge entry={entry} />
+          {admins.map((entry) => {
+            const canChange = canManage && entry.root !== true && entry.manageable !== false;
+            return (
+              <div key={entry.username} className="flex flex-wrap items-center justify-between gap-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="badge badge-neutral">@{entry.username}</span>
+                  <RoleBadge entry={entry} />
+                  {entry.manageable === false && (
+                    <span className="badge badge-neutral">Above your role</span>
+                  )}
+                </div>
+                <select
+                  className="select"
+                  style={{ maxWidth: "12rem" }}
+                  value={entry.owner ? "owner" : entry.roleId}
+                  disabled={!canChange || busy === entry.username}
+                  onChange={(event) => setRole(entry, event.target.value)}
+                >
+                  {entry.owner && <option value="owner">Super owner</option>}
+                  {canGrantOwner && !entry.owner && <option value="owner">Super owner</option>}
+                  {roles
+                    .filter((role) => !role.locked)
+                    .map((role) => (
+                      <option key={role.id} value={role.id}>
+                        {role.name}
+                      </option>
+                    ))}
+                </select>
               </div>
-              <select
-                className="select"
-                style={{ maxWidth: "12rem" }}
-                value={entry.owner ? "owner" : entry.roleId}
-                disabled={!canManage || entry.owner || busy === entry.username}
-                onChange={(event) => setRole(entry, event.target.value)}
-              >
-                {entry.owner && <option value="owner">Super owner</option>}
-                {roles
-                  .filter((role) => !role.locked)
-                  .map((role) => (
-                    <option key={role.id} value={role.id}>
-                      {role.name}
-                    </option>
-                  ))}
-              </select>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>

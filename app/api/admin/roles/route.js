@@ -5,8 +5,10 @@ import {
   PERMISSION_GROUPS,
   buildRole,
   loadGrants,
+  loadOwners,
   loadRoles,
   normalizeRole,
+  roleRank,
   saveGrants,
   saveRoles,
   sanitizeGrants,
@@ -15,37 +17,40 @@ import { logActivity } from "@/lib/activity-log";
 
 export const dynamic = "force-dynamic";
 
-function payload(roles) {
-  return roles.map((role) => ({
+function payload(roles, access, grants, ownerCount) {
+  const counts = new Map();
+  for (const grant of Object.values(grants)) {
+    if (!grant || typeof grant !== "object") continue;
+    counts.set(grant.roleId, (counts.get(grant.roleId) || 0) + 1);
+  }
+  const actorRank = roleRank(roles, access.roleId);
+  return roles.map((role, index) => ({
     id: role.id,
     name: role.name,
     description: role.description,
     permissions: role.permissions,
     locked: role.locked,
-    members: 0,
+    rank: index,
+    members: role.id === OWNER_ROLE_ID ? ownerCount : counts.get(role.id) || 0,
+    editable: role.locked ? false : access.root === true || index > actorRank,
   }));
+}
+
+async function snapshot(access) {
+  const [roles, grants, owners] = await Promise.all([loadRoles(), loadGrants(), loadOwners()]);
+  return payload(roles, access, grants, owners.length);
+}
+
+function denied(message) {
+  return NextResponse.json({ error: message }, { status: 403 });
 }
 
 export async function GET() {
   const gate = await authorize("roles.view");
   if (gate.response) return gate.response;
 
-  const roles = await loadRoles();
-  const grants = await loadGrants();
-  const counts = new Map();
-  for (const grant of Object.values(grants)) {
-    if (!grant || typeof grant !== "object") continue;
-    counts.set(grant.roleId, (counts.get(grant.roleId) || 0) + 1);
-  }
-
   return NextResponse.json(
-    {
-      roles: payload(roles).map((role) => ({
-        ...role,
-        members: role.id === OWNER_ROLE_ID ? 1 : counts.get(role.id) || 0,
-      })),
-      catalog: PERMISSION_GROUPS,
-    },
+    { roles: await snapshot(gate.access), catalog: PERMISSION_GROUPS, canGrantOwner: gate.access.root === true },
     { headers: { "Cache-Control": "no-store, max-age=0" } }
   );
 }
@@ -76,7 +81,7 @@ export async function POST(request) {
   });
 
   return NextResponse.json(
-    { ok: true, roles: payload(next), role },
+    { ok: true, roles: await snapshot(gate.access), role },
     { status: 201, headers: { "Cache-Control": "no-store" } }
   );
 }
@@ -86,6 +91,37 @@ export async function PATCH(request) {
   if (gate.response) return gate.response;
 
   const body = await request.json().catch(() => ({}));
+
+  if (Array.isArray(body.order)) {
+    const roles = await loadRoles();
+    const fixed = roles.filter((role) => role.locked);
+    const movable = roles.filter((role) => !role.locked);
+    const byId = new Map(movable.map((role) => [role.id, role]));
+    const ordered = [];
+    for (const id of body.order) {
+      const role = byId.get(id);
+      if (!role) continue;
+      ordered.push(role);
+      byId.delete(id);
+    }
+    ordered.push(...byId.values());
+    const next = [...fixed, ...ordered];
+    await saveRoles(next);
+
+    await logActivity({
+      area: "admin",
+      action: "roles-reordered",
+      username: gate.access.username,
+      detail: `Set the role hierarchy to ${next.map((role) => role.name).join(" › ")}`,
+      request,
+    });
+
+    return NextResponse.json(
+      { ok: true, roles: await snapshot(gate.access) },
+      { headers: { "Cache-Control": "no-store" } }
+    );
+  }
+
   const id = typeof body.id === "string" ? body.id : "";
   if (!id) return NextResponse.json({ error: "Pick a role first." }, { status: 400 });
 
@@ -97,6 +133,9 @@ export async function PATCH(request) {
       { error: "The Super owner role can't be changed." },
       { status: 400 }
     );
+  }
+  if (gate.access.root !== true && index <= roleRank(roles, gate.access.roleId)) {
+    return denied("You can only change roles below your own.");
   }
 
   const name = typeof body.name === "string" ? body.name.trim().slice(0, 48) : roles[index].name;
@@ -125,7 +164,7 @@ export async function PATCH(request) {
   });
 
   return NextResponse.json(
-    { ok: true, roles: payload(roles), role: updated },
+    { ok: true, roles: await snapshot(gate.access), role: updated },
     { headers: { "Cache-Control": "no-store" } }
   );
 }
@@ -137,10 +176,14 @@ export async function DELETE(request) {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get("id") || "";
   const roles = await loadRoles();
-  const target = roles.find((entry) => entry.id === id);
-  if (!target) return NextResponse.json({ error: "No role with that id." }, { status: 404 });
+  const index = roles.findIndex((entry) => entry.id === id);
+  if (index === -1) return NextResponse.json({ error: "No role with that id." }, { status: 404 });
+  const target = roles[index];
   if (target.locked) {
     return NextResponse.json({ error: "The Super owner role can't be deleted." }, { status: 400 });
+  }
+  if (gate.access.root !== true && index <= roleRank(roles, gate.access.roleId)) {
+    return denied("You can only delete roles below your own.");
   }
 
   const next = roles.filter((entry) => entry.id !== id);
@@ -160,7 +203,7 @@ export async function DELETE(request) {
   });
 
   return NextResponse.json(
-    { ok: true, roles: payload(next) },
+    { ok: true, roles: await snapshot(gate.access) },
     { headers: { "Cache-Control": "no-store" } }
   );
 }

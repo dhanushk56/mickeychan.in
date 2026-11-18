@@ -257,13 +257,13 @@ function AccountRow({
               className="select"
               style={{ maxWidth: "11rem" }}
               value={adminEntry ? (adminEntry.owner ? "owner" : adminEntry.roleId) : ""}
-              disabled={busy || adminEntry?.owner}
+              disabled={busy || adminEntry?.root || adminEntry?.manageable === false}
               onChange={(event) => onRoleChange(account, event.target.value)}
             >
               <option value="">No console access</option>
               {adminEntry?.owner && <option value="owner">Super owner</option>}
               {roles
-                .filter((role) => !role.locked)
+                .filter((role) => !(adminEntry?.owner && role.id === "owner"))
                 .map((role) => (
                   <option key={role.id} value={role.id}>
                     {role.name}
@@ -701,7 +701,10 @@ export default function AdminDashboard({ currentUser }) {
           });
       const result = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(result.error || "Could not change that access.");
-      const roleName = adminState.roles.find((role) => role.id === roleId)?.name;
+      const roleName =
+        roleId === "owner"
+          ? "Super owner"
+          : adminState.roles.find((role) => role.id === roleId)?.name;
       setError("");
       setNotice(
         roleId

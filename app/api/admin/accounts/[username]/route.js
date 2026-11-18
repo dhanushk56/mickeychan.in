@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { authorize } from "@/lib/admin-guard";
 import { deleteMember, setMemberPassword } from "@/lib/members";
-import { isSuperOwner } from "@/lib/roles";
+import { isOwnerAccount, isRootOwner } from "@/lib/roles";
 import { logActivity } from "@/lib/activity-log";
 
 export const dynamic = "force-dynamic";
@@ -11,9 +11,9 @@ export async function PATCH(request, { params }) {
   if (gate.response) return gate.response;
 
   const target = decodeURIComponent(params.username);
-  if (isSuperOwner(target) && !gate.access.owner) {
+  if ((await isOwnerAccount(target)) && gate.access.root !== true) {
     return NextResponse.json(
-      { error: "Only the super owner can change the super owner password." },
+      { error: "Only the owner can change a super owner's password." },
       { status: 403 }
     );
   }
@@ -43,9 +43,13 @@ export async function DELETE(request, { params }) {
   if (gate.response) return gate.response;
 
   const target = decodeURIComponent(params.username);
-  if (isSuperOwner(target)) {
+  if (await isOwnerAccount(target)) {
     return NextResponse.json(
-      { error: "The super owner account can't be deleted by anyone." },
+      {
+        error: isRootOwner(target)
+          ? "The super owner account can't be deleted by anyone."
+          : "Take the Super owner role away before deleting that account.",
+      },
       { status: 403 }
     );
   }
