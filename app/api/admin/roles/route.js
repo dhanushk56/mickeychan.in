@@ -106,6 +106,12 @@ export async function PATCH(request) {
     }
     ordered.push(...byId.values());
     const next = [...fixed, ...ordered];
+    if (gate.access.root !== true) {
+      const actorRank = roleRank(roles, gate.access.roleId);
+      const before = roles.slice(0, actorRank + 1).map((role) => role.id).join(",");
+      const after = next.slice(0, actorRank + 1).map((role) => role.id).join(",");
+      if (before !== after) return denied("You can't move a role above your own.");
+    }
     await saveRoles(next);
 
     await logActivity({

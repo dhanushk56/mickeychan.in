@@ -427,7 +427,7 @@ export default function AdminDashboard({ currentUser }) {
     return map;
   }, [adminState.admins]);
 
-  const canManageAdmins = currentUser?.owner === true;
+  const canManageAdmins = can("admins.manage");
 
   const filteredApplications = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -828,7 +828,7 @@ export default function AdminDashboard({ currentUser }) {
               { id: "accounts", label: "Accounts", count: data.accounts.length, show: can("accounts.view") },
               { id: "announcements", label: "Announcements", show: can("announcements.view") },
               { id: "admins", label: "Admins", count: adminState.admins.length, show: can("admins.view") },
-              { id: "roles", label: "Roles", show: currentUser?.owner === true },
+              { id: "roles", label: "Roles", show: can("roles.view") },
             ]
               .filter((item) => item.show)
               .map((item) => (
@@ -1067,7 +1067,9 @@ export default function AdminDashboard({ currentUser }) {
 
         {tab === "admins" && <AdminsPanel canManage={canManageAdmins} />}
 
-        {tab === "roles" && <RolesPanel canManage={canManageAdmins} />}
+        {tab === "roles" && (
+          <RolesPanel canManage={can("roles.manage")} canManageAdmins={canManageAdmins} />
+        )}
 
         {tab === "forms" && (
           <div className="grid gap-3">

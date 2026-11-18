@@ -390,7 +390,7 @@ function RoleEditor({
   );
 }
 
-export function RolesPanel({ canManage }) {
+export function RolesPanel({ canManage, canManageAdmins }) {
   const [roles, setRoles] = useState([]);
   const [catalog, setCatalog] = useState([]);
   const [admins, setAdmins] = useState([]);
@@ -408,11 +408,16 @@ export function RolesPanel({ canManage }) {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const [roleData, adminData] = await Promise.all([call("/api/admin/roles"), call("/api/admin/admins")]);
+      const roleData = await call("/api/admin/roles");
       setRoles(Array.isArray(roleData.roles) ? roleData.roles : []);
       setCatalog(Array.isArray(roleData.catalog) ? roleData.catalog : []);
       setCanGrantOwner(roleData.canGrantOwner === true);
-      setAdmins(Array.isArray(adminData.admins) ? adminData.admins : []);
+      try {
+        const adminData = await call("/api/admin/admins");
+        setAdmins(Array.isArray(adminData.admins) ? adminData.admins : []);
+      } catch {
+        setAdmins([]);
+      }
       setError("");
     } catch (err) {
       setError(err.message);
@@ -650,7 +655,7 @@ export function RolesPanel({ canManage }) {
         </p>
         <div className="grid gap-2 mt-3">
           {admins.map((entry) => {
-            const canChange = canManage && entry.root !== true && entry.manageable !== false;
+            const canChange = canManageAdmins && entry.root !== true && entry.manageable !== false;
             return (
               <div key={entry.username} className="flex flex-wrap items-center justify-between gap-2">
                 <div className="flex flex-wrap items-center gap-2">
