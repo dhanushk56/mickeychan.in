@@ -8,8 +8,6 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 export const fetchCache = "force-no-store";
 
-const HIDDEN_COLLABS = /mitsuha|niz unfiltered/i;
-
 function shortName(social) {
   return social.short || social.name.split(" (")[0];
 }
@@ -89,15 +87,16 @@ export default async function Home() {
     getChannelSubscribers(),
   ]);
 
-  const shown = videos.filter((video) => !HIDDEN_COLLABS.test(video.title || ""));
-  const longForm = shown.filter((video) => video.type !== "short");
-  const shorts = shown.filter((video) => video.type === "short");
-  const latest = shown.slice(0, 3);
+  const longForm = videos.filter((video) => video.type !== "short");
+  const shorts = videos.filter((video) => video.type === "short");
+  const latest = videos.slice(0, 3);
   const shortsStrip = shorts.slice(0, 5);
   const openRoles = forms.filter((form) => form.published !== false);
-  const featured = channels
-    .map((channel) => ({ channel, video: shown.find((video) => video.channel === channel.id) }))
-    .filter((entry) => entry.video);
+  const featured = longForm.slice(0, 2).map((video) => ({
+    channel: channels.find((channel) => channel.id === video.channel) || channels[0],
+    video,
+  }));
+  const heroChannels = new Set(featured.map((entry) => entry.channel.id));
 
   return (
     <>
@@ -168,7 +167,7 @@ export default async function Home() {
               <div className="flex items-center justify-between gap-3 mb-3">
                 <p className="kicker">Latest uploads</p>
                 <span className="badge badge-neutral">
-                  {featured.length > 1 ? "Both channels" : featured[0].video.channelLabel || "New"}
+                  {heroChannels.size > 1 ? "Both channels" : channelName(featured[0].channel)}
                 </span>
               </div>
               <div className={`grid gap-3 ${featured.length > 1 ? "sm:grid-cols-2" : ""}`}>
