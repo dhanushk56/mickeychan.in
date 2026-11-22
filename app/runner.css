@@ -1,8 +1,8 @@
 .scroll-runner {
-  --u: 2px;
+  --runner-band: 74px;
   position: fixed;
   inset: auto 0 0 0;
-  height: var(--runner-band, 74px);
+  height: var(--runner-band);
   z-index: 58;
   pointer-events: none;
   opacity: 0;
@@ -49,153 +49,35 @@
   will-change: transform;
 }
 
-.runner-stage {
-  position: absolute;
-  left: 0;
-  bottom: 2px;
-  width: calc(10 * var(--u));
-  height: calc(32 * var(--u));
-  transform: translateX(-50%) scale(var(--runner-scale, 1));
-  transform-origin: 50% 100%;
-}
-
-.rig {
-  position: absolute;
-  inset: 0;
-  transform-origin: 50% 100%;
-  filter: drop-shadow(0 1px 0 rgba(18, 10, 34, .22));
-  will-change: transform;
-}
-
-.rig-head,
-.rig-torso,
-.rig-thigh,
-.rig-shin,
-.rig-upper,
-.rig-fore {
-  position: absolute;
-  display: block;
-  background-image: url("/skins/steve.png");
-  background-repeat: no-repeat;
-  background-size: calc(64 * var(--u)) calc(64 * var(--u));
-  image-rendering: pixelated;
-}
-
-.rig-torso {
-  left: calc(3 * var(--u));
-  top: calc(8 * var(--u));
-  width: calc(4 * var(--u));
-  height: calc(12 * var(--u));
-  z-index: 2;
-  transform-origin: 50% 100%;
-  background-position: calc(-16 * var(--u)) calc(-20 * var(--u));
-  will-change: transform;
-}
-
-.rig-head {
-  left: calc(-2 * var(--u));
-  top: calc(-8 * var(--u));
-  width: calc(8 * var(--u));
-  height: calc(8 * var(--u));
-  z-index: 3;
-  transform-origin: 50% 100%;
-  background-position: 0 calc(-8 * var(--u));
-  will-change: transform;
-}
-
-.rig-arm {
-  position: absolute;
-  top: 0;
-  width: calc(4 * var(--u));
-  height: calc(12 * var(--u));
-  transform-origin: 50% 0;
-  will-change: transform;
-}
-
-.rig-arm--far {
-  left: calc(2.65 * var(--u));
-  z-index: 1;
-  filter: brightness(.8) saturate(.92);
-}
-
-.rig-arm--near {
-  left: calc(3.35 * var(--u));
-  z-index: 2;
-}
-
-.rig-upper {
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: calc(6 * var(--u));
-  background-position: calc(-40 * var(--u)) calc(-20 * var(--u));
-}
-
-.rig-fore {
-  left: 0;
-  top: calc(6 * var(--u));
-  width: 100%;
-  height: calc(6 * var(--u));
-  transform-origin: 50% 0;
-  background-position: calc(-40 * var(--u)) calc(-26 * var(--u));
-  will-change: transform;
-}
-
-.rig-leg {
-  position: absolute;
-  top: calc(20 * var(--u));
-  width: calc(4 * var(--u));
-  height: calc(12 * var(--u));
-  transform-origin: 50% 0;
-  will-change: transform;
-}
-
-.rig-leg--far {
-  left: calc(2.65 * var(--u));
-  z-index: 0;
-  filter: brightness(.8) saturate(.92);
-}
-
-.rig-leg--near {
-  left: calc(3.35 * var(--u));
-  z-index: 3;
-}
-
-.rig-thigh {
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: calc(6 * var(--u));
-  background-position: 0 calc(-20 * var(--u));
-}
-
-.rig-shin {
-  left: 0;
-  top: calc(6 * var(--u));
-  width: 100%;
-  height: calc(6 * var(--u));
-  transform-origin: 50% 0;
-  background-position: 0 calc(-26 * var(--u));
-  will-change: transform;
-}
-
-.rig-shadow {
+.runner-canvas {
   position: absolute;
   left: 50%;
-  bottom: calc(-.5 * var(--u));
+  bottom: 2px;
   display: block;
-  width: calc(6 * var(--u));
-  height: calc(1.4 * var(--u));
+  width: 120px;
+  max-width: none;
+  height: calc(var(--runner-band) - 2px);
+  transform: translateX(-50%);
+  filter: drop-shadow(0 1px 0 rgba(18, 10, 34, .22));
+}
+
+.runner-shadow {
+  position: absolute;
+  left: 50%;
+  bottom: 1px;
+  display: block;
+  width: 26px;
+  height: 5px;
   border-radius: 50%;
   transform: translateX(-50%);
-  background: radial-gradient(closest-side, rgba(28, 14, 54, .5), rgba(28, 14, 54, 0));
-  opacity: .3;
+  background: radial-gradient(closest-side, rgba(28, 14, 54, .45), rgba(28, 14, 54, 0));
+  opacity: .55;
 }
 
 .site-footer { padding-bottom: calc(3rem + 62px); }
 
 @media (max-width: 640px) {
   .scroll-runner { --runner-band: 64px; }
-  .runner-stage { --runner-scale: .8; }
+  .runner-canvas { width: 96px; }
   .site-footer { padding-bottom: calc(3rem + 52px); }
 }
