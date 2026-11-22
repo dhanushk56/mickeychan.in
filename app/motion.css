@@ -130,9 +130,16 @@ main[data-entering="true"] > * {
   inset: 0 0 auto 0;
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
+  transition: visibility 0s linear 410ms;
 }
 
 .flip-face[data-side="register"] { transform: rotateY(180deg); }
+
+.flip[data-face="login"] .flip-face[data-side="login"],
+.flip[data-face="register"] .flip-face[data-side="register"] { visibility: visible; }
+
+.flip[data-face="login"] .flip-face[data-side="register"],
+.flip[data-face="register"] .flip-face[data-side="login"] { visibility: hidden; }
 
 .auth-switch {
   font: inherit;
