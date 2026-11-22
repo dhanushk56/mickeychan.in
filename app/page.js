@@ -135,6 +135,8 @@ export default async function Home() {
 
       <section className="home-hero px-6 md:px-16">
         <div className="home-spotlight" aria-hidden="true" />
+        <div className="home-hero-aura" data-side="right" aria-hidden="true" />
+        <div className="home-hero-aura" data-side="left" aria-hidden="true" />
         <span className="home-ghost" aria-hidden="true">MICKEY CHAN</span>
 
         <div className="shell home-hero-inner">
@@ -163,19 +165,18 @@ export default async function Home() {
               </Link>
             </div>
 
-            <div className="home-signature home-in" style={{ "--d": "560ms" }}>
-              <span className="home-signature-label">Elsewhere</span>
-              {socials.slice(0, 4).map((social) => (
-                <a
-                  key={social.name}
-                  href={social.href}
-                  target={social.href.startsWith("mailto:") ? undefined : "_blank"}
-                  rel={social.href.startsWith("mailto:") ? undefined : "noreferrer"}
-                  className="chip"
-                >
-                  <SocialIcon name={social.icon} className="w-3.5 h-3.5" />
-                  {shortName(social)}
-                </a>
+            <div className="home-stats home-in" style={{ "--d": "560ms" }}>
+              {[
+                { value: longForm.length, label: "Videos live" },
+                { value: shorts.length, label: "Shorts" },
+                openRoles.length > 0
+                  ? { value: openRoles.length, label: "Open roles" }
+                  : { value: channels.length, label: "Channels" },
+              ].map((stat) => (
+                <div className="home-stat" key={stat.label}>
+                  <span className="home-stat-value">{stat.value}</span>
+                  <span className="home-stat-label">{stat.label}</span>
+                </div>
               ))}
             </div>
           </div>
@@ -208,25 +209,67 @@ export default async function Home() {
                   Open {channelName(featured[0].channel)} ↗
                 </a>
               </div>
+
+              {shorts.length > 0 && (
+                <div className="home-mini-rail home-in" style={{ "--d": "640ms" }}>
+                  <div className="home-mini-head">
+                    <span className="kicker">Quick hits</span>
+                    <Link href="/videos" className="home-text-link">All shorts ↗</Link>
+                  </div>
+                  <div className="home-mini-grid">
+                    {shorts.slice(0, 5).map((video) => (
+                      <Link key={video.id} href={`/videos?v=${video.id}`} className="home-mini">
+                        <span className="home-mini-thumb">
+                          <span
+                            className="home-mini-img"
+                            style={{ backgroundImage: `url(${video.thumbnail})` }}
+                            aria-hidden="true"
+                          />
+                          <span className="home-mini-view" aria-hidden="true">▶</span>
+                        </span>
+                        <span className="home-mini-meta">{video.views || "Short"}</span>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
 
-        <div className="shell home-hero-foot">
-          <a href="#latest" className="home-cue">
-            Scroll to explore
-            <span className="home-cue-line" aria-hidden="true" />
-          </a>
-          <a
-            href={`https://www.youtube.com/@${channels[0].handle}`}
-            target="_blank"
-            rel="noreferrer"
-            className="home-hero-live"
-          >
-            <span className="home-ping" aria-hidden="true" />
-            New episodes on @{channels[0].handle}
-            <span aria-hidden="true">↗</span>
-          </a>
+        <div className="shell home-hero-base home-in" style={{ "--d": "720ms" }}>
+          <div className="home-signature">
+            <span className="home-signature-label">Elsewhere</span>
+            {socials.slice(0, 4).map((social) => (
+              <a
+                key={social.name}
+                href={social.href}
+                target={social.href.startsWith("mailto:") ? undefined : "_blank"}
+                rel={social.href.startsWith("mailto:") ? undefined : "noreferrer"}
+                className="chip"
+              >
+                <SocialIcon name={social.icon} className="w-3.5 h-3.5" />
+                {shortName(social)}
+              </a>
+            ))}
+          </div>
+
+          <div className="home-hero-foot">
+            <a href="#latest" className="home-cue">
+              Scroll to explore
+              <span className="home-cue-line" aria-hidden="true" />
+            </a>
+            <a
+              href={`https://www.youtube.com/@${channels[0].handle}`}
+              target="_blank"
+              rel="noreferrer"
+              className="home-hero-live"
+            >
+              <span className="home-ping" aria-hidden="true" />
+              New episodes on @{channels[0].handle}
+              <span aria-hidden="true">↗</span>
+            </a>
+          </div>
         </div>
       </section>
 
