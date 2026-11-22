@@ -7,7 +7,6 @@ import { faces } from "@/lib/steveFigure";
 
 const EDGE = 26;
 const STRIDE = 66;
-const IDLE = 0.32;
 const NOMINAL = 34;
 const YAW_RIGHT = -3;
 const YAW_LEFT = 183;
@@ -137,6 +136,7 @@ export default function ScrollRunner() {
       }
 
       if (reduced) paint();
+      else start();
     };
 
     const tick = (time) => {
@@ -148,10 +148,22 @@ export default function ScrollRunner() {
       const step = x - before;
       if (Math.abs(step) > 0.02) facing = step < 0 ? -1 : 1;
 
-      clock += (Math.abs(step) / STRIDE + IDLE * dt) * LOOP_SECONDS;
+      clock += (Math.abs(step) / STRIDE) * LOOP_SECONDS;
 
       slide();
       paint();
+
+      if (Math.abs(target - x) < 0.08) {
+        frame = 0;
+        return;
+      }
+
+      frame = window.requestAnimationFrame(tick);
+    };
+
+    const start = () => {
+      if (frame) return;
+      last = 0;
       frame = window.requestAnimationFrame(tick);
     };
 
@@ -163,7 +175,7 @@ export default function ScrollRunner() {
       };
     }
 
-    frame = window.requestAnimationFrame(tick);
+    start();
 
     const sync = () => {
       place();
