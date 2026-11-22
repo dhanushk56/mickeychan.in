@@ -3,13 +3,9 @@
 import { useEffect, useRef } from "react";
 
 const HOT = "a, button, summary, label, input, textarea, select, [role='button'], .btn, .chip";
-const COLORS = ["#8b5cf6", "#c084fc", "#ff3d9a", "#ff7ac6", "#ffb020", "#ffd166"];
-const SPAWN_MS = 70;
-const MAX_PETALS = 36;
 
 export default function PetalCursor() {
   const pointerRef = useRef(null);
-  const layerRef = useRef(null);
 
   useEffect(() => {
     const fine = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
@@ -17,8 +13,7 @@ export default function PetalCursor() {
     if (!fine || reduced) return undefined;
 
     const pointer = pointerRef.current;
-    const layer = layerRef.current;
-    if (!pointer || !layer) return undefined;
+    if (!pointer) return undefined;
 
     const root = document.documentElement;
     root.classList.add("petal-cursor-on");
@@ -26,31 +21,9 @@ export default function PetalCursor() {
     let x = window.innerWidth / 2;
     let y = window.innerHeight / 2;
     let scale = 1;
-    let lastSpawn = 0;
 
     const apply = () => {
       pointer.style.transform = `translate3d(${x}px, ${y}px, 0) scale(${scale})`;
-    };
-
-    const spawn = (time) => {
-      if (time - lastSpawn < SPAWN_MS) return;
-      lastSpawn = time;
-      if (layer.childElementCount >= MAX_PETALS) return;
-
-      const size = 6 + Math.random() * 9;
-      const petal = document.createElement("span");
-      petal.className = "cursor-petal";
-      petal.style.left = `${x + Math.random() * 18 - 9}px`;
-      petal.style.top = `${y + Math.random() * 10 - 4}px`;
-      petal.style.width = `${size}px`;
-      petal.style.height = `${size}px`;
-      petal.style.background = COLORS[Math.floor(Math.random() * COLORS.length)];
-      petal.style.setProperty("--dx", `${Math.random() * 90 - 45}px`);
-      petal.style.setProperty("--fall", `${90 + Math.random() * 90}px`);
-      petal.style.setProperty("--spin", `${120 + Math.random() * 260}deg`);
-      petal.style.animationDuration = `${1.1 + Math.random() * 0.7}s`;
-      petal.addEventListener("animationend", () => petal.remove(), { once: true });
-      layer.appendChild(petal);
     };
 
     const move = (event) => {
@@ -58,14 +31,13 @@ export default function PetalCursor() {
       y = event.clientY;
       const hot = event.target instanceof Element && Boolean(event.target.closest(HOT));
       pointer.dataset.state = hot ? "hover" : "default";
-      scale = hot ? 1.06 : 1;
+      scale = hot ? 1.04 : 1;
       pointer.style.opacity = "1";
       apply();
-      spawn(event.timeStamp);
     };
 
     const down = () => {
-      scale = 0.9;
+      scale = 0.92;
       apply();
     };
 
@@ -96,36 +68,44 @@ export default function PetalCursor() {
       document.removeEventListener("mouseout", out);
       document.documentElement.removeEventListener("mouseleave", leave);
       root.classList.remove("petal-cursor-on");
-      layer.replaceChildren();
     };
   }, []);
 
   return (
-    <>
-      <div ref={layerRef} className="petal-cursor-layer" aria-hidden="true" />
-      <div ref={pointerRef} className="petal-pointer" aria-hidden="true">
-        <svg viewBox="0 0 30 30" data-cursor="default">
-          <g fill="none" strokeLinecap="round">
-            <path d="M5.4 4.6 11.4 20.6" stroke="#ffb020" strokeWidth="6" />
-            <path d="M5.4 4.6 16.6 17.4" stroke="#ff3d9a" strokeWidth="6.6" />
-            <path d="M5.4 4.6 20.6 13.6" stroke="#8b5cf6" strokeWidth="7" />
-          </g>
-          <circle cx="20" cy="19.6" r="2.4" fill="#8b5cf6" />
-          <circle cx="24.2" cy="22.2" r="3" fill="#ff3d9a" />
-          <circle cx="17.6" cy="24" r="2.2" fill="#ffb020" />
-          <circle cx="26" cy="26.6" r="1.5" fill="#ff3d9a" />
-        </svg>
-        <svg viewBox="0 0 30 30" data-cursor="hover">
-          <g fill="none" strokeLinecap="round">
-            <path d="M5.6 13.6C6.2 17.6 7.4 20.2 9.2 21.8" stroke="#ffb020" strokeWidth="6.6" />
-            <path d="M9.4 5.4C11.4 10 12.2 15.6 12.8 21" stroke="#ff3d9a" strokeWidth="7.2" />
-            <path d="M11.6 8.6C15.8 6.2 19.8 7.2 21.8 10.8" stroke="#8b5cf6" strokeWidth="7" />
-          </g>
-          <circle cx="21" cy="19" r="2.6" fill="#ff3d9a" />
-          <circle cx="25.2" cy="22" r="2.2" fill="#8b5cf6" />
-          <circle cx="18.6" cy="24.2" r="1.7" fill="#ffb020" />
-        </svg>
-      </div>
-    </>
+    <div ref={pointerRef} className="petal-pointer" aria-hidden="true">
+      <svg viewBox="0 0 30 30" data-cursor="default">
+        <defs>
+          <linearGradient id="cursor-pink-arrow" x1="0" y1="0" x2=".85" y2="1">
+            <stop offset="0%" stopColor="#e8b6ff" />
+            <stop offset="42%" stopColor="#ff86c8" />
+            <stop offset="100%" stopColor="#ff3d8f" />
+          </linearGradient>
+        </defs>
+        <path
+          d="M5.5 3.2 5.5 22.2 10.6 17.4 14.3 25.2 18.6 23.4 14.9 15.8 22.4 15.1 Z"
+          fill="url(#cursor-pink-arrow)"
+          stroke="#26232b"
+          strokeWidth="2.8"
+          strokeLinejoin="round"
+        />
+      </svg>
+      <svg viewBox="0 0 30 30" data-cursor="hover">
+        <defs>
+          <linearGradient id="cursor-pink-hand" x1="0" y1="0" x2=".85" y2="1">
+            <stop offset="0%" stopColor="#e8b6ff" />
+            <stop offset="42%" stopColor="#ff86c8" />
+            <stop offset="100%" stopColor="#ff3d8f" />
+          </linearGradient>
+        </defs>
+        <path
+          d="M10.2 14.6 10.2 6.3C10.2 4.9 11.1 4.1 12.3 4.1C13.5 4.1 14.4 4.9 14.4 6.3L14.4 10.6C14.8 9.8 15.6 9.3 16.6 9.3C17.9 9.3 18.8 10.2 19 11.4C19.3 10.6 20.1 10.1 21.1 10.1C22.4 10.1 23.3 11 23.5 12.2C23.8 11.4 24.6 10.9 25.4 10.9C26.4 10.9 27.2 11.7 27.2 12.7L27.2 16.8C27.2 20.2 24.5 22.9 21.1 22.9L14.4 22.9C12.2 22.9 10.1 21.9 8.8 20.2L5.5 16.2C4.7 15.4 4.7 14 5.5 13.2C6.3 12.4 7.8 12.5 8.6 13.5L10.2 15.4Z"
+          fill="url(#cursor-pink-hand)"
+          stroke="#26232b"
+          strokeWidth="2.4"
+          strokeLinejoin="round"
+          strokeLinecap="round"
+        />
+      </svg>
+    </div>
   );
 }
