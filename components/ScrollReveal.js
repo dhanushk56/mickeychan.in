@@ -37,7 +37,7 @@ export default function ScrollReveal() {
       const parent = element.parentElement || document.body;
       const index = seen.get(parent) || 0;
       seen.set(parent, index + 1);
-      element.style.setProperty("--reveal-i", String(Math.min(index, 5)));
+      element.style.setProperty("--reveal-i", String(Math.min(index, 6)));
       element.classList.add("reveal");
     }
 
@@ -49,7 +49,7 @@ export default function ScrollReveal() {
           observer.unobserve(entry.target);
         }
       },
-      { rootMargin: "0px 0px -6% 0px", threshold: 0.06 }
+      { rootMargin: "0px 0px -8% 0px", threshold: 0.12 }
     );
 
     for (const element of pending) observer.observe(element);

@@ -15,7 +15,7 @@ export default function RouteWipe() {
     const from = previous.current;
     previous.current = pathname;
 
-    if (pathname !== "/" || from === "/") return undefined;
+    if (from === pathname) return undefined;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return undefined;
 
     const root = document.documentElement;
@@ -23,11 +23,11 @@ export default function RouteWipe() {
     setLeaving(false);
     setActive(true);
 
-    const lift = window.setTimeout(() => setLeaving(true), 560);
+    const lift = window.setTimeout(() => setLeaving(true), 440);
     const settle = window.setTimeout(() => {
       setActive(false);
       root.classList.remove("is-arriving");
-    }, 1880);
+    }, 1360);
 
     return () => {
       window.clearTimeout(lift);
