@@ -5,6 +5,8 @@ import { usePathname } from "next/navigation";
 
 const useClientLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect;
 
+const AUTH_FACES = new Set(["/login", "/register"]);
+
 const PAGE_LABELS = {
   "/": "Home",
   "/videos": "Videos",
@@ -47,6 +49,7 @@ export default function RouteWipe() {
     previous.current = pathname;
 
     if (from === pathname) return undefined;
+    if (AUTH_FACES.has(from) && AUTH_FACES.has(pathname)) return undefined;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return undefined;
 
     const root = document.documentElement;

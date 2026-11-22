@@ -1,10 +1,13 @@
 import "./globals.css";
+import "./motion.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import PetalField from "@/components/PetalField";
 import ScrollProgress from "@/components/ScrollProgress";
 import ScrollReveal from "@/components/ScrollReveal";
 import RouteWipe from "@/components/RouteWipe";
+import PageEnter from "@/components/PageEnter";
+import PetalCursor from "@/components/PetalCursor";
 
 export const metadata = {
   title: {
@@ -45,8 +48,10 @@ export default function RootLayout({ children }) {
       <body>
         <div className="grid-veil" aria-hidden="true" />
         <PetalField />
+        <PetalCursor />
         <ScrollProgress />
         <ScrollReveal />
+        <PageEnter />
         <RouteWipe />
         <Navbar />
         <main className="relative z-10 pt-24">{children}</main>
