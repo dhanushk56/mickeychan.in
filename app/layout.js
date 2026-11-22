@@ -1,15 +1,16 @@
 import "./globals.css";
 import "./motion.css";
 import "./runner.css";
+import "./back-to-top.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import PetalField from "@/components/PetalField";
-import ScrollProgress from "@/components/ScrollProgress";
 import ScrollRunner from "@/components/ScrollRunner";
 import ScrollReveal from "@/components/ScrollReveal";
 import RouteWipe from "@/components/RouteWipe";
 import PageEnter from "@/components/PageEnter";
 import PetalCursor from "@/components/PetalCursor";
+import BackToTop from "@/components/BackToTop";
 
 export const metadata = {
   title: {
@@ -51,12 +52,12 @@ export default function RootLayout({ children }) {
         <div className="grid-veil" aria-hidden="true" />
         <PetalField />
         <PetalCursor />
-        <ScrollProgress />
         <ScrollRunner />
         <ScrollReveal />
         <PageEnter />
         <RouteWipe />
         <Navbar />
+        <BackToTop />
         <main className="relative z-10 pt-24">{children}</main>
         <Footer />
       </body>
