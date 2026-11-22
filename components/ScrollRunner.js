@@ -4,9 +4,9 @@ import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { pose } from "@/lib/runCycle";
 
-const EDGE = 28;
-const STRIDE = 46;
-const CADENCE = 4.4;
+const EDGE = 26;
+const STRIDE = 42;
+const CADENCE = 4.6;
 
 const clamp = (value, min, max) => (value < min ? min : value > max ? max : value);
 const fixed = (value) => value.toFixed(2);
@@ -37,13 +37,14 @@ export default function ScrollRunner() {
 
     let width = 0;
     let max = 0;
+    let unit = 2;
     let progress = 0;
     let target = 0;
     let x = 0;
     let phase = 0;
     let blend = 0;
     let pace = 0;
-    let facing = -1;
+    let facing = 1;
     let clock = 0;
     let last = 0;
     let frame = 0;
@@ -52,38 +53,46 @@ export default function ScrollRunner() {
     const measure = () => {
       width = window.innerWidth;
       max = document.documentElement.scrollHeight - window.innerHeight;
+      unit = parseFloat(getComputedStyle(stage).getPropertyValue("--u")) || 2;
     };
 
-    const place = () => {
-      progress = max > 8 ? clamp(window.scrollY / max, 0, 1) : 0;
-      target = EDGE + (1 - progress) * Math.max(0, width - EDGE * 2);
-      fill.style.transform = `scaleX(${progress.toFixed(4)})`;
-      if (ready) return;
-      x = target;
-      ready = true;
+    const paint = () => {
       lane.style.transform = `translate3d(${fixed(x)}px, 0, 0)`;
-      root.dataset.ready = "true";
+      const span = Math.max(1, width - EDGE * 2);
+      fill.style.transform = `scaleX(${clamp((x - EDGE) / span, 0, 1).toFixed(4)})`;
     };
 
     const draw = () => {
       const p = pose(phase, blend, clock, blend);
-      rig.style.transform = `translate3d(0, ${fixed(p.bob)}px, 0) scaleX(${facing})`;
+      const lift = p.bob * unit;
+      rig.style.transform = `translate3d(0, ${fixed(lift)}px, 0) scaleX(${facing})`;
       nodes.torso.style.transform = `rotate(${fixed(p.torso)}deg)`;
       nodes.head.style.transform = `rotate(${fixed(p.head)}deg)`;
       nodes.legNear.style.transform = `rotate(${fixed(p.thighNear)}deg)`;
       nodes.shinNear.style.transform = `rotate(${fixed(p.kneeNear)}deg)`;
-      nodes.footNear.style.transform = `rotate(${fixed(p.footNear)}deg)`;
       nodes.legFar.style.transform = `rotate(${fixed(p.thighFar)}deg)`;
       nodes.shinFar.style.transform = `rotate(${fixed(p.kneeFar)}deg)`;
-      nodes.footFar.style.transform = `rotate(${fixed(p.footFar)}deg)`;
       nodes.armNear.style.transform = `rotate(${fixed(p.armNear)}deg)`;
       nodes.foreNear.style.transform = `rotate(${fixed(p.elbowNear)}deg)`;
-      nodes.handNear.style.transform = `rotate(${fixed(p.wristNear)}deg)`;
       nodes.armFar.style.transform = `rotate(${fixed(p.armFar)}deg)`;
       nodes.foreFar.style.transform = `rotate(${fixed(p.elbowFar)}deg)`;
-      nodes.handFar.style.transform = `rotate(${fixed(p.wristFar)}deg)`;
-      nodes.shadow.style.transform = `translateX(-50%) scaleX(${(1 + p.bob * 0.05).toFixed(3)})`;
-      nodes.shadow.style.opacity = (0.26 + p.bob * 0.03).toFixed(3);
+      nodes.shadow.style.transform = `translateX(-50%) scaleX(${(1 - lift * 0.08).toFixed(3)})`;
+      nodes.shadow.style.opacity = (0.32 - lift * 0.06).toFixed(3);
+    };
+
+    const place = () => {
+      progress = max > 8 ? clamp(window.scrollY / max, 0, 1) : 0;
+      target = EDGE + progress * Math.max(0, width - EDGE * 2);
+      if (reduced) {
+        x = target;
+        paint();
+        draw();
+      }
+      if (ready) return;
+      x = target;
+      ready = true;
+      paint();
+      root.dataset.ready = "true";
     };
 
     const tick = (time) => {
@@ -92,18 +101,19 @@ export default function ScrollRunner() {
       clock += dt * 1000;
 
       const before = x;
-      x += (target - x) * (1 - Math.exp(-dt * 11));
+      x += (target - x) * (1 - Math.exp(-dt * 12));
       const travel = x - before;
 
       if (Math.abs(travel) > 0.03) facing = travel < 0 ? -1 : 1;
 
       phase += Math.min(Math.abs(travel) / STRIDE, CADENCE * dt);
 
-      pace += (Math.abs(travel) / dt - pace) * (1 - Math.exp(-dt * 13));
-      const want = clamp(pace / 320, 0, 1);
-      blend += (want - blend) * (1 - Math.exp(-dt * (want > blend ? 15 : 6)));
+      const speed = dt > 0 ? Math.abs(travel) / dt : 0;
+      pace += (speed - pace) * (1 - Math.exp(-dt * 13));
+      const want = clamp(pace / 280, 0, 1);
+      blend += (want - blend) * (1 - Math.exp(-dt * (want > blend ? 16 : 6)));
 
-      lane.style.transform = `translate3d(${fixed(x)}px, 0, 0)`;
+      paint();
       draw();
       frame = window.requestAnimationFrame(tick);
     };
@@ -112,7 +122,6 @@ export default function ScrollRunner() {
     place();
 
     if (reduced) {
-      draw();
       return () => {
         delete root.dataset.ready;
       };
@@ -150,32 +159,24 @@ export default function ScrollRunner() {
         <div className="runner-stage" ref={stageRef}>
           <span className="rig-shadow" data-joint="shadow" />
           <div className="rig">
-            <div className="rig-leg rig-leg-far" data-joint="legFar">
+            <div className="rig-leg rig-leg--far" data-joint="legFar">
               <span className="rig-thigh" />
-              <span className="rig-shin" data-joint="shinFar">
-                <span className="rig-foot" data-joint="footFar" />
-              </span>
+              <span className="rig-shin" data-joint="shinFar" />
             </div>
             <div className="rig-torso" data-joint="torso">
               <span className="rig-head" data-joint="head" />
-              <div className="rig-arm rig-arm-far" data-joint="armFar">
+              <div className="rig-arm rig-arm--far" data-joint="armFar">
                 <span className="rig-upper" />
-                <span className="rig-fore" data-joint="foreFar">
-                  <span className="rig-hand" data-joint="handFar" />
-                </span>
+                <span className="rig-fore" data-joint="foreFar" />
               </div>
-              <div className="rig-arm rig-arm-near" data-joint="armNear">
+              <div className="rig-arm rig-arm--near" data-joint="armNear">
                 <span className="rig-upper" />
-                <span className="rig-fore" data-joint="foreNear">
-                  <span className="rig-hand" data-joint="handNear" />
-                </span>
+                <span className="rig-fore" data-joint="foreNear" />
               </div>
             </div>
-            <div className="rig-leg rig-leg-near" data-joint="legNear">
+            <div className="rig-leg rig-leg--near" data-joint="legNear">
               <span className="rig-thigh" />
-              <span className="rig-shin" data-joint="shinNear">
-                <span className="rig-foot" data-joint="footNear" />
-              </span>
+              <span className="rig-shin" data-joint="shinNear" />
             </div>
           </div>
         </div>
