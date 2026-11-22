@@ -1,6 +1,7 @@
 "use client";
 
-import { useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import MemberLogin from "@/components/MemberLogin";
 import MemberRegister from "@/components/MemberRegister";
 
@@ -15,8 +16,23 @@ export default function AuthFlip({
 }) {
   const [face, setFace] = useState(initialFace);
   const [height, setHeight] = useState(null);
+  const router = useRouter();
+  const timer = useRef(null);
   const loginRef = useRef(null);
   const registerRef = useRef(null);
+
+  useEffect(() => () => {
+    if (timer.current) window.clearTimeout(timer.current);
+  }, []);
+
+  const switchTo = (side) => {
+    setFace(side);
+    if (timer.current) window.clearTimeout(timer.current);
+    timer.current = window.setTimeout(() => {
+      const target = side === "register" ? "/register" : "/login";
+      router.replace(`${target}${window.location.search}`, { scroll: false });
+    }, 840);
+  };
 
   useLayoutEffect(() => {
     const measure = () => {
@@ -58,7 +74,7 @@ export default function AuthFlip({
                 discordEnabled={discordEnabled}
                 initialError={initialError}
                 initialNotice={initialNotice}
-                onSwitch={() => setFace("register")}
+                onSwitch={() => switchTo("register")}
               />
             </div>
             <div
@@ -72,7 +88,7 @@ export default function AuthFlip({
                 next={next}
                 googleEnabled={googleEnabled}
                 discordEnabled={discordEnabled}
-                onSwitch={() => setFace("login")}
+                onSwitch={() => switchTo("login")}
               />
             </div>
           </div>
