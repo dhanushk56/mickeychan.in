@@ -21,9 +21,20 @@ export default async function VideosPage({ searchParams }) {
             <h1 className="display-lg mt-2">Videos &amp; Shorts</h1>
             <p className="muted mt-3">
               Pulled live from{" "}
-              <a href={channelUrl} target="_blank" rel="noreferrer" className="font-semibold" style={{ color: "var(--primary)" }}>
-                @mickeychaan
-              </a>
+              {channels.map((channel, index) => (
+                <span key={channel.id}>
+                  {index > 0 ? (index === channels.length - 1 ? " and " : ", ") : null}
+                  <a
+                    href={channel.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="font-semibold"
+                    style={{ color: "var(--primary)" }}
+                  >
+                    {channel.name || channel.label}
+                  </a>
+                </span>
+              ))}
               . Click any thumbnail to watch without leaving the site.
             </p>
           </div>
@@ -36,7 +47,7 @@ export default async function VideosPage({ searchParams }) {
           videos={videos}
           initialId={initialId}
           channelUrl={channelUrl}
-          channels={channels.map(({ id, label, url }) => ({ id, label, url }))}
+          channels={channels.map(({ id, name, label, url }) => ({ id, name, label, url }))}
         />
       </div>
     </section>

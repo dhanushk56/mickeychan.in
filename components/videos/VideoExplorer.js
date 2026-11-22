@@ -124,50 +124,43 @@ export default function VideoExplorer({ videos, initialId = "", channelUrl, chan
 
   return (
     <div className="grid gap-6">
-      <div className="grid gap-3">
+      <div className="flex flex-wrap items-end gap-3">
         {channels.length > 1 && (
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="faint text-xs font-bold uppercase" style={{ letterSpacing: ".14em" }}>
-              Channel
-            </span>
-            {[{ id: "all", label: "Both" }, ...channels].map((item) => (
-              <button
-                key={item.id}
-                type="button"
-                className="chip"
-                data-active={channel === item.id}
-                aria-pressed={channel === item.id}
-                onClick={() => setChannel(item.id)}
-              >
-                {item.label}
-                <span className="tab-count">{channelCounts[item.id] ?? 0}</span>
-              </button>
-            ))}
-          </div>
+          <label className="field" style={{ minWidth: "12rem" }}>
+            <span className="field-label">Channel</span>
+            <select
+              className="select"
+              value={channel}
+              onChange={(event) => setChannel(event.target.value)}
+              aria-label="Filter by channel"
+            >
+              <option value="all">Both channels ({channelCounts.all})</option>
+              {channels.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.name || item.label} ({channelCounts[item.id] ?? 0})
+                </option>
+              ))}
+            </select>
+          </label>
         )}
 
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="tabbar" role="tablist" aria-label="Filter videos">
-            {[
-              { id: "all", label: "Everything" },
-              { id: "video", label: "Videos" },
-              { id: "short", label: "Shorts" },
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                role="tab"
-                aria-selected={filter === tab.id}
-                className="tab"
-                data-active={filter === tab.id}
-                onClick={() => setFilter(tab.id)}
-              >
-                {tab.label}
-                <span className="tab-count">{counts[tab.id]}</span>
-              </button>
-            ))}
-          </div>
-          <p className="faint text-xs">{visible.length} showing</p>
-        </div>
+        <label className="field" style={{ minWidth: "10.5rem" }}>
+          <span className="field-label">Show</span>
+          <select
+            className="select"
+            value={filter}
+            onChange={(event) => setFilter(event.target.value)}
+            aria-label="Filter by video type"
+          >
+            <option value="all">Everything ({counts.all})</option>
+            <option value="video">Videos ({counts.video})</option>
+            <option value="short">Shorts ({counts.short})</option>
+          </select>
+        </label>
+
+        <p className="faint text-xs" style={{ marginLeft: "auto", paddingBottom: ".72rem" }}>
+          {visible.length} showing
+        </p>
       </div>
 
       {visible.length === 0 ? (
