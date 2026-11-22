@@ -5,8 +5,8 @@ import { usePathname } from "next/navigation";
 import { pose } from "@/lib/runCycle";
 
 const EDGE = 26;
-const STRIDE = 42;
-const CADENCE = 4.6;
+const STRIDE = 60;   // px of travel per full stride (the new cycle swings wider than the old one)
+const CADENCE = 3;   // max strides per second; the reference clip runs at ~1.6
 
 const clamp = (value, min, max) => (value < min ? min : value > max ? max : value);
 const fixed = (value) => value.toFixed(2);
