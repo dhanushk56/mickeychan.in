@@ -78,22 +78,23 @@ export default function PetalCursor() {
       pointer.style.opacity = "0";
     };
 
-    const enter = () => {
-      pointer.style.opacity = "1";
+    const out = (event) => {
+      if (event.relatedTarget) return;
+      leave();
     };
 
     window.addEventListener("pointermove", move, { passive: true });
     window.addEventListener("pointerdown", down, { passive: true });
     window.addEventListener("pointerup", up, { passive: true });
-    document.addEventListener("pointerleave", leave);
-    document.addEventListener("pointerenter", enter);
+    document.addEventListener("mouseout", out);
+    document.documentElement.addEventListener("mouseleave", leave);
 
     return () => {
       window.removeEventListener("pointermove", move);
       window.removeEventListener("pointerdown", down);
       window.removeEventListener("pointerup", up);
-      document.removeEventListener("pointerleave", leave);
-      document.removeEventListener("pointerenter", enter);
+      document.removeEventListener("mouseout", out);
+      document.documentElement.removeEventListener("mouseleave", leave);
       root.classList.remove("petal-cursor-on");
       layer.replaceChildren();
     };
