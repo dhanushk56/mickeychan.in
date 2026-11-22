@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 
 const HOT = "a, button, summary, label, input, textarea, select, [role='button'], .btn, .chip";
-const COLORS = ["#c4b5fd", "#a78bfa", "#f9a8d4", "#93c5fd"];
+const COLORS = ["#8b5cf6", "#c084fc", "#ff3d9a", "#ff7ac6", "#ffb020", "#ffd166"];
 const SPAWN_MS = 70;
 const MAX_PETALS = 36;
 
@@ -101,19 +101,21 @@ export default function PetalCursor() {
     <>
       <div ref={layerRef} className="petal-cursor-layer" aria-hidden="true" />
       <div ref={pointerRef} className="petal-pointer" aria-hidden="true">
-        <svg viewBox="0 0 26 26">
+        <svg viewBox="0 0 30 30">
           <defs>
             <linearGradient id="petal-pointer-fill" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" style={{ stopColor: "var(--accent)" }} />
-              <stop offset="100%" style={{ stopColor: "var(--primary)" }} />
+              <stop offset="0%" style={{ stopColor: "#8b5cf6" }} />
+              <stop offset="50%" style={{ stopColor: "#ff3d9a" }} />
+              <stop offset="100%" style={{ stopColor: "#ffb020" }} />
             </linearGradient>
           </defs>
           <path
-            d="M6 2.5 6 21.5 10.6 17 13.3 23.2 16.6 21.7 13.9 15.7 20.2 15.2 Z"
+            d="M7 3.5 7 22 11.6 17.4 14.3 23.6 17.8 22 15.1 15.9 21.2 15.4 Z"
             fill="url(#petal-pointer-fill)"
-            stroke="rgba(255, 255, 255, .92)"
-            strokeWidth="1.4"
+            stroke="url(#petal-pointer-fill)"
+            strokeWidth="3.4"
             strokeLinejoin="round"
+            strokeLinecap="round"
           />
         </svg>
       </div>
