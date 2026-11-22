@@ -1,7 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
+
+const RESEND_SECONDS = 60;
 
 export default function VerifyEmail({ email = "", next = "/positions", emailConfigured = true }) {
   const [address, setAddress] = useState(email);
@@ -10,8 +12,15 @@ export default function VerifyEmail({ email = "", next = "/positions", emailConf
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState("");
   const [error, setError] = useState("");
+  const [cooldown, setCooldown] = useState(0);
 
   const emailLooksValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(address.trim());
+
+  useEffect(() => {
+    if (cooldown <= 0) return undefined;
+    const timer = window.setTimeout(() => setCooldown((value) => Math.max(0, value - 1)), 1000);
+    return () => window.clearTimeout(timer);
+  }, [cooldown]);
 
   async function send() {
     setBusy(true);
@@ -24,8 +33,12 @@ export default function VerifyEmail({ email = "", next = "/positions", emailConf
         body: JSON.stringify({ email: address.trim() === email ? "" : address.trim() }),
       });
       const result = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(result.error || "Could not send the code.");
+      if (!response.ok) {
+        if (result.waitSeconds) setCooldown(Math.max(0, Number(result.waitSeconds) || 0));
+        throw new Error(result.error || "Could not send the code.");
+      }
       setSent(true);
+      setCooldown(RESEND_SECONDS);
       setStatus(`Code sent to ${result.email || address}.`);
     } catch (err) {
       setError(err.message);
@@ -96,9 +109,15 @@ export default function VerifyEmail({ email = "", next = "/positions", emailConf
             type="button"
             className="btn btn-secondary w-full mt-3"
             onClick={send}
-            disabled={busy || !emailConfigured || !emailLooksValid}
+            disabled={busy || cooldown > 0 || !emailConfigured || !emailLooksValid}
           >
-            {busy ? "Sending…" : sent ? "Send a new code" : "Send the code"}
+            {busy
+              ? "Sending…"
+              : cooldown > 0
+                ? `Resend code in ${cooldown}s`
+                : sent
+                  ? "Resend code"
+                  : "Send the code"}
           </button>
 
           {status && (

@@ -1,7 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
+
+const RESEND_SECONDS = 60;
 
 export default function PasswordReset() {
   const [step, setStep] = useState("request");
@@ -13,6 +15,13 @@ export default function PasswordReset() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const [cooldown, setCooldown] = useState(0);
+
+  useEffect(() => {
+    if (cooldown <= 0) return undefined;
+    const timer = window.setTimeout(() => setCooldown((value) => Math.max(0, value - 1)), 1000);
+    return () => window.clearTimeout(timer);
+  }, [cooldown]);
 
   async function requestCode(event) {
     if (event) event.preventDefault();
@@ -25,8 +34,12 @@ export default function PasswordReset() {
         body: JSON.stringify({ email }),
       });
       const result = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(result.error || "We couldn't send that code.");
+      if (!response.ok) {
+        if (result.waitSeconds) setCooldown(Math.max(0, Number(result.waitSeconds) || 0));
+        throw new Error(result.error || "We couldn't send that code.");
+      }
       setStep("reset");
+      setCooldown(RESEND_SECONDS);
       setNotice(`We sent a 6-digit code to ${result.email || email}.`);
     } catch (err) {
       setError(err.message);
@@ -209,9 +222,9 @@ export default function PasswordReset() {
                 type="button"
                 className="btn btn-ghost btn-sm"
                 onClick={requestCode}
-                disabled={busy}
+                disabled={busy || cooldown > 0}
               >
-                Send another code
+                {cooldown > 0 ? `Resend code in ${cooldown}s` : "Resend code"}
               </button>
               <button
                 type="button"
@@ -220,6 +233,7 @@ export default function PasswordReset() {
                   setStep("request");
                   setError("");
                   setNotice("");
+                  setCooldown(0);
                   setCode("");
                 }}
               >
