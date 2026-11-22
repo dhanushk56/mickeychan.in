@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import MemberLogin from "@/components/MemberLogin";
+import AuthFlip from "@/components/AuthFlip";
 import { hasMembers, memberFromCookieStore } from "@/lib/members";
 import { isGoogleConfigured } from "@/lib/google";
 import { isDiscordConfigured } from "@/lib/discord";
@@ -41,7 +41,8 @@ export default async function LoginPage({ searchParams }) {
     searchParams?.reset === "1" ? "Password updated — log in with your new password." : "";
 
   return (
-    <MemberLogin
+    <AuthFlip
+      initialFace="login"
       next={next}
       hasAccounts={await hasMembers()}
       googleEnabled={isGoogleConfigured()}

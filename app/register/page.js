@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import MemberRegister from "@/components/MemberRegister";
+import AuthFlip from "@/components/AuthFlip";
 import { memberFromCookieStore } from "@/lib/members";
 import { isGoogleConfigured } from "@/lib/google";
 import { isDiscordConfigured } from "@/lib/discord";
@@ -20,7 +20,8 @@ export default async function RegisterPage({ searchParams }) {
   if (member) redirect(next);
 
   return (
-    <MemberRegister
+    <AuthFlip
+      initialFace="register"
       next={next}
       googleEnabled={isGoogleConfigured()}
       discordEnabled={isDiscordConfigured()}
