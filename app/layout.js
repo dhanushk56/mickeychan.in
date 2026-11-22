@@ -1,9 +1,11 @@
 import "./globals.css";
 import "./motion.css";
+import "./runner.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import PetalField from "@/components/PetalField";
 import ScrollProgress from "@/components/ScrollProgress";
+import ScrollRunner from "@/components/ScrollRunner";
 import ScrollReveal from "@/components/ScrollReveal";
 import RouteWipe from "@/components/RouteWipe";
 import PageEnter from "@/components/PageEnter";
@@ -50,6 +52,7 @@ export default function RootLayout({ children }) {
         <PetalField />
         <PetalCursor />
         <ScrollProgress />
+        <ScrollRunner />
         <ScrollReveal />
         <PageEnter />
         <RouteWipe />
