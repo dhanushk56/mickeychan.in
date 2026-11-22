@@ -12,6 +12,7 @@ export default function MemberLogin({
   discordEnabled = false,
   initialError = "",
   initialNotice = "",
+  onSwitch = () => {},
 }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -39,134 +40,126 @@ export default function MemberLogin({
   }
 
   return (
-    <div className="page">
-      <div className="shell" style={{ maxWidth: "30rem" }}>
-        <form onSubmit={submit} className="glass-card p-8 animate-rise">
-          <span className="glass-inset icon-button mx-auto mb-5" aria-hidden="true">
-            ☺
-          </span>
-          <p className="kicker justify-center">Site account</p>
-          <h1 className="font-display text-2xl font-bold mt-3 mb-2 text-center">Log in</h1>
-          <p className="muted text-sm leading-relaxed mb-6 text-center">
-            Log in to apply for a role and follow the status of your application.
-          </p>
+    <form onSubmit={submit} className="glass-card p-8">
+      <span className="glass-inset icon-button mx-auto mb-5" aria-hidden="true">
+        ☺
+      </span>
+      <p className="kicker justify-center">Site account</p>
+      <h1 className="font-display text-2xl font-bold mt-3 mb-2 text-center">Log in</h1>
+      <p className="muted text-sm leading-relaxed mb-6 text-center">
+        Log in to apply for a role and follow the status of your application.
+      </p>
 
-          {!hasAccounts && (
-            <p className="badge badge-pending mb-4 w-full justify-center" role="alert">
-              No accounts exist yet — create one below.
-            </p>
-          )}
+      {!hasAccounts && (
+        <p className="badge badge-pending mb-4 w-full justify-center" role="alert">
+          No accounts exist yet — create one below.
+        </p>
+      )}
 
-          <label className="field">
-            <span className="field-label">Username or email</span>
-            <input
-              className="input"
-              value={username}
-              onChange={(event) => setUsername(event.target.value)}
-              autoComplete="username"
-              autoCapitalize="none"
-              spellCheck={false}
-              placeholder="yourname or you@example.com"
-              required
-            />
-          </label>
+      <label className="field">
+        <span className="field-label">Username or email</span>
+        <input
+          className="input"
+          value={username}
+          onChange={(event) => setUsername(event.target.value)}
+          autoComplete="username"
+          autoCapitalize="none"
+          spellCheck={false}
+          placeholder="yourname or you@example.com"
+          required
+        />
+      </label>
 
-          <label className="field mt-3">
-            <span className="field-label flex items-center justify-between">
-              Password
-              <Link
-                href="/forgot-password"
-                className="hover:underline normal-case tracking-normal"
-                style={{ color: "var(--primary)", fontWeight: 600 }}
-              >
-                Forgot password?
-              </Link>
-            </span>
-            <div className="relative flex items-center">
-              <input
-                className="input"
-                type={reveal ? "text" : "password"}
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-                placeholder="••••••••"
-                autoComplete="current-password"
-                required
-                style={{ paddingRight: "3rem" }}
-              />
-              <button
-                type="button"
-                className="icon-button absolute right-2"
-                onClick={() => setReveal(!reveal)}
-                aria-label={reveal ? "Hide password" : "Show password"}
-                style={{ width: "1.9rem", height: "1.9rem" }}
-              >
-                {reveal ? "◡" : "◉"}
-              </button>
-            </div>
-          </label>
-
-          {initialNotice && !error && (
-            <p className="badge badge-accepted mt-4 w-full justify-center" role="status">
-              {initialNotice}
-            </p>
-          )}
-
-          {error && (
-            <p className="badge badge-denied mt-4 w-full justify-center" role="alert">
-              {error}
-            </p>
-          )}
-
-          <button
-            type="submit"
-            className="btn btn-primary w-full mt-5"
-            disabled={busy || !username || !password}
+      <label className="field mt-3">
+        <span className="field-label flex items-center justify-between">
+          Password
+          <Link
+            href="/forgot-password"
+            className="hover:underline normal-case tracking-normal"
+            style={{ color: "var(--primary)", fontWeight: 600 }}
           >
-            {busy ? "Signing in…" : "Log in ↗"}
+            Forgot password?
+          </Link>
+        </span>
+        <div className="relative flex items-center">
+          <input
+            className="input"
+            type={reveal ? "text" : "password"}
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            placeholder="••••••••"
+            autoComplete="current-password"
+            required
+            style={{ paddingRight: "3rem" }}
+          />
+          <button
+            type="button"
+            className="icon-button absolute right-2"
+            onClick={() => setReveal(!reveal)}
+            aria-label={reveal ? "Hide password" : "Show password"}
+            style={{ width: "1.9rem", height: "1.9rem" }}
+          >
+            {reveal ? "◡" : "◉"}
           </button>
+        </div>
+      </label>
 
-          {(googleEnabled || discordEnabled) && (
-            <>
-              <div className="flex items-center gap-3 my-5" aria-hidden="true">
-                <span className="h-px flex-1" style={{ background: "var(--glass-edge)" }} />
-                <span className="faint text-xs uppercase tracking-widest">or</span>
-                <span className="h-px flex-1" style={{ background: "var(--glass-edge)" }} />
-              </div>
-              <div className="grid gap-2">
-                {googleEnabled && (
-                  <a
-                    href={`/api/auth/google?next=${encodeURIComponent(next)}`}
-                    className="btn btn-secondary w-full gap-2"
-                  >
-                    <GoogleMark />
-                    Continue with Google
-                  </a>
-                )}
-                {discordEnabled && (
-                  <a
-                    href={`/api/auth/discord?next=${encodeURIComponent(next)}`}
-                    className="btn btn-secondary w-full gap-2"
-                  >
-                    <DiscordMark />
-                    Continue with Discord
-                  </a>
-                )}
-              </div>
-            </>
-          )}
+      {initialNotice && !error && (
+        <p className="badge badge-accepted mt-4 w-full justify-center" role="status">
+          {initialNotice}
+        </p>
+      )}
 
-          <p className="faint text-xs mt-5 text-center">
-            No account yet?{" "}
-            <Link
-              href={`/register?next=${encodeURIComponent(next)}`}
-              className="hover:underline"
-              style={{ color: "var(--primary)" }}
-            >
-              Register Now
-            </Link>
-          </p>
-        </form>
-      </div>
-    </div>
+      {error && (
+        <p className="badge badge-denied mt-4 w-full justify-center" role="alert">
+          {error}
+        </p>
+      )}
+
+      <button
+        type="submit"
+        className="btn btn-primary w-full mt-5"
+        disabled={busy || !username || !password}
+      >
+        {busy ? "Signing in…" : "Log in ↗"}
+      </button>
+
+      {(googleEnabled || discordEnabled) && (
+        <>
+          <div className="flex items-center gap-3 my-5" aria-hidden="true">
+            <span className="h-px flex-1" style={{ background: "var(--glass-edge)" }} />
+            <span className="faint text-xs uppercase tracking-widest">or</span>
+            <span className="h-px flex-1" style={{ background: "var(--glass-edge)" }} />
+          </div>
+          <div className="grid gap-2">
+            {googleEnabled && (
+              <a
+                href={`/api/auth/google?next=${encodeURIComponent(next)}`}
+                className="btn btn-secondary w-full gap-2"
+              >
+                <GoogleMark />
+                Continue with Google
+              </a>
+            )}
+            {discordEnabled && (
+              <a
+                href={`/api/auth/discord?next=${encodeURIComponent(next)}`}
+                className="btn btn-secondary w-full gap-2"
+              >
+                <DiscordMark />
+                Continue with Discord
+              </a>
+            )}
+          </div>
+        </>
+      )}
+
+      <p className="faint text-xs mt-5 text-center">
+        No account yet?{" "}
+        <button type="button" onClick={onSwitch} className="auth-switch">
+          Register Now
+        </button>
+      </p>
+    </form>
   );
 }
