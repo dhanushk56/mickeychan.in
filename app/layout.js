@@ -70,7 +70,7 @@ export default function RootLayout({ children }) {
         <div className="theme-dock">
           <ThemeToggle />
         </div>
-        <main className="relative z-10 pt-24">{children}</main>
+        <main className="relative z-10">{children}</main>
         <Footer />
       </body>
     </html>
