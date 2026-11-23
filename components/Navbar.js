@@ -114,14 +114,9 @@ export default function Navbar() {
                 )}
               </Link>
             ) : (
-              <>
-                <Link href="/login" className="nav-link">
-                  Log in
-                </Link>
-                <Link href="/join" className="btn btn-primary btn-sm">
-                  Join us
-                </Link>
-              </>
+              <Link href="/login" className="nav-link">
+                Log in
+              </Link>
             )}
           </div>
         </div>
@@ -205,24 +200,14 @@ export default function Navbar() {
             </LogoutButton>
           </>
         ) : (
-          <>
-            <Link
-              href="/login"
-              className="btn btn-secondary"
-              style={{ "--i": String(drawerBase) }}
-              onClick={() => setOpen(false)}
-            >
-              Log in
-            </Link>
-            <Link
-              href="/join"
-              className="btn btn-primary"
-              style={{ "--i": String(drawerBase + 1) }}
-              onClick={() => setOpen(false)}
-            >
-              Join us
-            </Link>
-          </>
+          <Link
+            href="/login"
+            className="btn btn-secondary"
+            style={{ "--i": String(drawerBase) }}
+            onClick={() => setOpen(false)}
+          >
+            Log in
+          </Link>
         )}
       </nav>
     </>

@@ -123,10 +123,16 @@
     display: inline-flex;
     flex-wrap: wrap;
     gap: .25rem;
-    padding: .25rem;
-    border-radius: .625rem;
-    background: var(--surface-2);
-    border: 1px solid var(--line-soft);
+    padding: .3rem;
+    border-radius: .75rem;
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, .065) 0%, rgba(255, 255, 255, .015) 62%, transparent 100%),
+      var(--glass);
+    border: 1px solid var(--glass-line);
+    -webkit-backdrop-filter: blur(20px) saturate(160%);
+    backdrop-filter: blur(20px) saturate(160%);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .09),
+      0 20px 44px -38px rgba(0, 0, 0, .92);
   }
 
   .tab {
@@ -135,34 +141,61 @@
     gap: .375rem;
     padding: .4375rem .75rem;
     border-radius: .5rem;
-    border: none;
+    border: 1px solid transparent;
     background: transparent;
     color: var(--text-muted);
     font-family: inherit;
     font-size: .8125rem;
     font-weight: 500;
     cursor: pointer;
-    transition: color 140ms ease, background-color 140ms ease;
+    transition: color 220ms var(--ease-glide), background-color 220ms var(--ease-glide),
+      border-color 220ms var(--ease-glide), transform 260ms var(--ease-glide),
+      box-shadow 260ms var(--ease-glide);
   }
 
-  .tab:hover { color: var(--text); }
+  .tab:hover {
+    color: var(--text);
+    background: var(--hover-tint);
+    transform: translateY(-1px);
+  }
 
   .tab[data-active="true"] {
     color: var(--text);
-    background: var(--surface);
-    box-shadow: var(--shadow-1);
+    background: color-mix(in srgb, var(--primary) 15%, var(--surface));
+    border-color: color-mix(in srgb, var(--primary) 30%, transparent);
+    box-shadow: 0 12px 26px -20px color-mix(in srgb, var(--primary) 80%, transparent),
+      inset 0 1px 0 rgba(255, 255, 255, .1);
   }
 
   .tab-count {
     display: inline-grid;
     place-items: center;
-    min-width: 1.25rem;
-    height: 1.25rem;
-    padding: 0 .25rem;
-    color: var(--text-muted);
+    min-width: 1.375rem;
+    height: 1.375rem;
+    padding: 0 .375rem;
+    border-radius: 999px;
+    border: 1px solid color-mix(in srgb, var(--primary) 26%, transparent);
+    background: color-mix(in srgb, var(--primary) 15%, transparent);
+    color: color-mix(in srgb, var(--primary-strong) 86%, var(--text));
     font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
     font-size: .6875rem;
+    font-weight: 600;
     font-variant-numeric: tabular-nums;
+    transition: background-color 240ms var(--ease-glide), border-color 240ms var(--ease-glide),
+      color 240ms var(--ease-glide), transform 240ms var(--ease-glide);
+  }
+
+  .tab:hover .tab-count {
+    background: color-mix(in srgb, var(--primary) 26%, transparent);
+    color: var(--text);
+    transform: translateY(-1px);
+  }
+
+  .tab[data-active="true"] .tab-count {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #1b1024;
+    box-shadow: 0 6px 18px -12px color-mix(in srgb, var(--primary) 90%, transparent);
   }
 
   .chip {
@@ -276,19 +309,19 @@
   .sub-handle { font-size: .75rem; color: var(--text-faint); }
   .reveal {
     opacity: 0;
-    transform: translate3d(0, 26px, 0);
-    filter: blur(6px);
-    transition: opacity 900ms cubic-bezier(.16, 1, .3, 1),
-      transform 1000ms cubic-bezier(.16, 1, .3, 1), filter 900ms ease;
-    transition-delay: calc(var(--reveal-i, 0) * 70ms);
-    will-change: opacity, transform, filter;
+    transform: translate3d(0, 14px, 0);
+    transition: opacity 700ms cubic-bezier(.22, 1, .36, 1),
+      transform 780ms cubic-bezier(.22, 1, .36, 1);
+    transition-delay: calc(var(--reveal-i, 0) * 40ms);
   }
 
   .reveal.is-revealed {
     opacity: 1;
     transform: none;
-    filter: none;
-    will-change: auto;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .reveal { opacity: 1; transform: none; transition: none; }
   }
   .video-card {
     display: flex;
