@@ -67,9 +67,6 @@ export default function Navbar() {
       <header className="site-nav">
         <div className="nav-shell" data-scrolled={scrolled}>
           <div className="nav-start">
-            <Link href="/" className="brand-mark" aria-label="Mickey Chan home">
-              <img src="/mickey-logo.png" alt="" className="brand-logo" width={34} height={34} />
-            </Link>
             <button
               type="button"
               className="icon-button menu-button"
@@ -84,6 +81,9 @@ export default function Navbar() {
                 <span />
               </span>
             </button>
+            <Link href="/" className="brand-mark" aria-label="Mickey Chan home">
+              <img src="/mickey-logo.png" alt="" className="brand-logo" width={34} height={34} />
+            </Link>
           </div>
 
           <span className="nav-wordmark">Mickey Chan</span>
