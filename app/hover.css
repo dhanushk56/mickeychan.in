@@ -150,30 +150,6 @@
   border-color: color-mix(in srgb, var(--primary) 22%, transparent);
 }
 
-html.petal-cursor-on input,
-html.petal-cursor-on textarea,
-html.petal-cursor-on [contenteditable="true"] {
-  cursor: none !important;
-}
-
-.petal-pointer svg[data-cursor="text"] {
-  opacity: 0;
-  transform: scale(.82);
-}
-
-.petal-pointer[data-state="text"] svg[data-cursor="default"],
-.petal-pointer[data-state="text"] svg[data-cursor="hover"] {
-  opacity: 0;
-  transform: scale(.82);
-}
-
-.petal-pointer[data-state="text"] svg[data-cursor="text"] {
-  opacity: 1;
-  transform: none;
-}
-
-.petal-pointer[data-state="text"] { translate: -12px -10px; }
-
 .flip { max-width: 25rem; margin-inline: auto; }
 
 .flip .glass-card { padding: 1.4rem 1.45rem 1.5rem; }
