@@ -27,15 +27,6 @@ jobs:
           node-version: 22
           cache: npm
 
-      - name: Rebuild the lockfile from the pinned versions
-        run: npm install --package-lock-only --no-audit --no-fund
-
-      - name: Warn when the committed lockfile is out of date
-        run: |
-          if ! git diff --quiet -- package-lock.json; then
-            echo "::warning file=package-lock.json::package-lock.json does not match package.json. Run npm install locally and commit package-lock.json."
-          fi
-
       - name: Install exact dependencies
         run: npm ci
 
