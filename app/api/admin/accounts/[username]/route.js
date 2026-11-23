@@ -7,10 +7,11 @@ import { logActivity } from "@/lib/activity-log";
 export const dynamic = "force-dynamic";
 
 export async function PATCH(request, { params }) {
+  const { username } = await params;
   const gate = await authorize("accounts.password");
   if (gate.response) return gate.response;
 
-  const target = decodeURIComponent(params.username);
+  const target = decodeURIComponent(username);
   if ((await isOwnerAccount(target)) && gate.access.root !== true) {
     return NextResponse.json(
       { error: "Only the owner can change a super owner's password." },
@@ -39,10 +40,11 @@ export async function PATCH(request, { params }) {
 }
 
 export async function DELETE(request, { params }) {
+  const { username } = await params;
   const gate = await authorize("accounts.delete");
   if (gate.response) return gate.response;
 
-  const target = decodeURIComponent(params.username);
+  const target = decodeURIComponent(username);
   if (await isOwnerAccount(target)) {
     return NextResponse.json(
       {

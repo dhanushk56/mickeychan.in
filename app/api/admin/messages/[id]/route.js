@@ -8,12 +8,13 @@ const SUBMISSIONS_KEY = "submissions:join";
 export const dynamic = "force-dynamic";
 
 export async function DELETE(request, { params }) {
+  const { id } = await params;
   const gate = await authorize("messages.delete");
   if (gate.response) return gate.response;
 
   const messages = await kvGet(SUBMISSIONS_KEY, []);
-  const target = messages.find((entry) => entry.id === params.id);
-  const next = messages.filter((entry) => entry.id !== params.id);
+  const target = messages.find((entry) => entry.id === id);
+  const next = messages.filter((entry) => entry.id !== id);
   if (next.length === messages.length) {
     return NextResponse.json({ error: "Message not found." }, { status: 404 });
   }

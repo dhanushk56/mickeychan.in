@@ -15,7 +15,8 @@ function safeNext(value) {
 }
 
 export default async function VerifyPage({ searchParams }) {
-  const next = safeNext(searchParams?.next);
+  const query = await searchParams;
+  const next = safeNext(query?.next);
   const member = await memberFromCookieStore(cookies());
   if (!member) redirect(`/login?next=${encodeURIComponent("/verify")}`);
   if (!EMAIL_VERIFICATION_REQUIRED || member.emailVerified) redirect(next);

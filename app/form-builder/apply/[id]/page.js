@@ -5,7 +5,6 @@ import ApplyForm from "@/components/form-builder/ApplyForm";
 import { memberFromCookieStore } from "@/lib/members";
 import { STATUS_TEXT, applicationGate, memberSubmission, submissionsKey } from "@/lib/applications";
 import { isReadyForm } from "@/lib/form-builder/schema";
-import { unstable_noStore as noStore } from "next/cache";
 import Countdown from "@/components/Countdown";
 import LocalTime from "@/components/LocalTime";
 import { EMAIL_VERIFICATION_REQUIRED } from "@/lib/features";
@@ -35,9 +34,9 @@ function Card({ kicker, title, children }) {
 }
 
 export default async function ApplyPage({ params }) {
-  noStore();
+  const { id } = await params;
 
-  const form = await kvGet(`formbuilder:form:${params.id}`, null);
+  const form = await kvGet(`formbuilder:form:${id}`, null);
 
   if (!form) {
     return (
@@ -60,7 +59,7 @@ export default async function ApplyPage({ params }) {
   }
 
   const member = await memberFromCookieStore(cookies());
-  const applyHref = `/form-builder/apply/${params.id}`;
+  const applyHref = `/form-builder/apply/${id}`;
 
   if (!member) {
     return (
@@ -108,7 +107,7 @@ export default async function ApplyPage({ params }) {
     );
   }
 
-  const submissions = await kvGet(submissionsKey(params.id), []);
+  const submissions = await kvGet(submissionsKey(id), []);
   const gate = applicationGate(form, memberSubmission(submissions, member.username));
 
   if (gate.status === "pending") {
@@ -180,7 +179,7 @@ export default async function ApplyPage({ params }) {
             )}
           </div>
         )}
-        <ApplyForm form={form} formId={params.id} />
+        <ApplyForm form={form} formId={id} />
       </div>
     </div>
   );

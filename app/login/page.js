@@ -32,13 +32,14 @@ function safeNext(value) {
 }
 
 export default async function LoginPage({ searchParams }) {
-  const next = safeNext(searchParams?.next);
+  const query = await searchParams;
+  const next = safeNext(query?.next);
   const member = await memberFromCookieStore(cookies());
   if (member) redirect(next);
 
-  const errorCode = typeof searchParams?.error === "string" ? searchParams.error : "";
+  const errorCode = typeof query?.error === "string" ? query.error : "";
   const notice =
-    searchParams?.reset === "1" ? "Password updated — log in with your new password." : "";
+    query?.reset === "1" ? "Password updated — log in with your new password." : "";
 
   return (
     <AuthFlip

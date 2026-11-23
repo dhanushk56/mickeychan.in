@@ -7,6 +7,7 @@ import { logActivity } from "@/lib/activity-log";
 export const dynamic = "force-dynamic";
 
 export async function PATCH(request, { params }) {
+  const { formId, id } = await params;
   const gate = await authorize("applications.review");
   if (gate.response) return gate.response;
   const session = gate.session;
@@ -19,9 +20,9 @@ export async function PATCH(request, { params }) {
 
   const note = typeof body.note === "string" ? body.note.trim().slice(0, 500) : "";
 
-  const key = submissionsKey(params.formId);
+  const key = submissionsKey(formId);
   const submissions = await kvGet(key, []);
-  const index = submissions.findIndex((entry) => entry.id === params.id);
+  const index = submissions.findIndex((entry) => entry.id === id);
   if (index === -1) {
     return NextResponse.json({ error: "Application not found." }, { status: 404 });
   }
@@ -41,7 +42,7 @@ export async function PATCH(request, { params }) {
     action: "application-status",
     username: session.user.username,
     detail: `Marked ${applicant ? `@${applicant}'s` : "an applicant's"} application ` +
-      `for “${submissions[index].formTitle || params.formId}” as ${status}`,
+      `for “${submissions[index].formTitle || formId}” as ${status}`,
     request,
   });
 
@@ -52,14 +53,15 @@ export async function PATCH(request, { params }) {
 }
 
 export async function DELETE(request, { params }) {
+  const { formId, id } = await params;
   const gate = await authorize("applications.delete");
   if (gate.response) return gate.response;
   const session = gate.session;
 
-  const key = submissionsKey(params.formId);
+  const key = submissionsKey(formId);
   const submissions = await kvGet(key, []);
-  const target = submissions.find((entry) => entry.id === params.id);
-  const next = submissions.filter((entry) => entry.id !== params.id);
+  const target = submissions.find((entry) => entry.id === id);
+  const next = submissions.filter((entry) => entry.id !== id);
   if (next.length === submissions.length) {
     return NextResponse.json({ error: "Application not found." }, { status: 404 });
   }
@@ -71,7 +73,7 @@ export async function DELETE(request, { params }) {
     action: "application-deleted",
     username: session.user.username,
     detail: `Deleted ${target?.memberUsername ? `@${target.memberUsername}'s` : "an applicant's"} ` +
-      `application for “${target?.formTitle || params.formId}”`,
+      `application for “${target?.formTitle || formId}”`,
     request,
   });
 

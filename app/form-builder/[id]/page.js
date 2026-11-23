@@ -10,13 +10,14 @@ export const dynamic = "force-dynamic";
 export const metadata = { title: "Form Builder" };
 
 export default async function FormBuilderEditPage({ params }) {
-  const session = getSession();
+  const { id } = await params;
+  const session = await getSession();
 
   if (!session.authenticated) {
     return <PasswordGate area="The form builder" />;
   }
 
-  const form = await kvGet(`formbuilder:form:${params.id}`, null);
+  const form = await kvGet(`formbuilder:form:${id}`, null);
 
   if (!form) {
     return (
@@ -36,16 +37,17 @@ export default async function FormBuilderEditPage({ params }) {
     );
   }
 
-  const host = headers().get("host") || "localhost:3000";
+  const headerList = await headers();
+  const host = headerList.get("host") || "localhost:3000";
   const protocol = process.env.NODE_ENV === "production" ? "https" : "http";
-  const publicUrl = `${protocol}://${host}/form-builder/apply/${params.id}`;
+  const publicUrl = `${protocol}://${host}/form-builder/apply/${id}`;
 
   return (
     <FormBuilder
       initialForm={form}
       publicUrl={publicUrl}
       currentUser={session.user}
-      formId={params.id}
+      formId={id}
     />
   );
 }

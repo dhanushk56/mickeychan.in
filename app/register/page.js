@@ -15,7 +15,8 @@ function safeNext(value) {
 }
 
 export default async function RegisterPage({ searchParams }) {
-  const next = safeNext(searchParams?.next);
+  const query = await searchParams;
+  const next = safeNext(query?.next);
   const member = await memberFromCookieStore(cookies());
   if (member) redirect(next);
 

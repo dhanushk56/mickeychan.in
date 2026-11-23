@@ -10,7 +10,8 @@ export const metadata = {
 
 export default async function VideosPage({ searchParams }) {
   const videos = await getVideos();
-  const initialId = typeof searchParams?.v === "string" ? searchParams.v : "";
+  const query = await searchParams;
+  const initialId = typeof query?.v === "string" ? query.v : "";
 
   return (
     <section className="page">
