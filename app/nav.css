@@ -51,6 +51,19 @@
     object-fit: cover;
   }
 
+  .nav-brand {
+    display: flex;
+    align-items: center;
+    gap: .625rem;
+    justify-self: center;
+    min-width: 0;
+  }
+
+  .nav-account {
+    display: inline-flex;
+    align-items: center;
+  }
+
   .nav-start {
     display: flex;
     align-items: center;
@@ -67,7 +80,6 @@
   }
 
   .nav-wordmark {
-    justify-self: center;
     font-family: 'Bricolage Grotesque', 'Plus Jakarta Sans', system-ui, sans-serif;
     font-size: .82rem;
     font-weight: 700;
@@ -286,8 +298,9 @@
       padding: 0 .875rem;
     }
     .nav-end { display: none; }
+    .nav-account { display: none; }
+    .nav-brand { justify-self: end; }
     .nav-wordmark {
-      justify-self: end;
       font-size: .72rem;
       letter-spacing: .24em;
       text-indent: .24em;
