@@ -1,9 +1,18 @@
 .flip .glass-inset.icon-button,
 .auth-mark {
-  background-image: url("/mickey-logo.png");
-  background-size: 1.15rem 1.15rem;
-  background-position: center;
-  background-repeat: no-repeat;
+  position: relative;
+  border-color: transparent;
   font-size: 0;
   color: transparent;
 }
+
+.flip .glass-inset.icon-button::after,
+.auth-mark::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: url("/mickey-logo.png") center / cover no-repeat;
+}
+
+.flip .glass-inset.icon-button { margin-right: .55rem; }
