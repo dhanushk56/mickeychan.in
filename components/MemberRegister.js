@@ -4,6 +4,17 @@ import { useState } from "react";
 import GoogleMark from "@/components/GoogleMark";
 import DiscordMark from "@/components/DiscordMark";
 
+function Hint({ ok, children }) {
+  return (
+    <span className="flex items-center gap-1.5 text-xs" style={{ color: ok ? "var(--primary-strong)" : "var(--text-faint)" }}>
+      <span aria-hidden="true" style={{ opacity: ok ? 1 : 0.45 }}>
+        {ok ? "✓" : "•"}
+      </span>
+      {children}
+    </span>
+  );
+}
+
 export default function MemberRegister({
   next = "/positions",
   googleEnabled = false,
@@ -13,6 +24,7 @@ export default function MemberRegister({
   const [name, setName] = useState("");
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [reveal, setReveal] = useState(false);
@@ -21,12 +33,10 @@ export default function MemberRegister({
 
   const mismatch = confirmPassword.length > 0 && password !== confirmPassword;
   const emailLooksValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
-  const canSubmit =
-    username.trim().length >= 3 &&
-    emailLooksValid &&
-    password.length >= 8 &&
-    password === confirmPassword &&
-    !busy;
+  const handleLooksValid = /^[a-zA-Z0-9][a-zA-Z0-9._-]{2,23}$/.test(username.trim());
+  const longEnough = password.length >= 8;
+  const matches = confirmPassword.length > 0 && password === confirmPassword;
+  const canSubmit = handleLooksValid && emailLooksValid && longEnough && matches && !busy;
 
   async function submit(event) {
     event.preventDefault();
@@ -36,7 +46,7 @@ export default function MemberRegister({
       const response = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, username, email, password, confirmPassword }),
+        body: JSON.stringify({ name, username, email, phone, password, confirmPassword }),
       });
       const result = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(result.error || "Could not create your account.");
@@ -55,22 +65,12 @@ export default function MemberRegister({
       <p className="kicker justify-center">Site account</p>
       <h1 className="font-display text-2xl font-bold mt-3 mb-2 text-center">Create an account</h1>
       <p className="muted text-sm leading-relaxed mb-6 text-center">
-        You need an account to apply for a role — it keeps one application per person and lets
-        you follow your status afterwards.
+        You need an account to apply for a role — it keeps one application per person and lets you
+        follow your status afterwards.
       </p>
 
+      <p className="field-label mb-2">Your account</p>
       <label className="field">
-        <span className="field-label">Display name (optional)</span>
-        <input
-          className="input"
-          value={name}
-          onChange={(event) => setName(event.target.value)}
-          autoComplete="name"
-          placeholder="How your name shows up for the team"
-        />
-      </label>
-
-      <label className="field mt-3">
         <span className="field-label">Username</span>
         <input
           className="input"
@@ -85,6 +85,18 @@ export default function MemberRegister({
       </label>
 
       <label className="field mt-3">
+        <span className="field-label">Display name (optional)</span>
+        <input
+          className="input"
+          value={name}
+          onChange={(event) => setName(event.target.value)}
+          autoComplete="name"
+          placeholder="How your name shows up for the team"
+        />
+      </label>
+
+      <p className="field-label mt-6 mb-2">How we reach you</p>
+      <label className="field">
         <span className="field-label">Email</span>
         <input
           className="input"
@@ -103,6 +115,24 @@ export default function MemberRegister({
       </label>
 
       <label className="field mt-3">
+        <span className="field-label">Phone number (optional)</span>
+        <input
+          className="input"
+          value={phone}
+          onChange={(event) => setPhone(event.target.value)}
+          type="tel"
+          inputMode="tel"
+          autoComplete="tel"
+          maxLength={24}
+          placeholder="+91 98765 43210"
+        />
+        <span className="faint text-xs mt-1">
+          Only used if the team needs to reach you about an application. You can add it later.
+        </span>
+      </label>
+
+      <p className="field-label mt-6 mb-2">Password</p>
+      <label className="field">
         <span className="field-label">Password</span>
         <div className="relative flex items-center">
           <input
@@ -138,6 +168,11 @@ export default function MemberRegister({
           required
         />
       </label>
+
+      <div className="flex flex-wrap gap-3 mt-2">
+        <Hint ok={longEnough}>8 characters or more</Hint>
+        <Hint ok={matches}>Both passwords match</Hint>
+      </div>
 
       {mismatch && (
         <p className="faint text-xs mt-2" style={{ color: "var(--danger)" }}>
