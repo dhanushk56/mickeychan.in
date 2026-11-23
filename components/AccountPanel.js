@@ -60,7 +60,13 @@ export default function AccountPanel({ profile, verificationRequired = true }) {
   const fileInput = useRef(null);
   const [current, setCurrent] = useState(profile);
   const [editing, setEditing] = useState(false);
-  const [form, setForm] = useState({ name: profile.name || "", phone: profile.phone || "" });
+  const [form, setForm] = useState({
+    name: profile.name || "",
+    username: profile.username || "",
+    email: profile.email || "",
+    phone: profile.phone || "",
+    password: "",
+  });
   const [busy, setBusy] = useState("");
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
@@ -69,11 +75,18 @@ export default function AccountPanel({ profile, verificationRequired = true }) {
   const nextChange = formatDate(current.nextChangeAt);
   const joined = formatDate(current.createdAt);
   const needsVerify = verificationRequired && !current.emailVerified;
+  const emailChangeable = current.emailChangeable !== false && current.emailVerified !== true;
 
   function apply(result) {
     if (result?.profile) {
       setCurrent(result.profile);
-      setForm({ name: result.profile.name || "", phone: result.profile.phone || "" });
+      setForm({
+        name: result.profile.name || "",
+        username: result.profile.username || "",
+        email: result.profile.email || "",
+        phone: result.profile.phone || "",
+        password: "",
+      });
     }
     router.refresh();
   }
@@ -132,17 +145,57 @@ export default function AccountPanel({ profile, verificationRequired = true }) {
     if (result) setNotice("Profile photo removed. Your initials are showing instead.");
   }
 
+  function openEditor() {
+    setForm({
+      name: current.name || "",
+      username: current.username || "",
+      email: current.email || "",
+      phone: current.phone || "",
+      password: "",
+    });
+    setError("");
+    setNotice("");
+    setEditing(true);
+  }
+
   async function saveDetails(event) {
     event.preventDefault();
+    const patch = {};
+
+    if (!locked) {
+      if (form.name.trim() !== (current.name || "").trim()) patch.name = form.name;
+      if (form.username.trim().toLowerCase() !== (current.username || "").toLowerCase()) {
+        patch.username = form.username.trim();
+      }
+      if (form.phone.trim() !== (current.phone || "").trim()) patch.phone = form.phone;
+      if (form.password) patch.password = form.password;
+    }
+
+    if (emailChangeable && form.email.trim().toLowerCase() !== (current.email || "").toLowerCase()) {
+      patch.email = form.email.trim();
+    }
+
+    if (Object.keys(patch).length === 0) {
+      setEditing(false);
+      setNotice("Nothing to change.");
+      return;
+    }
+
     const result = await send("/api/account/profile", {
       method: "PATCH",
-      body: JSON.stringify({ name: form.name, phone: form.phone }),
+      body: JSON.stringify(patch),
     });
     if (result) {
       setEditing(false);
-      setNotice("Your details are saved. They can be changed again in six months.");
+      setNotice(
+        patch.email
+          ? "Saved. Confirm the new email address so it counts as verified."
+          : "Saved. Your details can be changed again in six months."
+      );
     }
   }
+
+  const lockedNote = locked && nextChange ? `Next change ${nextChange}` : "";
 
   return (
     <div className="grid gap-5">
@@ -213,7 +266,7 @@ export default function AccountPanel({ profile, verificationRequired = true }) {
       <div className="glass-card account-card animate-rise">
         <div className="flex items-center justify-between gap-3 mb-1">
           <p className="kicker">Details</p>
-          {locked && nextChange && <span className="account-lock">Next change {nextChange}</span>}
+          {lockedNote && <span className="account-lock">{lockedNote}</span>}
         </div>
 
         {editing ? (
@@ -224,10 +277,45 @@ export default function AccountPanel({ profile, verificationRequired = true }) {
                 className="input"
                 value={form.name}
                 maxLength={60}
+                disabled={locked}
                 onChange={(event) => setForm({ ...form, name: event.target.value })}
                 required
               />
             </label>
+
+            <label className="field">
+              <span className="field-label">Username</span>
+              <input
+                className="input"
+                value={form.username}
+                maxLength={24}
+                disabled={locked}
+                autoCapitalize="none"
+                spellCheck={false}
+                onChange={(event) => setForm({ ...form, username: event.target.value })}
+                required
+              />
+              <span className="faint text-xs mt-1">3–24 letters, numbers, dot, dash or underscore.</span>
+            </label>
+
+            <label className="field">
+              <span className="field-label">Email</span>
+              <input
+                className="input"
+                type="email"
+                value={form.email}
+                disabled={!emailChangeable}
+                autoCapitalize="none"
+                spellCheck={false}
+                onChange={(event) => setForm({ ...form, email: event.target.value })}
+              />
+              <span className="faint text-xs mt-1">
+                {emailChangeable
+                  ? "You can change this until the address is confirmed."
+                  : "This address is confirmed, so it can no longer be changed."}
+              </span>
+            </label>
+
             <label className="field">
               <span className="field-label">Phone number (optional)</span>
               <input
@@ -235,10 +323,30 @@ export default function AccountPanel({ profile, verificationRequired = true }) {
                 value={form.phone}
                 inputMode="tel"
                 maxLength={24}
+                disabled={locked}
                 placeholder="+91 98765 43210"
                 onChange={(event) => setForm({ ...form, phone: event.target.value })}
               />
             </label>
+
+            <label className="field">
+              <span className="field-label">New password (optional)</span>
+              <input
+                className="input"
+                type="password"
+                value={form.password}
+                disabled={locked || !current.hasPassword}
+                autoComplete="new-password"
+                placeholder="Leave blank to keep your password"
+                onChange={(event) => setForm({ ...form, password: event.target.value })}
+              />
+              <span className="faint text-xs mt-1">
+                {current.hasPassword
+                  ? "At least 8 characters. Changing it signs out your other devices."
+                  : "This account signs in with Google or Discord, so it has no password."}
+              </span>
+            </label>
+
             <div className="flex flex-wrap gap-2">
               <button type="submit" className="btn btn-primary btn-sm" disabled={busy === "details"}>
                 {busy === "details" ? "Saving…" : "Save changes"}
@@ -248,7 +356,6 @@ export default function AccountPanel({ profile, verificationRequired = true }) {
                 className="btn btn-secondary btn-sm"
                 onClick={() => {
                   setEditing(false);
-                  setForm({ name: current.name || "", phone: current.phone || "" });
                   setError("");
                 }}
               >
@@ -256,7 +363,9 @@ export default function AccountPanel({ profile, verificationRequired = true }) {
               </button>
             </div>
             <p className="faint text-xs">
-              Saving uses your one change for the next six months.
+              {locked && nextChange
+                ? `Name, username, password and phone can be changed again on ${nextChange}.`
+                : "Saving name, username, password or phone uses your one change for the next six months. Email does not."}
             </p>
           </form>
         ) : (
@@ -267,11 +376,7 @@ export default function AccountPanel({ profile, verificationRequired = true }) {
               <button
                 type="button"
                 className="btn btn-secondary btn-sm"
-                onClick={() => {
-                  setEditing(true);
-                  setError("");
-                  setNotice("");
-                }}
+                onClick={openEditor}
                 disabled={locked}
                 title={locked ? `You can change this again on ${nextChange}` : undefined}
               >
@@ -282,7 +387,15 @@ export default function AccountPanel({ profile, verificationRequired = true }) {
             <div className="account-row">
               <span className="account-label">Username</span>
               <span className="account-value">@{current.username}</span>
-              <span className="account-lock">Fixed</span>
+              <button
+                type="button"
+                className="btn btn-secondary btn-sm"
+                onClick={openEditor}
+                disabled={locked}
+                title={locked ? `You can change this again on ${nextChange}` : undefined}
+              >
+                Change
+              </button>
             </div>
 
             <div className="account-row">
@@ -290,16 +403,23 @@ export default function AccountPanel({ profile, verificationRequired = true }) {
               <span className="account-value" data-empty={!current.email}>
                 {current.email || "Not added"}
               </span>
-              {needsVerify ? (
-                <Link
-                  href={`/verify?next=${encodeURIComponent("/my-account")}`}
-                  className="btn btn-secondary btn-sm"
-                >
-                  Verify
-                </Link>
-              ) : (
-                <span className="badge badge-accepted">Verified</span>
-              )}
+              <div className="flex items-center gap-2">
+                {needsVerify && (
+                  <Link
+                    href={`/verify?next=${encodeURIComponent("/my-account")}`}
+                    className="btn btn-secondary btn-sm"
+                  >
+                    Verify
+                  </Link>
+                )}
+                {emailChangeable ? (
+                  <button type="button" className="btn btn-ghost btn-sm" onClick={openEditor}>
+                    Change
+                  </button>
+                ) : (
+                  <span className="badge badge-accepted">Locked</span>
+                )}
+              </div>
             </div>
 
             <div className="account-row">
@@ -310,12 +430,24 @@ export default function AccountPanel({ profile, verificationRequired = true }) {
               <button
                 type="button"
                 className="btn btn-secondary btn-sm"
-                onClick={() => {
-                  setEditing(true);
-                  setError("");
-                  setNotice("");
-                }}
+                onClick={openEditor}
                 disabled={locked}
+                title={locked ? `You can change this again on ${nextChange}` : undefined}
+              >
+                Change
+              </button>
+            </div>
+
+            <div className="account-row">
+              <span className="account-label">Password</span>
+              <span className="account-value">
+                {current.hasPassword ? "Set" : "Google or Discord only"}
+              </span>
+              <button
+                type="button"
+                className="btn btn-secondary btn-sm"
+                onClick={openEditor}
+                disabled={locked || !current.hasPassword}
                 title={locked ? `You can change this again on ${nextChange}` : undefined}
               >
                 Change
