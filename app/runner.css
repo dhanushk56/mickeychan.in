@@ -75,7 +75,7 @@
 .rig-fore {
   position: absolute;
   display: block;
-  background-image: url("/skins/steve.png");
+  background-image: url("/skins/character.png");
   background-repeat: no-repeat;
   background-size: calc(64 * var(--u)) calc(64 * var(--u));
   image-rendering: pixelated;
@@ -88,7 +88,9 @@
   height: calc(12 * var(--u));
   z-index: 2;
   transform-origin: 50% 100%;
-  background-position: calc(-16 * var(--u)) calc(-20 * var(--u));
+  /* overlay layer (listed first = drawn on top), then the base layer */
+  background-image: url("/skins/character.png"), url("/skins/character.png");
+  background-position: calc(-16 * var(--u)) calc(-36 * var(--u)), calc(-16 * var(--u)) calc(-20 * var(--u));
   will-change: transform;
 }
 
@@ -99,7 +101,10 @@
   height: calc(8 * var(--u));
   z-index: 3;
   transform-origin: 50% 100%;
-  background-position: 0 calc(-8 * var(--u));
+  /* the character's face (front of the head) with its overlay layer on top.
+     This skin's side-of-head texture is an ornament, so the front reads better. */
+  background-image: url("/skins/character.png"), url("/skins/character.png");
+  background-position: calc(-40 * var(--u)) calc(-8 * var(--u)), calc(-8 * var(--u)) calc(-8 * var(--u));
   will-change: transform;
 }
 
