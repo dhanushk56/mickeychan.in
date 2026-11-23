@@ -9,14 +9,14 @@
     "user:add": "node scripts/add-user.mjs"
   },
   "dependencies": {
-    "next": "14.2.35",
-    "react": "18.3.1",
-    "react-dom": "18.3.1",
-    "@vercel/kv": "^3.0.0"
+    "@vercel/kv": "^3.0.0",
+    "next": "16.4.6",
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
   },
   "devDependencies": {
-    "tailwindcss": "3.4.10",
+    "autoprefixer": "10.4.20",
     "postcss": "8.4.41",
-    "autoprefixer": "10.4.20"
+    "tailwindcss": "3.4.10"
   }
 }
