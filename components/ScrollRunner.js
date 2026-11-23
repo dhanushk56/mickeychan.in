@@ -3,8 +3,10 @@
 import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { LOOP_SECONDS, pose } from "@/lib/runCycle";
-import { faces } from "@/lib/steveFigure";
+import { faces } from "@/lib/runnerFigure";
+import { readSkin } from "@/lib/skin";
 
+const SKIN_SRC = "/skins/mickey.png";
 const EDGE = 26;
 const STRIDE = 66;
 const NOMINAL = 34;
@@ -34,6 +36,8 @@ export default function ScrollRunner() {
 
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+    let skin = null;
+    let alive = true;
     let width = 0;
     let max = 0;
     let target = 0;
@@ -60,6 +64,7 @@ export default function ScrollRunner() {
     };
 
     const paint = () => {
+      if (!skin) return;
       fit();
 
       const w = viewWidth;
@@ -67,7 +72,7 @@ export default function ScrollRunner() {
       const scale = (h - 6) / NOMINAL;
       const centerX = w / 2;
       const ground = h - 4;
-      const list = faces(pose(clock), facing > 0 ? YAW_RIGHT : YAW_LEFT);
+      const list = faces(pose(clock), facing > 0 ? YAW_RIGHT : YAW_LEFT, skin);
 
       list.sort((a, b) => a.z - b.z);
 
@@ -167,10 +172,21 @@ export default function ScrollRunner() {
       frame = window.requestAnimationFrame(tick);
     };
 
+    const image = new Image();
+    image.decoding = "async";
+    image.onload = () => {
+      if (!alive) return;
+      skin = readSkin(image);
+      paint();
+    };
+    image.src = SKIN_SRC;
+
     place();
 
     if (reduced) {
       return () => {
+        alive = false;
+        image.onload = null;
         delete root.dataset.ready;
       };
     }
@@ -190,6 +206,8 @@ export default function ScrollRunner() {
     window.addEventListener("resize", sync);
 
     return () => {
+      alive = false;
+      image.onload = null;
       window.cancelAnimationFrame(frame);
       window.clearTimeout(settle);
       window.removeEventListener("scroll", place);
