@@ -33,7 +33,9 @@
 .scroll-runner-fill {
   transform: scaleX(0);
   transform-origin: 0 50%;
-  background: var(--primary);
+  border-radius: 0 999px 999px 0;
+  background: linear-gradient(90deg, var(--primary) 0%, var(--accent) 58%, #5ee0ff 100%);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--primary) 55%, transparent);
   will-change: transform;
 }
 
