@@ -1,32 +1,53 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 export default function PasswordGate({ area = "This area" }) {
   const router = useRouter();
-  const [name, setName] = useState("");
+  const pathname = usePathname();
+  const [member, setMember] = useState(null);
+  const [checking, setChecking] = useState(true);
   const [password, setPassword] = useState("");
   const [reveal, setReveal] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [denied, setDenied] = useState("");
 
+  useEffect(() => {
+    let active = true;
+    fetch("/api/auth/member", { cache: "no-store" })
+      .then((response) => (response.ok ? response.json() : {}))
+      .then((result) => {
+        if (active) setMember(result.member || null);
+      })
+      .catch(() => {
+        if (active) setMember(null);
+      })
+      .finally(() => {
+        if (active) setChecking(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
   async function submit(event) {
     event.preventDefault();
+    if (!member) return;
     setBusy(true);
     setError("");
     try {
       const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username: name, password }),
+        body: JSON.stringify({ password }),
       });
       const result = await response.json().catch(() => ({}));
       if (!response.ok) {
         if (result.code === "admin_not_allowed") {
-          setDenied(result.error || "That username doesn't have access to the admin console.");
+          setDenied(result.error || "That account doesn't have access to the admin console.");
           return;
         }
         throw new Error(result.error || "Sign in failed.");
@@ -42,9 +63,10 @@ export default function PasswordGate({ area = "This area" }) {
 
   function dismissDenied() {
     setDenied("");
-    setName("");
     setPassword("");
   }
+
+  const loginHref = `/login?next=${encodeURIComponent(pathname || "/admin")}`;
 
   return (
     <div className="page">
@@ -56,22 +78,37 @@ export default function PasswordGate({ area = "This area" }) {
           <p className="kicker justify-center">Password protected</p>
           <h1 className="font-display text-2xl font-bold mt-3 mb-2 text-center">Password required</h1>
           <p className="muted text-sm leading-relaxed mb-6 text-center">
-            {area} is locked. Enter your admin credentials to continue.
+            {area} is locked. Enter the console password to continue.
           </p>
 
           <label className="field">
             <span className="field-label">Username</span>
             <input
-              className="input"
-              value={name}
-              onChange={(event) => setName(event.target.value)}
+              className="input input-locked"
+              value={member?.username || ""}
+              placeholder={checking ? "Checking your account…" : "No site account signed in"}
+              readOnly
+              aria-readonly="true"
+              tabIndex={-1}
               autoComplete="username"
               autoCapitalize="none"
               spellCheck={false}
-              required
-              autoFocus
             />
           </label>
+
+          {!checking && !member && (
+            <p className="faint text-xs mt-2 leading-relaxed">
+              The console signs you in as your own site account.{" "}
+              <Link
+                href={loginHref}
+                className="hover:underline"
+                style={{ color: "var(--primary)", fontWeight: 600 }}
+              >
+                Log in first
+              </Link>{" "}
+              and come back.
+            </p>
+          )}
 
           <label className="field mt-3">
             <span className="field-label">Password</span>
@@ -84,6 +121,7 @@ export default function PasswordGate({ area = "This area" }) {
                 placeholder="••••••••"
                 autoComplete="current-password"
                 required
+                disabled={!checking && !member}
                 style={{ paddingRight: "3rem" }}
               />
               <button
@@ -107,7 +145,7 @@ export default function PasswordGate({ area = "This area" }) {
           <button
             type="submit"
             className="btn btn-primary w-full mt-5"
-            disabled={busy || password.length === 0 || name.trim().length === 0}
+            disabled={busy || checking || !member || password.length === 0}
           >
             {busy ? "Checking…" : "Unlock ↗"}
           </button>
@@ -135,12 +173,12 @@ export default function PasswordGate({ area = "This area" }) {
             </h2>
             <p className="muted text-sm mt-2 leading-relaxed">{denied}</p>
             <p className="faint text-xs mt-2 leading-relaxed">
-              Only the usernames added to the admin list can sign in here. If you think you should
-              have access, ask the site owner to add your account.
+              The console signs you in as your own site account. Only accounts that have been given
+              access can open it — if you think that should be you, ask the site owner to grant it.
             </p>
             <div className="flex flex-wrap gap-2 mt-5">
               <button type="button" className="btn btn-primary btn-sm" onClick={dismissDenied}>
-                Try another account
+                Close
               </button>
               <Link href="/" className="btn btn-secondary btn-sm">
                 Back to the site

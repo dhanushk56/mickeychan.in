@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import {
   checkPassword,
   createSessionToken,
@@ -6,6 +7,7 @@ import {
   sessionCookieHeader,
 } from "@/lib/auth";
 import { logActivity } from "@/lib/activity-log";
+import { memberFromCookieStore } from "@/lib/members";
 import { resolveAdmin } from "@/lib/roles";
 
 export const dynamic = "force-dynamic";
@@ -70,14 +72,32 @@ export async function POST(request) {
 
   const body = await request.json().catch(() => ({}));
   const password = typeof body.password === "string" ? body.password : "";
-  const typedName = typeof body.username === "string" ? body.username.trim() : "";
+
+  const member = await memberFromCookieStore(cookies());
+  if (!member) {
+    await logActivity({
+      area: "admin",
+      action: "login-blocked",
+      username: "Unknown",
+      detail: "Tried to unlock the console without a site account",
+      ok: false,
+      request,
+    });
+    return NextResponse.json(
+      {
+        error: "Log in to your site account first, then unlock the console.",
+        code: "login_required",
+      },
+      { status: 401 }
+    );
+  }
 
   if (!checkPassword(password)) {
     recordFailure(key);
     await logActivity({
       area: "admin",
       action: "login-failed",
-      username: typedName || "Unknown",
+      username: member.username,
       detail: "Wrong admin password",
       ok: false,
       request,
@@ -85,20 +105,20 @@ export async function POST(request) {
     return NextResponse.json({ error: "That password didn't work." }, { status: 401 });
   }
 
-  const access = await resolveAdmin(typedName);
+  const access = await resolveAdmin(member.username);
   if (!access) {
     recordFailure(key);
     await logActivity({
       area: "admin",
       action: "login-denied",
-      username: typedName || "Unknown",
-      detail: "Username has no role and no console access",
+      username: member.username,
+      detail: "Site account has no console role",
       ok: false,
       request,
     });
     return NextResponse.json(
       {
-        error: "That username doesn't have access to the admin console.",
+        error: "Your account doesn't have access to the admin console.",
         code: "admin_not_allowed",
       },
       { status: 403 }
