@@ -78,12 +78,35 @@ export default function Navbar() {
                 <span />
               </span>
             </button>
+            <div className="nav-account">
+              {member ? (
+                <Link
+                  href="/my-account"
+                  className="nav-avatar"
+                  data-active={isActive("/my-account")}
+                  title="My account"
+                  aria-label={`My account — ${member.name || member.username}`}
+                >
+                  {member.avatar ? (
+                    <img src={member.avatar} alt="" />
+                  ) : (
+                    <span aria-hidden="true">{member.initials}</span>
+                  )}
+                </Link>
+              ) : (
+                <Link href="/login" className="nav-link">
+                  Log in
+                </Link>
+              )}
+            </div>
+          </div>
+
+          <div className="nav-brand">
+            <span className="nav-wordmark">Mickey Chan</span>
             <Link href="/" className="brand-mark" aria-label="Mickey Chan home">
               <img src="/mickey-logo.png" alt="" className="brand-logo" width={34} height={34} />
             </Link>
           </div>
-
-          <span className="nav-wordmark">Mickey Chan</span>
 
           <div className="nav-end">
             <nav className="nav-links" aria-label="Main">
@@ -98,26 +121,6 @@ export default function Navbar() {
                 </Link>
               ))}
             </nav>
-
-            {member ? (
-              <Link
-                href="/my-account"
-                className="nav-avatar"
-                data-active={isActive("/my-account")}
-                title="My account"
-                aria-label={`My account — ${member.name || member.username}`}
-              >
-                {member.avatar ? (
-                  <img src={member.avatar} alt="" />
-                ) : (
-                  <span aria-hidden="true">{member.initials}</span>
-                )}
-              </Link>
-            ) : (
-              <Link href="/login" className="nav-link">
-                Log in
-              </Link>
-            )}
           </div>
         </div>
       </header>
@@ -143,8 +146,8 @@ export default function Navbar() {
             aria-label="Mickey Chan home"
             onClick={() => setOpen(false)}
           >
-            <img src="/mickey-logo.png" alt="" className="brand-logo" width={34} height={34} />
             <span className="mobile-nav-brand">Mickey Chan</span>
+            <img src="/mickey-logo.png" alt="" className="brand-logo" width={34} height={34} />
           </Link>
           <button
             type="button"
