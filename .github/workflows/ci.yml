@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      ADMIN_PASSWORD: smoke-console-password
+      SESSION_SECRET: smoke-session-secret
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Rebuild the lockfile from the pinned versions
+        run: npm install --package-lock-only --no-audit --no-fund
+
+      - name: Warn when the committed lockfile is out of date
+        run: |
+          if ! git diff --quiet -- package-lock.json; then
+            echo "::warning file=package-lock.json::package-lock.json does not match package.json. Run npm install locally and commit package-lock.json."
+          fi
+
+      - name: Install exact dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Smoke the auth surface
+        run: npm run smoke
