@@ -209,3 +209,27 @@ html.petal-cursor-on [contenteditable="true"] {
   padding: .62rem 1.05rem;
   font-size: .84rem;
 }
+
+.home-marquee-item i {
+  display: inline-block;
+  flex: 0 0 auto;
+  width: 1.05rem;
+  height: 1.05rem;
+  font-size: 0;
+  color: transparent;
+  border-radius: 999px;
+  opacity: .6;
+  background: url("/mickey-logo.png") center / contain no-repeat;
+}
+
+:root:not([data-theme="dark"]) .menu-button[aria-expanded="true"] {
+  background-color: color-mix(in srgb, var(--accent) 74%, #fff);
+  border-color: color-mix(in srgb, var(--accent) 62%, transparent);
+  color: #331028;
+  transform: scale(.94);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 20%, transparent);
+}
+
+:root:not([data-theme="dark"]) .menu-button[aria-expanded="true"]:hover {
+  background-color: color-mix(in srgb, var(--accent) 82%, #fff);
+}
