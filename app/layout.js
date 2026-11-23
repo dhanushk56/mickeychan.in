@@ -11,6 +11,7 @@ import "./page-wipe.css";
 import "./hover.css";
 import "./account.css";
 import "./auth-mark.css";
+import "./glass.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import PetalField from "@/components/PetalField";
@@ -20,6 +21,7 @@ import RouteWipe from "@/components/RouteWipe";
 import PageEnter from "@/components/PageEnter";
 import PetalCursor from "@/components/PetalCursor";
 import BackToTop from "@/components/BackToTop";
+import CardGlow from "@/components/CardGlow";
 
 export const metadata = {
   title: {
@@ -50,6 +52,7 @@ export default function RootLayout({ children }) {
         <PetalCursor />
         <ScrollRunner />
         <ScrollReveal />
+        <CardGlow />
         <PageEnter />
         <RouteWipe />
         <Navbar />
