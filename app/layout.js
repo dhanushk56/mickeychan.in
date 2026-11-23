@@ -7,7 +7,6 @@ import "./hover.css";
 import "./auth-mark.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import PetalField from "@/components/PetalField";
 import ScrollRunner from "@/components/ScrollRunner";
 import ScrollReveal from "@/components/ScrollReveal";
 import RouteWipe from "@/components/RouteWipe";
@@ -52,8 +51,6 @@ export default function RootLayout({ children }) {
         <script dangerouslySetInnerHTML={{ __html: noFlashScript }} />
       </head>
       <body>
-        <div className="grid-veil" aria-hidden="true" />
-        <PetalField />
         <PetalCursor />
         <ScrollRunner />
         <ScrollReveal />

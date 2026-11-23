@@ -51,7 +51,7 @@ export default function Navbar() {
       <div className="nav-shell" data-scrolled={scrolled}>
         <Link href="/" className="brand-mark" aria-label="Mickey Chan home">
           <img src="/mickey-logo.png" alt="" className="brand-logo" width={34} height={34} />
-          <span className="hidden sm:inline">MICKEY CHAN</span>
+          <span className="hidden sm:inline">Mickey Chan</span>
         </Link>
 
         <nav className="nav-links" aria-label="Main">
@@ -90,12 +90,12 @@ export default function Navbar() {
               </LogoutButton>
             </>
           ) : (
-            <Link href="/login" className="btn btn-secondary btn-sm hidden sm:inline-flex">
+            <Link href="/login" className="nav-link hidden sm:inline-flex">
               Log in
             </Link>
           )}
           <Link href="/join" className="btn btn-primary btn-sm hidden sm:inline-flex">
-            Join us <span aria-hidden="true">↗</span>
+            Join us
           </Link>
           <button
             type="button"
