@@ -163,9 +163,9 @@ html.petal-cursor-on * { cursor: none !important; }
   position: fixed;
   top: 0;
   left: 0;
-  width: 34px;
-  height: 34px;
-  margin: -17px 0 0 -17px;
+  width: 24px;
+  height: 24px;
+  margin: -12px 0 0 -12px;
   opacity: 0;
   pointer-events: none;
   z-index: 200;

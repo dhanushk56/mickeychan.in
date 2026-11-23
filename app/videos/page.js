@@ -10,6 +10,10 @@ export const metadata = {
 
 export default async function VideosPage({ searchParams }) {
   const videos = await getVideos();
+  const grouped = channels.flatMap((channel) => [
+    ...videos.filter((video) => video.channel === channel.id && video.type !== "short"),
+    ...videos.filter((video) => video.channel === channel.id && video.type === "short"),
+  ]);
   const query = await searchParams;
   const initialId = typeof query?.v === "string" ? query.v : "";
 
@@ -45,7 +49,7 @@ export default async function VideosPage({ searchParams }) {
         </div>
 
         <VideoExplorer
-          videos={videos}
+          videos={grouped}
           initialId={initialId}
           channelUrl={channelUrl}
           channels={channels.map(({ id, name, label, url }) => ({ id, name, label, url }))}
