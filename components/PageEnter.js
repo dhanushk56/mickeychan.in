@@ -1,7 +1,9 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
+
+const useClientLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect;
 
 const AUTH_FACES = new Set(["/login", "/register"]);
 
@@ -10,7 +12,7 @@ export default function PageEnter() {
   const first = useRef(true);
   const previous = useRef(pathname);
 
-  useEffect(() => {
+  useClientLayoutEffect(() => {
     const from = previous.current;
     previous.current = pathname;
 

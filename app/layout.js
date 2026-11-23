@@ -2,6 +2,7 @@ import "./globals.css";
 import "./motion.css";
 import "./runner.css";
 import "./back-to-top.css";
+import "./page-wipe.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import PetalField from "@/components/PetalField";

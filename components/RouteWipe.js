@@ -5,6 +5,8 @@ import { usePathname } from "next/navigation";
 
 const useClientLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect;
 
+const DURATION = 660;
+
 const AUTH_FACES = new Set(["/login", "/register"]);
 
 const PAGE_LABELS = {
@@ -42,7 +44,6 @@ export default function RouteWipe() {
   const pathname = usePathname();
   const previous = useRef(pathname);
   const [active, setActive] = useState(false);
-  const [leaving, setLeaving] = useState(false);
 
   useClientLayoutEffect(() => {
     const from = previous.current;
@@ -54,17 +55,14 @@ export default function RouteWipe() {
 
     const root = document.documentElement;
     root.classList.add("is-arriving");
-    setLeaving(false);
     setActive(true);
 
-    const lift = window.setTimeout(() => setLeaving(true), 440);
     const settle = window.setTimeout(() => {
       setActive(false);
       root.classList.remove("is-arriving");
-    }, 1360);
+    }, DURATION);
 
     return () => {
-      window.clearTimeout(lift);
       window.clearTimeout(settle);
       root.classList.remove("is-arriving");
     };
@@ -73,13 +71,11 @@ export default function RouteWipe() {
   if (!active) return null;
 
   return (
-    <div className={`route-wipe${leaving ? " is-leaving" : ""}`} aria-hidden="true">
-      <div className="route-wipe-sheet" />
-      <div className="route-wipe-mark">
-        <img src="/mickey-logo.png" alt="" width={48} height={48} className="route-wipe-logo" />
-        <span className="route-wipe-brand">Mickey Chan</span>
-        <span className="route-wipe-name" key={pathname}>{pageLabel(pathname)}</span>
-        <span className="route-wipe-rule" />
+    <div className="page-wipe" aria-hidden="true">
+      <div className="page-wipe-mark">
+        <img src="/mickey-logo.png" alt="" width={43} height={43} className="page-wipe-logo" />
+        <span className="page-wipe-name" key={pathname}>{pageLabel(pathname)}</span>
+        <span className="page-wipe-rule" />
       </div>
     </div>
   );
