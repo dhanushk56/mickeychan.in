@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import LogoutButton from "@/components/LogoutButton";
-import { EMAIL_VERIFICATION_REQUIRED } from "@/lib/features";
 
 const LINKS = [
   { href: "/videos", label: "Videos" },
@@ -58,9 +57,7 @@ export default function Navbar() {
   }, [open]);
 
   const isActive = (href) => pathname === href || pathname.startsWith(`${href}/`);
-  const needsVerify = EMAIL_VERIFICATION_REQUIRED && member && !member.emailVerified;
-  const drawerBase = LINKS.length + (needsVerify ? 1 : 0);
-  const verifyHref = `/verify?next=${encodeURIComponent(pathname || "/")}`;
+  const drawerBase = LINKS.length;
 
   return (
     <>
@@ -103,31 +100,29 @@ export default function Navbar() {
             </nav>
 
             {member ? (
-              <>
-                {needsVerify && (
-                  <Link href={verifyHref} className="btn btn-primary btn-sm">
-                    Verify
-                  </Link>
+              <Link
+                href="/my-account"
+                className="nav-avatar"
+                data-active={isActive("/my-account")}
+                title="My account"
+                aria-label={`My account — ${member.name || member.username}`}
+              >
+                {member.avatar ? (
+                  <img src={member.avatar} alt="" />
+                ) : (
+                  <span aria-hidden="true">{member.initials}</span>
                 )}
-                <span className="badge badge-neutral" title={member.username}>
-                  {member.name}
-                </span>
-                <LogoutButton
-                  endpoint="/api/auth/member/logout"
-                  className="btn btn-secondary btn-sm"
-                >
-                  Log out
-                </LogoutButton>
-              </>
-            ) : (
-              <Link href="/login" className="nav-link">
-                Log in
               </Link>
+            ) : (
+              <>
+                <Link href="/login" className="nav-link">
+                  Log in
+                </Link>
+                <Link href="/join" className="btn btn-primary btn-sm">
+                  Join us
+                </Link>
+              </>
             )}
-
-            <Link href="/join" className="btn btn-primary btn-sm">
-              Join us
-            </Link>
           </div>
         </div>
       </header>
@@ -166,6 +161,18 @@ export default function Navbar() {
           </button>
         </div>
 
+        {member && (
+          <Link href="/my-account" className="mobile-nav-user" onClick={() => setOpen(false)}>
+            <span className="avatar-frame" aria-hidden="true">
+              {member.avatar ? <img src={member.avatar} alt="" /> : member.initials}
+            </span>
+            <span className="mobile-nav-user-name">
+              {member.name || member.username}
+              <span>@{member.username}</span>
+            </span>
+          </Link>
+        )}
+
         {LINKS.map((link, index) => (
           <Link
             key={link.href}
@@ -179,44 +186,44 @@ export default function Navbar() {
           </Link>
         ))}
 
-        {needsVerify && (
-          <Link
-            href={verifyHref}
-            className="btn btn-primary"
-            style={{ "--i": String(LINKS.length) }}
-            onClick={() => setOpen(false)}
-          >
-            Verify your account
-          </Link>
-        )}
-
         {member ? (
-          <LogoutButton
-            endpoint="/api/auth/member/logout"
-            className="btn btn-secondary"
-            style={{ "--i": String(drawerBase) }}
-          >
-            {`Log out (${member.username})`}
-          </LogoutButton>
+          <>
+            <Link
+              href="/my-account"
+              className="btn btn-secondary"
+              style={{ "--i": String(drawerBase) }}
+              onClick={() => setOpen(false)}
+            >
+              My account
+            </Link>
+            <LogoutButton
+              endpoint="/api/auth/member/logout"
+              className="btn btn-primary"
+              style={{ "--i": String(drawerBase + 1) }}
+            >
+              Log out
+            </LogoutButton>
+          </>
         ) : (
-          <Link
-            href="/login"
-            className="btn btn-secondary"
-            style={{ "--i": String(drawerBase) }}
-            onClick={() => setOpen(false)}
-          >
-            Log in
-          </Link>
+          <>
+            <Link
+              href="/login"
+              className="btn btn-secondary"
+              style={{ "--i": String(drawerBase) }}
+              onClick={() => setOpen(false)}
+            >
+              Log in
+            </Link>
+            <Link
+              href="/join"
+              className="btn btn-primary"
+              style={{ "--i": String(drawerBase + 1) }}
+              onClick={() => setOpen(false)}
+            >
+              Join us
+            </Link>
+          </>
         )}
-
-        <Link
-          href="/join"
-          className="btn btn-primary"
-          style={{ "--i": String(drawerBase + 1) }}
-          onClick={() => setOpen(false)}
-        >
-          Join us
-        </Link>
       </nav>
     </>
   );

@@ -9,6 +9,7 @@ import "./runner.css";
 import "./back-to-top.css";
 import "./page-wipe.css";
 import "./hover.css";
+import "./account.css";
 import "./auth-mark.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -19,7 +20,6 @@ import RouteWipe from "@/components/RouteWipe";
 import PageEnter from "@/components/PageEnter";
 import PetalCursor from "@/components/PetalCursor";
 import BackToTop from "@/components/BackToTop";
-import ThemeToggle from "@/components/ThemeToggle";
 
 export const metadata = {
   title: {
@@ -41,22 +41,9 @@ export const metadata = {
   },
 };
 
-const noFlashScript = `
-(function () {
-  try {
-    var stored = localStorage.getItem('mc-theme');
-    var theme = stored || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-    document.documentElement.setAttribute('data-theme', theme);
-  } catch (e) {}
-})();
-`;
-
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <head>
-        <script dangerouslySetInnerHTML={{ __html: noFlashScript }} />
-      </head>
+    <html lang="en" data-theme="dark" suppressHydrationWarning>
       <body>
         <div className="grid-veil" aria-hidden="true" />
         <PetalField />
@@ -67,9 +54,6 @@ export default function RootLayout({ children }) {
         <RouteWipe />
         <Navbar />
         <BackToTop />
-        <div className="theme-dock">
-          <ThemeToggle />
-        </div>
         <main className="relative z-10">{children}</main>
         <Footer />
       </body>

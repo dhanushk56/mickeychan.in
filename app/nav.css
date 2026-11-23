@@ -252,30 +252,6 @@
     to { opacity: 1; transform: none; filter: blur(0); }
   }
 
-  .theme-dock {
-    position: fixed;
-    left: 1.35rem;
-    bottom: calc(74px + 1.15rem);
-    z-index: 59;
-  }
-
-  .theme-dock .icon-button {
-    width: 2.85rem;
-    height: 2.85rem;
-    border-radius: 999px;
-    border: 1px solid var(--glass-line);
-    background-color: color-mix(in srgb, var(--bg-base) 82%, transparent);
-    box-shadow: var(--glass-shadow);
-    -webkit-backdrop-filter: blur(18px) saturate(170%);
-    backdrop-filter: blur(18px) saturate(170%);
-    font-size: 1rem;
-  }
-
-  @media (max-width: 640px) {
-    .theme-dock { left: 1rem; bottom: calc(64px + .95rem); }
-    .theme-dock .icon-button { width: 2.6rem; height: 2.6rem; }
-  }
-
   @media (min-width: 960px) {
     .site-nav { position: relative; inset: auto; }
 
