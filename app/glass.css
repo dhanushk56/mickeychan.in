@@ -194,6 +194,54 @@
   box-shadow: 0 30px 70px -52px rgba(0, 0, 0, .95);
 }
 
+/* card hover: media breathe + readable accents, used on the home page and /videos */
+.home-poster-img,
+.home-thumb-img {
+  transition: scale 900ms var(--ease-glide), filter 520ms var(--ease-glide);
+}
+
+.video-thumb,
+.home-thumb {
+  transition: filter 520ms var(--ease-glide);
+}
+
+.home .home-poster:hover .home-poster-img,
+.home-poster:hover .home-poster-img,
+.home .home-card:hover .home-thumb-img {
+  scale: 1.05;
+  filter: saturate(1.06) brightness(1.04);
+}
+
+.video-card:hover .video-thumb,
+.home .home-card:hover .home-thumb {
+  filter: saturate(1.08) brightness(1.07);
+}
+
+.video-card:hover .video-title,
+.home .home-card:hover .home-card-title,
+.home .home-poster:hover .home-poster-title {
+  color: var(--primary-strong);
+}
+
+.video-title,
+.home-card-title,
+.home-poster-title {
+  transition: color 320ms var(--ease-glide);
+}
+
+.video-card:hover .play-badge,
+.home .home-card:hover .play-badge {
+  scale: 1.09;
+}
+
+.play-badge { transition: scale 420ms var(--ease-glide); }
+
+.home-band-cell:hover .home-count {
+  color: var(--primary-strong);
+}
+
+.home-count { transition: color 320ms var(--ease-glide); }
+
 .home-band-cell { background-color: var(--glass); }
 .home-band-cell:hover { background-color: color-mix(in srgb, var(--glass) 60%, rgba(255, 255, 255, .06)); }
 

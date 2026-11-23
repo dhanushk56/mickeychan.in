@@ -71,7 +71,6 @@ export default function MemberRegister({
         follow your status afterwards.
       </p>
 
-      <p className="field-label mb-2">Your account</p>
       <label className="field">
         <span className="field-label">Username</span>
         <input
@@ -97,8 +96,7 @@ export default function MemberRegister({
         />
       </label>
 
-      <p className="field-label mt-6 mb-2">How we reach you</p>
-      <label className="field">
+      <label className="field mt-5">
         <span className="field-label">Email</span>
         <input
           className="input"
@@ -133,8 +131,7 @@ export default function MemberRegister({
         </span>
       </label>
 
-      <p className="field-label mt-6 mb-2">Password</p>
-      <label className="field">
+      <label className="field mt-5">
         <span className="field-label">Password</span>
         <div className="relative flex items-center">
           <input
