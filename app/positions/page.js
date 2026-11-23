@@ -5,8 +5,8 @@ import { memberFromCookieStore } from "@/lib/members";
 import {
   STATUS_TEXT,
   applicationGate,
+  listSubmissions,
   memberSubmission,
-  submissionsKey,
 } from "@/lib/applications";
 import Countdown from "@/components/Countdown";
 import LocalTime from "@/components/LocalTime";
@@ -106,7 +106,7 @@ export default async function PositionsPage() {
     await Promise.all(
       open.map(async (entry) => {
         const form = (await kvGet(`formbuilder:form:${entry.id}`, null)) || entry;
-        const submissions = member ? await kvGet(submissionsKey(entry.id), []) : [];
+        const submissions = member ? await listSubmissions(entry.id) : [];
         const submission = member ? memberSubmission(submissions, member.username) : null;
         return { entry, form, gate: applicationGate(form, submission) };
       })

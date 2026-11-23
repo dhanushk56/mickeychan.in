@@ -3,7 +3,7 @@ import { cookies } from "next/headers";
 import { kvGet } from "@/lib/kv";
 import ApplyForm from "@/components/form-builder/ApplyForm";
 import { memberFromCookieStore } from "@/lib/members";
-import { STATUS_TEXT, applicationGate, memberSubmission, submissionsKey } from "@/lib/applications";
+import { STATUS_TEXT, applicationGate, listSubmissions, memberSubmission } from "@/lib/applications";
 import { isReadyForm } from "@/lib/form-builder/schema";
 import Countdown from "@/components/Countdown";
 import LocalTime from "@/components/LocalTime";
@@ -107,7 +107,7 @@ export default async function ApplyPage({ params }) {
     );
   }
 
-  const submissions = await kvGet(submissionsKey(id), []);
+  const submissions = await listSubmissions(id);
   const gate = applicationGate(form, memberSubmission(submissions, member.username));
 
   if (gate.status === "pending") {
