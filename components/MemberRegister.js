@@ -59,9 +59,11 @@ export default function MemberRegister({
 
   return (
     <form onSubmit={submit} className="glass-card p-8">
-      <span className="glass-inset icon-button mx-auto mb-5" aria-hidden="true">
-        ✧
-      </span>
+      <div className="flex justify-center mb-4">
+        <span className="glass-inset icon-button" aria-hidden="true">
+          ✧
+        </span>
+      </div>
       <p className="kicker justify-center">Site account</p>
       <h1 className="font-display text-2xl font-bold mt-3 mb-2 text-center">Create an account</h1>
       <p className="muted text-sm leading-relaxed mb-6 text-center">
