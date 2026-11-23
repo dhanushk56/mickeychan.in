@@ -34,7 +34,7 @@ export async function POST(request) {
   await logActivity({
     area: "admin",
     action: "form-created",
-    username: getSessionFromCookies()?.user?.username || "Admin",
+    username: (await getSessionFromCookies())?.user?.username || "Admin",
     detail: `Created a new form (/${id}), saved as a draft`,
     request,
   });

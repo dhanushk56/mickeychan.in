@@ -7,17 +7,18 @@ import { normalizeRichText } from "@/lib/rich-text";
 
 const INDEX_KEY = "formbuilder:index";
 
-function actor() {
-  return getSessionFromCookies()?.user?.username || "Admin";
+async function actor() {
+  return (await getSessionFromCookies())?.user?.username || "Admin";
 }
 
 export const dynamic = "force-dynamic";
 
 export async function GET(request, { params }) {
+  const { id } = await params;
   const gate = await authorize("forms.view");
   if (gate.response) return gate.response;
 
-  const form = await kvGet(`formbuilder:form:${params.id}`, null);
+  const form = await kvGet(`formbuilder:form:${id}`, null);
   if (!form) {
     return NextResponse.json(null, { status: 404 });
   }
@@ -25,6 +26,7 @@ export async function GET(request, { params }) {
 }
 
 export async function PUT(request, { params }) {
+  const { id } = await params;
   const gate = await authorize("forms.edit");
   if (gate.response) return gate.response;
 
@@ -33,7 +35,7 @@ export async function PUT(request, { params }) {
     return NextResponse.json({ error: "Invalid form schema." }, { status: 400 });
   }
 
-  const existing = await kvGet(`formbuilder:form:${params.id}`, null);
+  const existing = await kvGet(`formbuilder:form:${id}`, null);
   if (!existing) {
     return NextResponse.json({ error: "Form not found." }, { status: 404 });
   }
@@ -50,23 +52,23 @@ export async function PUT(request, { params }) {
     ...body,
     description: normalizeRichText(body.description),
     sections,
-    id: params.id,
+    id: id,
     published: Boolean(body.published),
     createdAt: existing.createdAt || new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };
-  await kvSet(`formbuilder:form:${params.id}`, form);
+  await kvSet(`formbuilder:form:${id}`, form);
 
   const index = await kvGet(INDEX_KEY, []);
   const now = form.updatedAt;
-  const updatedIndex = index.some((entry) => entry.id === params.id)
+  const updatedIndex = index.some((entry) => entry.id === id)
     ? index.map((entry) =>
-        entry.id === params.id
+        entry.id === id
           ? { ...entry, title: form.title, published: form.published, updatedAt: now }
           : entry
       )
     : [
-        { id: params.id, title: form.title, published: form.published, createdAt: now, updatedAt: now },
+        { id: id, title: form.title, published: form.published, createdAt: now, updatedAt: now },
         ...index,
       ];
 
@@ -75,7 +77,7 @@ export async function PUT(request, { params }) {
   await logActivity({
     area: "admin",
     action: "form-saved",
-    username: actor(),
+    username: await actor(),
     detail: `Edited “${form.title || "Untitled form"}”: ${formChangeSummary(existing, form)}`,
     request,
   });
@@ -84,19 +86,20 @@ export async function PUT(request, { params }) {
 }
 
 export async function DELETE(request, { params }) {
+  const { id } = await params;
   const gate = await authorize("forms.delete");
   if (gate.response) return gate.response;
 
-  const existing = await kvGet(`formbuilder:form:${params.id}`, null);
-  await kvDel(`formbuilder:form:${params.id}`);
+  const existing = await kvGet(`formbuilder:form:${id}`, null);
+  await kvDel(`formbuilder:form:${id}`);
   const index = await kvGet(INDEX_KEY, []);
-  await kvSet(INDEX_KEY, index.filter((entry) => entry.id !== params.id));
+  await kvSet(INDEX_KEY, index.filter((entry) => entry.id !== id));
 
   await logActivity({
     area: "admin",
     action: "form-deleted",
-    username: actor(),
-    detail: `Deleted the form “${existing?.title || params.id}”`,
+    username: await actor(),
+    detail: `Deleted the form “${existing?.title || id}”`,
     request,
   });
 

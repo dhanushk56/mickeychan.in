@@ -5,9 +5,8 @@ import AuditLog from "@/components/admin/AuditLog";
 export const dynamic = "force-dynamic";
 
 export const metadata = { title: "Audit log" };
-
 export default async function AuditPage() {
-  const session = getSession();
+  const session = await getSession();
 
   if (!session.authenticated) {
     return <PasswordGate area="The audit log" />;

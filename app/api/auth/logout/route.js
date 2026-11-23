@@ -23,7 +23,7 @@ function sameOriginNavigation(request) {
 }
 
 async function endSession(request, response) {
-  const session = getSessionFromCookies();
+  const session = await getSessionFromCookies();
   response.headers.append("Set-Cookie", clearSessionCookieHeader());
   await logActivity({
     area: "admin",

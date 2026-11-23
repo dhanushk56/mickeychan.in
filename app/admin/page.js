@@ -5,9 +5,8 @@ import AdminDashboard from "@/components/admin/AdminDashboard";
 export const dynamic = "force-dynamic";
 
 export const metadata = { title: "Admin" };
-
 export default async function AdminPage() {
-  const session = getSession();
+  const session = await getSession();
 
   if (!session.authenticated) {
     return <PasswordGate area="The admin console" />;
