@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 
 const useClientLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect;
 
-const DURATION = 660;
+const DURATION = 1960;
 
 const AUTH_FACES = new Set(["/login", "/register"]);
 

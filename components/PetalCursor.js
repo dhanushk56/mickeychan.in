@@ -2,7 +2,13 @@
 
 import { useEffect, useRef } from "react";
 
-const HOT = "a, button, summary, label, input, textarea, select, [role='button'], .btn, .chip";
+const TEXT_FIELD = [
+  "input:not([type='checkbox']):not([type='radio']):not([type='button'])",
+  ":not([type='submit']):not([type='reset']):not([type='file'])",
+  ":not([type='range']):not([type='color'])",
+].join("") + ", textarea, [contenteditable='true']";
+
+const HOT = "a, button, summary, label, select, [role='button'], .btn, .chip";
 
 export default function PetalCursor() {
   const pointerRef = useRef(null);
@@ -29,9 +35,11 @@ export default function PetalCursor() {
     const move = (event) => {
       x = event.clientX;
       y = event.clientY;
-      const hot = event.target instanceof Element && Boolean(event.target.closest(HOT));
-      pointer.dataset.state = hot ? "hover" : "default";
-      scale = hot ? 1.04 : 1;
+      const target = event.target instanceof Element ? event.target : null;
+      const field = Boolean(target && target.closest(TEXT_FIELD));
+      const hot = Boolean(target && target.closest(HOT));
+      pointer.dataset.state = field ? "text" : hot ? "hover" : "default";
+      scale = hot && !field ? 1.04 : 1;
       pointer.style.opacity = "1";
       apply();
     };
@@ -103,6 +111,29 @@ export default function PetalCursor() {
           stroke="#26232b"
           strokeWidth="2.4"
           strokeLinejoin="round"
+          strokeLinecap="round"
+        />
+      </svg>
+      <svg viewBox="0 0 30 30" data-cursor="text">
+        <defs>
+          <linearGradient id="cursor-pink-beam" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#e8b6ff" />
+            <stop offset="42%" stopColor="#ff86c8" />
+            <stop offset="100%" stopColor="#ff3d8f" />
+          </linearGradient>
+        </defs>
+        <path
+          d="M10.4 5.2H19.6M10.4 24.8H19.6M15 5.2V24.8"
+          fill="none"
+          stroke="#26232b"
+          strokeWidth="5.6"
+          strokeLinecap="round"
+        />
+        <path
+          d="M10.4 5.2H19.6M10.4 24.8H19.6M15 5.2V24.8"
+          fill="none"
+          stroke="url(#cursor-pink-beam)"
+          strokeWidth="2.6"
           strokeLinecap="round"
         />
       </svg>

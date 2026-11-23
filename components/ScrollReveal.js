@@ -21,26 +21,6 @@ export default function ScrollReveal() {
     const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (prefersReduced || typeof IntersectionObserver === "undefined") return undefined;
 
-    const viewportHeight = window.innerHeight;
-
-    const pending = Array.from(document.querySelectorAll(CARD_SELECTOR)).filter((element) => {
-      if (element.classList.contains("animate-rise")) return false;
-      if (element.dataset.reveal === "off") return false;
-      const rect = element.getBoundingClientRect();
-      return rect.top > viewportHeight * 0.9 && rect.height > 0;
-    });
-
-    if (pending.length === 0) return undefined;
-
-    const seen = new Map();
-    for (const element of pending) {
-      const parent = element.parentElement || document.body;
-      const index = seen.get(parent) || 0;
-      seen.set(parent, index + 1);
-      element.style.setProperty("--reveal-i", String(Math.min(index, 6)));
-      element.classList.add("reveal");
-    }
-
     const observer = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
@@ -52,9 +32,48 @@ export default function ScrollReveal() {
       { rootMargin: "0px 0px -8% 0px", threshold: 0.12 }
     );
 
-    for (const element of pending) observer.observe(element);
+    const counters = new WeakMap();
 
-    return () => observer.disconnect();
+    const decorate = (element) => {
+      if (element.classList.contains("reveal")) return;
+      if (element.classList.contains("animate-rise")) return;
+      if (element.dataset.reveal === "off") return;
+      const parent = element.parentElement || document.body;
+      const index = counters.get(parent) || 0;
+      counters.set(parent, index + 1);
+      element.style.setProperty("--reveal-i", String(Math.min(index, 6)));
+      element.classList.add("reveal");
+      observer.observe(element);
+    };
+
+    const viewportHeight = window.innerHeight;
+
+    for (const element of Array.from(document.querySelectorAll(CARD_SELECTOR))) {
+      const rect = element.getBoundingClientRect();
+      if (rect.top <= viewportHeight * 0.9 || rect.height === 0) continue;
+      decorate(element);
+    }
+
+    if (typeof MutationObserver === "undefined") {
+      return () => observer.disconnect();
+    }
+
+    const mutations = new MutationObserver((records) => {
+      for (const record of records) {
+        for (const node of record.addedNodes) {
+          if (!(node instanceof Element)) continue;
+          if (node.matches(CARD_SELECTOR)) decorate(node);
+          for (const child of node.querySelectorAll(CARD_SELECTOR)) decorate(child);
+        }
+      }
+    });
+
+    mutations.observe(document.body, { childList: true, subtree: true });
+
+    return () => {
+      mutations.disconnect();
+      observer.disconnect();
+    };
   }, [pathname]);
 
   return null;

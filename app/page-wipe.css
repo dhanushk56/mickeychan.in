@@ -11,7 +11,7 @@
     radial-gradient(760px 540px at 92% 4%, var(--blob-2), transparent 60%),
     radial-gradient(820px 620px at 70% 92%, var(--blob-3), transparent 62%);
   opacity: 0;
-  animation: page-wipe-veil 640ms both;
+  animation: page-wipe-veil 1900ms both;
   will-change: opacity;
 }
 
@@ -26,7 +26,7 @@
     color-mix(in srgb, var(--accent) 11%, transparent) 52%,
     transparent 59%
   );
-  animation: page-wipe-sheen 640ms cubic-bezier(.4, 0, .2, 1) both;
+  animation: page-wipe-sheen 1900ms cubic-bezier(.4, 0, .2, 1) both;
   will-change: transform;
 }
 
@@ -37,7 +37,7 @@
   justify-items: center;
   gap: .85rem;
   text-align: center;
-  animation: page-wipe-mark 640ms both;
+  animation: page-wipe-mark 1900ms both;
   will-change: opacity, transform;
 }
 
@@ -65,13 +65,13 @@
   height: 1px;
   border-radius: 999px;
   background: linear-gradient(90deg, transparent 12%, var(--primary) 50%, transparent 88%);
-  animation: page-wipe-rule 640ms cubic-bezier(.22, 1, .36, 1) both;
+  animation: page-wipe-rule 1900ms cubic-bezier(.22, 1, .36, 1) both;
 }
 
 @keyframes page-wipe-veil {
   0% { opacity: 0; animation-timing-function: cubic-bezier(.22, 1, .36, 1); }
-  18% { opacity: 1; animation-timing-function: linear; }
-  46% { opacity: 1; animation-timing-function: cubic-bezier(.4, 0, .2, 1); }
+  20% { opacity: 1; animation-timing-function: linear; }
+  56% { opacity: 1; animation-timing-function: cubic-bezier(.4, 0, .2, 1); }
   100% { opacity: 0; }
 }
 
@@ -87,7 +87,7 @@
     filter: blur(8px);
     animation-timing-function: cubic-bezier(.22, 1, .36, 1);
   }
-  12% {
+  10% {
     opacity: 1;
     transform: none;
     filter: blur(0);
@@ -107,9 +107,9 @@
 }
 
 @keyframes page-wipe-rule {
-  0%, 10% { transform: scaleX(0); opacity: 0; }
-  28% { transform: scaleX(1); opacity: .9; }
-  58%, 100% { transform: scaleX(1); opacity: 0; }
+  0%, 8% { transform: scaleX(0); opacity: 0; }
+  24% { transform: scaleX(1); opacity: .9; }
+  60%, 100% { transform: scaleX(1); opacity: 0; }
 }
 
 @media (prefers-reduced-motion: reduce) {
