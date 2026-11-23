@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 
 const useClientLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect;
 
-const DURATION = 1960;
+const DURATION = 1100;
 
 const AUTH_FACES = new Set(["/login", "/register"]);
 
@@ -73,7 +73,7 @@ export default function RouteWipe() {
   return (
     <div className="page-wipe" aria-hidden="true">
       <div className="page-wipe-mark">
-        <img src="/mickey-logo.png" alt="" width={43} height={43} className="page-wipe-logo" />
+        <img src="/mickey-logo.png" alt="" width={40} height={40} className="page-wipe-logo" />
         <span className="page-wipe-name" key={pathname}>{pageLabel(pathname)}</span>
         <span className="page-wipe-rule" />
       </div>
