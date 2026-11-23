@@ -101,7 +101,11 @@ export default function Navbar() {
             aria-expanded={open}
             onClick={() => setOpen(!open)}
           >
-            {open ? "✕" : "☰"}
+            <span className="menu-mark" data-open={open} aria-hidden="true">
+              <span />
+              <span />
+              <span />
+            </span>
           </button>
         </div>
 
