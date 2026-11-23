@@ -3,11 +3,13 @@ import { channels, getChannelSubscribers, getVideos } from "@/lib/content";
 import { kvGet } from "@/lib/kv";
 import { socials } from "@/data/socials";
 import SocialIcon from "@/components/SocialIcon";
-import HomeReveal from "@/components/HomeReveal";
+import HomeMotion from "@/components/HomeMotion";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 export const fetchCache = "force-no-store";
+
+const MARQUEE = ["Challenges", "Shorts", "ARGs", "Collabs", "Storylines", "Community"];
 
 const QUESTIONS = [
   {
@@ -133,18 +135,27 @@ export default async function Home() {
 
   return (
     <div className="home">
-      <HomeReveal />
+      <HomeMotion />
 
       <section className="home-hero px-6 md:px-16">
+        <div className="home-spotlight" aria-hidden="true" />
+        <div className="home-hero-aura" data-side="right" aria-hidden="true" />
+        <div className="home-hero-aura" data-side="left" aria-hidden="true" />
+        <span className="home-ghost" aria-hidden="true">MICKEY CHAN</span>
+
         <div className="shell home-hero-inner">
           <div className="home-hero-copy">
             <span className="eyebrow home-in" style={{ "--d": "80ms" }}>
               Minecraft videos, shorts and ARGs
             </span>
 
-            <h1 className="home-title home-in" style={{ "--d": "140ms" }}>
-              <span>One rule, thirty minutes,</span>
-              <span className="accent-text">one very loud episode.</span>
+            <h1 className="home-title">
+              <span className="home-line">
+                <span>One rule, thirty minutes,</span>
+              </span>
+              <span className="home-line">
+                <span className="accent-text">one very loud episode.</span>
+              </span>
             </h1>
 
             <p className="home-lede home-in" style={{ "--d": "220ms" }}>
@@ -230,6 +241,21 @@ export default async function Home() {
           </div>
         </div>
       </section>
+
+      <div className="home-marquee" aria-hidden="true">
+        <div className="home-marquee-track">
+          {[0, 1].map((copy) => (
+            <div className="home-marquee-group" key={copy}>
+              {MARQUEE.map((word) => (
+                <span key={`${copy}-${word}`} className="home-marquee-item">
+                  {word}
+                  <i>✳</i>
+                </span>
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
 
       <section className="home-section px-6 md:px-16">
         <div className="shell">
@@ -515,6 +541,7 @@ export default async function Home() {
       </section>
 
       <section className="home-cta px-6 md:px-16" data-home-reveal>
+        <div className="home-cta-aura" aria-hidden="true" />
         <div className="shell home-cta-inner">
           <p className="kicker justify-center">Collaborations &amp; community</p>
           <h2 className="home-cta-title">Have something in mind?</h2>
