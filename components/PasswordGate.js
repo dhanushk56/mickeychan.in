@@ -50,7 +50,7 @@ export default function PasswordGate({ area = "This area" }) {
     <div className="page">
       <div className="shell" style={{ maxWidth: "30rem" }}>
         <form onSubmit={submit} className="glass-card p-8 animate-rise">
-          <span className="glass-inset icon-button mx-auto mb-5" aria-hidden="true">
+          <span className="glass-inset icon-button auth-mark mx-auto mb-5" aria-hidden="true">
             ⚿
           </span>
           <p className="kicker justify-center">Protected</p>

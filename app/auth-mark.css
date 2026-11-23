@@ -1,0 +1,9 @@
+.flip .glass-inset.icon-button,
+.auth-mark {
+  background-image: url("/mickey-logo.png");
+  background-size: 1.15rem 1.15rem;
+  background-position: center;
+  background-repeat: no-repeat;
+  font-size: 0;
+  color: transparent;
+}

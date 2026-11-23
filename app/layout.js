@@ -4,6 +4,7 @@ import "./runner.css";
 import "./back-to-top.css";
 import "./page-wipe.css";
 import "./hover.css";
+import "./auth-mark.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import PetalField from "@/components/PetalField";
