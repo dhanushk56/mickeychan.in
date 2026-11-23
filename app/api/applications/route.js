@@ -86,6 +86,10 @@ export async function POST(request) {
     return NextResponse.json({ error: "This form is no longer available." }, { status: 404 });
   }
 
+  if (form.published === false) {
+    return NextResponse.json({ error: "This form isn't open right now." }, { status: 409 });
+  }
+
   const key = submissionsKey(formId);
   const submissions = await kvGet(key, []);
   const gate = applicationGate(form, memberSubmission(submissions, member.username));

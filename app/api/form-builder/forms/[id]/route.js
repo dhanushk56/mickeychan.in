@@ -14,6 +14,9 @@ function actor() {
 export const dynamic = "force-dynamic";
 
 export async function GET(request, { params }) {
+  const gate = await authorize("forms.view");
+  if (gate.response) return gate.response;
+
   const form = await kvGet(`formbuilder:form:${params.id}`, null);
   if (!form) {
     return NextResponse.json(null, { status: 404 });

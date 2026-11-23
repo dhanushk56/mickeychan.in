@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import ThemeToggle from "@/components/ThemeToggle";
+import LogoutButton from "@/components/LogoutButton";
 import { EMAIL_VERIFICATION_REQUIRED } from "@/lib/features";
 
 const LINKS = [
@@ -44,7 +45,6 @@ export default function Navbar() {
   }, [pathname]);
 
   const isActive = (href) => pathname === href || pathname.startsWith(`${href}/`);
-  const accountHref = member ? "/api/auth/member/logout" : "/login";
 
   return (
     <header className="site-nav">
@@ -82,9 +82,12 @@ export default function Navbar() {
               <span className="badge badge-neutral hidden md:inline-flex" title={member.username}>
                 {member.name}
               </span>
-              <a href={accountHref} className="btn btn-secondary btn-sm hidden sm:inline-flex">
+              <LogoutButton
+                endpoint="/api/auth/member/logout"
+                className="btn btn-secondary btn-sm hidden sm:inline-flex"
+              >
                 Log out
-              </a>
+              </LogoutButton>
             </>
           ) : (
             <Link href="/login" className="btn btn-secondary btn-sm hidden sm:inline-flex">
@@ -132,14 +135,29 @@ export default function Navbar() {
               Verify your account
             </Link>
           )}
-          <a
-            href={accountHref}
-            className="btn btn-secondary"
-            style={{ "--i": String(LINKS.length + (EMAIL_VERIFICATION_REQUIRED && member && !member.emailVerified ? 1 : 0)) }}
-            onClick={() => setOpen(false)}
-          >
-            {member ? `Log out (${member.username})` : "Log in"}
-          </a>
+          {member ? (
+            <LogoutButton
+              endpoint="/api/auth/member/logout"
+              className="btn btn-secondary"
+              style={{
+                "--i": String(
+                  LINKS.length +
+                    (EMAIL_VERIFICATION_REQUIRED && !member.emailVerified ? 1 : 0)
+                ),
+              }}
+            >
+              {`Log out (${member.username})`}
+            </LogoutButton>
+          ) : (
+            <Link
+              href="/login"
+              className="btn btn-secondary"
+              style={{ "--i": String(LINKS.length) }}
+              onClick={() => setOpen(false)}
+            >
+              Log in
+            </Link>
+          )}
           <Link
             href="/join"
             className="btn btn-primary mt-1"

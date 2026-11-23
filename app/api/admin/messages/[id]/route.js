@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { kvGet, kvSet } from "@/lib/kv";
-import { getSessionFromCookies } from "@/lib/auth";
+import { authorize } from "@/lib/admin-guard";
 import { logActivity } from "@/lib/activity-log";
 
 const SUBMISSIONS_KEY = "submissions:join";
@@ -8,10 +8,8 @@ const SUBMISSIONS_KEY = "submissions:join";
 export const dynamic = "force-dynamic";
 
 export async function DELETE(request, { params }) {
-  const session = getSessionFromCookies();
-  if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const gate = await authorize("messages.delete");
+  if (gate.response) return gate.response;
 
   const messages = await kvGet(SUBMISSIONS_KEY, []);
   const target = messages.find((entry) => entry.id === params.id);
@@ -26,7 +24,7 @@ export async function DELETE(request, { params }) {
   await logActivity({
     area: "admin",
     action: "message-deleted",
-    username: session.user.username,
+    username: gate.access.username,
     detail: `Deleted a “join us” message from ${who}`,
     request,
   });
