@@ -4,12 +4,11 @@ import { requestIps, requestLocation } from "@/lib/request-ips";
 import { logActivity } from "@/lib/activity-log";
 import { isEmailConfigured } from "@/lib/email";
 import { sendCodeEmail } from "@/lib/email-verification";
+import { limitReached, recordHit } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 
-const signups = globalThis.__mcSignupAttempts || (globalThis.__mcSignupAttempts = new Map());
-const WINDOW_MS = 60 * 60 * 1000;
-const MAX_SIGNUPS = 5;
+const LIMIT = { max: 5, windowMs: 60 * 60 * 1000 };
 
 function clientKey(request) {
   return (
@@ -17,22 +16,6 @@ function clientKey(request) {
     request.headers.get("x-real-ip") ||
     "local"
   );
-}
-
-function tooManySignups(key) {
-  const record = signups.get(key);
-  if (!record) return false;
-  if (Date.now() - record.first > WINDOW_MS) {
-    signups.delete(key);
-    return false;
-  }
-  return record.count >= MAX_SIGNUPS;
-}
-
-function recordSignup(key) {
-  const record = signups.get(key);
-  if (!record || Date.now() - record.first > WINDOW_MS) signups.set(key, { first: Date.now(), count: 1 });
-  else record.count += 1;
 }
 
 function sameOrigin(request) {
@@ -58,10 +41,11 @@ export async function POST(request) {
   }
 
   const key = clientKey(request);
-  if (tooManySignups(key)) {
+  const limit = await limitReached("register", key, LIMIT);
+  if (limit.limited) {
     return NextResponse.json(
       { error: "Too many accounts created from this connection. Try again later." },
-      { status: 429 }
+      { status: 429, headers: { "Retry-After": String(limit.retryAfter) } }
     );
   }
 
@@ -101,7 +85,7 @@ export async function POST(request) {
     return NextResponse.json({ error: result.error, code: result.code }, { status: conflict ? 409 : 400 });
   }
 
-  recordSignup(key);
+  await recordHit("register", key, LIMIT);
 
   let emailSent = false;
   if (isEmailConfigured()) {

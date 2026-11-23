@@ -13,6 +13,7 @@ import {
 import { requestIps, requestLocation } from "@/lib/request-ips";
 import { availableUsername } from "@/lib/member-handles";
 import { logActivity } from "@/lib/activity-log";
+import { readOAuthState } from "@/lib/oauth-state";
 import { safeNextPath, siteOrigin } from "@/lib/site-url";
 
 export const dynamic = "force-dynamic";
@@ -33,16 +34,9 @@ export async function GET(request) {
   if (!isGoogleConfigured()) return fail("google_unavailable");
   if (url.searchParams.get("error")) return fail("google_denied");
 
-  let parsed = null;
-  try {
-    parsed = JSON.parse(
-      Buffer.from(request.cookies.get("mc_oauth_state")?.value || "", "base64url").toString("utf8")
-    );
-  } catch {
-    parsed = null;
-  }
   const state = url.searchParams.get("state") || "";
-  if (!parsed || !parsed.state || parsed.state !== state) return fail("google_state");
+  const parsed = readOAuthState(request.cookies.get("mc_oauth_state")?.value, state);
+  if (!parsed) return fail("google_state");
 
   const next = safeNextPath(parsed.next);
   const code = url.searchParams.get("code") || "";

@@ -13,12 +13,11 @@ import {
 } from "@/lib/members";
 import { requestIps, requestLocation } from "@/lib/request-ips";
 import { logActivity } from "@/lib/activity-log";
+import { clearHits, limitReached, recordHit } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 
-const attempts = globalThis.__mcMemberAttempts || (globalThis.__mcMemberAttempts = new Map());
-const WINDOW_MS = 10 * 60 * 1000;
-const MAX_ATTEMPTS = 10;
+const LIMIT = { max: 10, windowMs: 10 * 60 * 1000 };
 
 function clientKey(request) {
   return (
@@ -26,22 +25,6 @@ function clientKey(request) {
     request.headers.get("x-real-ip") ||
     "local"
   );
-}
-
-function tooManyAttempts(key) {
-  const record = attempts.get(key);
-  if (!record) return false;
-  if (Date.now() - record.first > WINDOW_MS) {
-    attempts.delete(key);
-    return false;
-  }
-  return record.count >= MAX_ATTEMPTS;
-}
-
-function recordFailure(key) {
-  const record = attempts.get(key);
-  if (!record || Date.now() - record.first > WINDOW_MS) attempts.set(key, { first: Date.now(), count: 1 });
-  else record.count += 1;
 }
 
 function sameOrigin(request) {
@@ -82,8 +65,12 @@ export async function POST(request) {
   }
 
   const key = clientKey(request);
-  if (tooManyAttempts(key)) {
-    return NextResponse.json({ error: "Too many attempts. Try again in a few minutes." }, { status: 429 });
+  const limit = await limitReached("member-login", key, LIMIT);
+  if (limit.limited) {
+    return NextResponse.json(
+      { error: "Too many attempts. Try again in a few minutes." },
+      { status: 429, headers: { "Retry-After": String(limit.retryAfter) } }
+    );
   }
 
   const body = await request.json().catch(() => ({}));
@@ -112,7 +99,7 @@ export async function POST(request) {
   }
 
   if (!member || !verifyMemberPassword(member, password)) {
-    recordFailure(key);
+    await recordHit("member-login", key, LIMIT);
     await logActivity({
       area: "website",
       action: "login-failed",
@@ -124,7 +111,7 @@ export async function POST(request) {
     return NextResponse.json({ error: "That username and password don't match." }, { status: 401 });
   }
 
-  attempts.delete(key);
+  await clearHits("member-login", key, LIMIT);
   const signedIn =
     (await bindMemberIps(member.username, requestIps(request), requestLocation(request))) || member;
   const response = NextResponse.json({ ok: true, member: publicMember(signedIn) });

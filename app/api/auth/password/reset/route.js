@@ -43,21 +43,11 @@ export async function POST(request) {
   }
 
   const member = await findMemberByEmail(email);
-  if (!member) {
-    return NextResponse.json(
-      { error: "No account is associated with that email address.", code: "no_account" },
-      { status: 404 }
-    );
+  if (!member || member.provider === "google" || member.provider === "discord") {
+    return NextResponse.json({ error: "That code has expired. Send a new one." }, { status: 400 });
   }
 
-  if (member.provider === "google" || member.provider === "discord") {
-    return NextResponse.json(
-      { error: "That account signs in with Google or Discord, so it has no password to reset." },
-      { status: 400 }
-    );
-  }
-
-  const problem = passwordProblem(password);
+  const problem = passwordProblem(password, member.username);
   if (problem) return NextResponse.json({ error: problem }, { status: 400 });
 
   if (password !== confirm) {

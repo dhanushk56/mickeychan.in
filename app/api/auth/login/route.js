@@ -8,13 +8,12 @@ import {
 } from "@/lib/auth";
 import { logActivity } from "@/lib/activity-log";
 import { memberFromCookieStore } from "@/lib/members";
+import { clearHits, limitReached, recordHit } from "@/lib/rate-limit";
 import { resolveAdmin } from "@/lib/roles";
 
 export const dynamic = "force-dynamic";
 
-const attempts = globalThis.__mcLoginAttempts || (globalThis.__mcLoginAttempts = new Map());
-const WINDOW_MS = 10 * 60 * 1000;
-const MAX_ATTEMPTS = 8;
+const LIMIT = { max: 8, windowMs: 10 * 60 * 1000 };
 
 function clientKey(request) {
   return (
@@ -22,25 +21,6 @@ function clientKey(request) {
     request.headers.get("x-real-ip") ||
     "local"
   );
-}
-
-function tooManyAttempts(key) {
-  const record = attempts.get(key);
-  if (!record) return false;
-  if (Date.now() - record.first > WINDOW_MS) {
-    attempts.delete(key);
-    return false;
-  }
-  return record.count >= MAX_ATTEMPTS;
-}
-
-function recordFailure(key) {
-  const record = attempts.get(key);
-  if (!record || Date.now() - record.first > WINDOW_MS) {
-    attempts.set(key, { first: Date.now(), count: 1 });
-  } else {
-    record.count += 1;
-  }
 }
 
 export async function POST(request) {
@@ -63,10 +43,11 @@ export async function POST(request) {
   }
 
   const key = clientKey(request);
-  if (tooManyAttempts(key)) {
+  const limit = await limitReached("admin-login", key, LIMIT);
+  if (limit.limited) {
     return NextResponse.json(
       { error: "Too many attempts. Try again in a few minutes." },
-      { status: 429 }
+      { status: 429, headers: { "Retry-After": String(limit.retryAfter) } }
     );
   }
 
@@ -75,6 +56,7 @@ export async function POST(request) {
 
   const member = await memberFromCookieStore(cookies());
   if (!member) {
+    await recordHit("admin-login", key, LIMIT);
     await logActivity({
       area: "admin",
       action: "login-blocked",
@@ -93,7 +75,7 @@ export async function POST(request) {
   }
 
   if (!checkPassword(password)) {
-    recordFailure(key);
+    await recordHit("admin-login", key, LIMIT);
     await logActivity({
       area: "admin",
       action: "login-failed",
@@ -107,7 +89,7 @@ export async function POST(request) {
 
   const access = await resolveAdmin(member.username);
   if (!access) {
-    recordFailure(key);
+    await recordHit("admin-login", key, LIMIT);
     await logActivity({
       area: "admin",
       action: "login-denied",
@@ -125,7 +107,7 @@ export async function POST(request) {
     );
   }
 
-  attempts.delete(key);
+  await clearHits("admin-login", key, LIMIT);
   const response = NextResponse.json({
     ok: true,
     user: {

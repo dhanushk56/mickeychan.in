@@ -3,12 +3,11 @@ import { findMemberByEmail } from "@/lib/members";
 import { clearResetCode, issueResetCode } from "@/lib/password-reset";
 import { isEmailConfigured, resetEmail, sendEmail } from "@/lib/email";
 import { logActivity } from "@/lib/activity-log";
+import { limitReached, recordHit } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 
-const requests = globalThis.__mcResetRequests || (globalThis.__mcResetRequests = new Map());
-const WINDOW_MS = 60 * 60 * 1000;
-const MAX_REQUESTS = 8;
+const LIMIT = { max: 8, windowMs: 60 * 60 * 1000 };
 
 function clientKey(request) {
   return (
@@ -16,22 +15,6 @@ function clientKey(request) {
     request.headers.get("x-real-ip") ||
     "local"
   );
-}
-
-function tooMany(key) {
-  const record = requests.get(key);
-  if (!record) return false;
-  if (Date.now() - record.first > WINDOW_MS) {
-    requests.delete(key);
-    return false;
-  }
-  return record.count >= MAX_REQUESTS;
-}
-
-function recordRequest(key) {
-  const record = requests.get(key);
-  if (!record || Date.now() - record.first > WINDOW_MS) requests.set(key, { first: Date.now(), count: 1 });
-  else record.count += 1;
 }
 
 function sameOrigin(request) {
@@ -64,10 +47,11 @@ export async function POST(request) {
   }
 
   const key = clientKey(request);
-  if (tooMany(key)) {
+  const limit = await limitReached("password-request", key, LIMIT);
+  if (limit.limited) {
     return NextResponse.json(
       { error: "Too many reset requests. Try again later." },
-      { status: 429 }
+      { status: 429, headers: { "Retry-After": String(limit.retryAfter) } }
     );
   }
 
@@ -78,55 +62,28 @@ export async function POST(request) {
   }
 
   const member = await findMemberByEmail(email);
-  if (!member) {
-    return NextResponse.json(
-      { error: "No account is associated with that email address.", code: "no_account" },
-      { status: 404 }
-    );
+  if (member && member.provider !== "google" && member.provider !== "discord") {
+    const issued = await issueResetCode(member);
+    if (!issued.error) {
+      const message = resetEmail({ username: member.name || member.username, code: issued.code });
+      const sent = await sendEmail({
+        to: member.email,
+        subject: message.subject,
+        html: message.html,
+        text: message.text,
+      });
+      if (sent.error) await clearResetCode(member.email);
+      await recordHit("password-request", key, LIMIT);
+      await logActivity({
+        area: "website",
+        action: "password-reset-code",
+        username: member.username,
+        detail: sent.error ? `Couldn't send a reset code to ${member.email}` : `Sent a password reset code to ${member.email}`,
+        ok: !sent.error,
+        request,
+      });
+    }
   }
 
-  if (member.provider === "google" || member.provider === "discord") {
-    const provider = member.provider === "discord" ? "Discord" : "Google";
-    return NextResponse.json(
-      {
-        error: `That account signs in with ${provider}, so it has no password to reset. Use the ${provider} button on the login page.`,
-        code: "oauth_account",
-      },
-      { status: 400 }
-    );
-  }
-
-  const issued = await issueResetCode(member);
-  if (issued.error === "cooldown") {
-    return NextResponse.json(
-      { error: `Wait ${issued.waitSeconds}s before asking for another code.`, waitSeconds: issued.waitSeconds },
-      { status: 429 }
-    );
-  }
-
-  const message = resetEmail({ username: member.name || member.username, code: issued.code });
-  const sent = await sendEmail({
-    to: member.email,
-    subject: message.subject,
-    html: message.html,
-    text: message.text,
-  });
-  if (sent.error) {
-    await clearResetCode(member.email);
-    return NextResponse.json(
-      { error: "We couldn't send the email. Try again in a minute." },
-      { status: 502 }
-    );
-  }
-
-  recordRequest(key);
-  await logActivity({
-    area: "website",
-    action: "password-reset-code",
-    username: member.username,
-    detail: `Sent a password reset code to ${member.email}`,
-    request,
-  });
-
-  return NextResponse.json({ ok: true, email: member.email });
+  return NextResponse.json({ ok: true }, { headers: { "Cache-Control": "no-store" } });
 }
