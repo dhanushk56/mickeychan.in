@@ -166,6 +166,7 @@ function AccountRow({
   account,
   onDelete,
   onPassword,
+  onEdit,
   onBlacklist,
   adminEntry,
   roles,
@@ -173,10 +174,13 @@ function AccountRow({
   canBlock,
   canDelete,
   canPassword,
+  canEdit,
   onRoleChange,
 }) {
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
+  const [details, setDetails] = useState(null);
+  const [savingDetails, setSavingDetails] = useState(false);
   const verified = account.emailVerified === true;
   const methodLabel =
     account.provider === "google"
@@ -198,6 +202,34 @@ function AccountRow({
     const ok = await onPassword(account, password);
     setBusy(false);
     if (ok) setPassword("");
+  }
+
+  function openDetails() {
+    setDetails({
+      name: account.name || "",
+      username: account.username || "",
+      email: account.email || "",
+      phone: account.phone || "",
+      password: "",
+      emailVerified: account.emailVerified === true,
+    });
+  }
+
+  async function saveDetails(event) {
+    event.preventDefault();
+    if (!details) return;
+    setSavingDetails(true);
+    const patch = {
+      name: details.name,
+      username: details.username,
+      email: details.email,
+      phone: details.phone,
+      emailVerified: details.emailVerified,
+    };
+    if (details.password) patch.password = details.password;
+    const ok = await onEdit(account, patch);
+    setSavingDetails(false);
+    if (ok) setDetails(null);
   }
 
   return (
@@ -273,6 +305,14 @@ function AccountRow({
           )}
           <button
             type="button"
+            className="btn btn-secondary"
+            disabled={busy || !canEdit}
+            onClick={openDetails}
+          >
+            Edit details
+          </button>
+          <button
+            type="button"
             className="btn btn-ghost"
             style={{ color: "var(--danger)" }}
             disabled={busy || !canDelete}
@@ -304,6 +344,89 @@ function AccountRow({
           {busy ? "Saving…" : "Set password"}
         </button>
       </form>
+
+      {details && (
+        <form onSubmit={saveDetails} className="grid gap-3 mt-3">
+          <div className="grid gap-2 sm:grid-cols-2">
+            <label className="field">
+              <span className="field-label">Display name</span>
+              <input
+                className="input"
+                value={details.name}
+                maxLength={60}
+                onChange={(event) => setDetails({ ...details, name: event.target.value })}
+              />
+            </label>
+            <label className="field">
+              <span className="field-label">Username</span>
+              <input
+                className="input"
+                value={details.username}
+                maxLength={24}
+                autoCapitalize="none"
+                spellCheck={false}
+                onChange={(event) => setDetails({ ...details, username: event.target.value })}
+              />
+            </label>
+            <label className="field">
+              <span className="field-label">Email</span>
+              <input
+                className="input"
+                type="email"
+                value={details.email}
+                autoCapitalize="none"
+                spellCheck={false}
+                onChange={(event) => setDetails({ ...details, email: event.target.value })}
+              />
+            </label>
+            <label className="field">
+              <span className="field-label">Phone (optional)</span>
+              <input
+                className="input"
+                value={details.phone}
+                inputMode="tel"
+                maxLength={24}
+                onChange={(event) => setDetails({ ...details, phone: event.target.value })}
+              />
+            </label>
+            <label className="field">
+              <span className="field-label">New password (optional)</span>
+              <input
+                className="input"
+                type="password"
+                value={details.password}
+                autoComplete="new-password"
+                placeholder="Leave blank to keep it"
+                onChange={(event) => setDetails({ ...details, password: event.target.value })}
+              />
+            </label>
+            <label className="field">
+              <span className="field-label">Email status</span>
+              <span className="flex items-center gap-2" style={{ minHeight: "2.5rem" }}>
+                <input
+                  type="checkbox"
+                  checked={details.emailVerified}
+                  onChange={(event) =>
+                    setDetails({ ...details, emailVerified: event.target.checked })
+                  }
+                />
+                <span className="muted text-sm">Mark this email as confirmed</span>
+              </span>
+            </label>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <button type="submit" className="btn btn-primary btn-sm" disabled={savingDetails}>
+              {savingDetails ? "Saving…" : "Save changes"}
+            </button>
+            <button type="button" className="btn btn-ghost btn-sm" onClick={() => setDetails(null)}>
+              Cancel
+            </button>
+            <span className="faint text-xs">
+              Admin edits skip the member&apos;s six-month lock.
+            </span>
+          </div>
+        </form>
+      )}
     </article>
   );
 }
@@ -323,7 +446,13 @@ export default function AdminDashboard({ currentUser }) {
   const [creating, setCreating] = useState(false);
   const [copied, setCopied] = useState("");
   const [clearing, setClearing] = useState(false);
-  const [newAccount, setNewAccount] = useState({ username: "", name: "", password: "" });
+  const [newAccount, setNewAccount] = useState({
+    username: "",
+    name: "",
+    email: "",
+    phone: "",
+    password: "",
+  });
   const [creatingAccount, setCreatingAccount] = useState(false);
   const mounted = useRef(true);
   const [dialog, askConfirm] = useConfirm();
@@ -589,6 +718,29 @@ export default function AdminDashboard({ currentUser }) {
     }
   }
 
+  async function editAccountDetails(account, patch) {
+    try {
+      const response = await fetch(`/api/admin/accounts/${encodeURIComponent(account.username)}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(patch),
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(result.error || "Could not update that account.");
+      setError("");
+      setNotice(
+        result.renamed
+          ? `Saved — @${account.username} is now @${result.member?.username}.`
+          : `Saved the details for @${result.member?.username || account.username}.`
+      );
+      load();
+      return true;
+    } catch (err) {
+      setError(err.message);
+      return false;
+    }
+  }
+
   async function deleteAccount(account) {
     const ok = await askConfirm({
       title: "Delete this account?",
@@ -678,7 +830,7 @@ export default function AdminDashboard({ currentUser }) {
       setNotice(
         `Account @${result.member?.username || newAccount.username} created — give them the password you set.`
       );
-      setNewAccount({ username: "", name: "", password: "" });
+      setNewAccount({ username: "", name: "", email: "", phone: "", password: "" });
       load();
     } catch (err) {
       setError(err.message);
@@ -1023,6 +1175,33 @@ export default function AdminDashboard({ currentUser }) {
                     required
                   />
                 </label>
+                <label className="field flex-1" style={{ minWidth: "10rem" }}>
+                  <span className="field-label">Email (optional)</span>
+                  <input
+                    className="input"
+                    type="email"
+                    value={newAccount.email}
+                    onChange={(event) =>
+                      setNewAccount((current) => ({ ...current, email: event.target.value }))
+                    }
+                    autoCapitalize="none"
+                    spellCheck={false}
+                    placeholder="them@example.com"
+                  />
+                </label>
+                <label className="field flex-1" style={{ minWidth: "10rem" }}>
+                  <span className="field-label">Phone (optional)</span>
+                  <input
+                    className="input"
+                    value={newAccount.phone}
+                    inputMode="tel"
+                    maxLength={24}
+                    onChange={(event) =>
+                      setNewAccount((current) => ({ ...current, phone: event.target.value }))
+                    }
+                    placeholder="+91 98765 43210"
+                  />
+                </label>
                 <button
                   type="submit"
                   className="btn btn-primary btn-sm"
@@ -1056,6 +1235,8 @@ export default function AdminDashboard({ currentUser }) {
                   canBlock={can("accounts.block")}
                   canDelete={can("accounts.delete")}
                   canPassword={can("accounts.password")}
+                  canEdit={can("accounts.password")}
+                  onEdit={editAccountDetails}
                   onRoleChange={changeAdminRole}
                 />
               ))
