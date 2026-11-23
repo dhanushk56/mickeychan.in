@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "user:add": "node scripts/add-user.mjs",
-    "smoke": "node scripts/smoke.mjs"
+    "smoke": "node scripts/smoke.mjs",
+    "data-model": "node --import ./scripts/register.mjs scripts/data-model.mjs"
   },
   "dependencies": {
     "@vercel/kv": "^3.0.0",

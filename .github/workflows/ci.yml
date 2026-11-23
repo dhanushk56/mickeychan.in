@@ -30,6 +30,9 @@ jobs:
       - name: Install exact dependencies
         run: npm ci
 
+      - name: Check the record store under concurrency
+        run: npm run data-model
+
       - name: Build
         run: npm run build
 
