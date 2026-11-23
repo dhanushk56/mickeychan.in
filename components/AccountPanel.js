@@ -148,11 +148,11 @@ export default function AccountPanel({ profile, verificationRequired = true }) {
     <div className="grid gap-5">
       <div className="glass-card account-card animate-rise">
         <div className="account-head">
+          <p className="kicker">My account</p>
           <span className="avatar-frame" aria-hidden="true">
             {current.avatar ? <img src={current.avatar} alt="" /> : current.initials}
           </span>
-          <div className="grid gap-2 min-w-0">
-            <p className="kicker">My account</p>
+          <div className="account-head-text">
             <h1 className="font-display text-2xl font-bold leading-tight">{current.name}</h1>
             <p className="muted text-sm">@{current.username}</p>
             <div className="flex flex-wrap gap-2 mt-1">
@@ -190,7 +190,7 @@ export default function AccountPanel({ profile, verificationRequired = true }) {
       </div>
 
       {needsVerify && (
-        <div className="glass-card p-5 grid gap-3 animate-rise">
+        <div className="glass-card account-card grid gap-3 animate-rise">
           <p className="kicker">Verify your email</p>
           <p className="muted text-sm leading-relaxed">
             Confirm {current.email || "your email address"} so applications and messages reach you.
@@ -205,10 +205,7 @@ export default function AccountPanel({ profile, verificationRequired = true }) {
       )}
 
       {(error || notice) && (
-        <p
-          className={error ? "badge badge-denied p-3 text-sm" : "badge badge-accepted p-3 text-sm"}
-          role="status"
-        >
+        <p className={error ? "badge badge-denied p-3 text-sm" : "badge badge-accepted p-3 text-sm"} role="status">
           {error || notice}
         </p>
       )}
@@ -258,7 +255,9 @@ export default function AccountPanel({ profile, verificationRequired = true }) {
                 Cancel
               </button>
             </div>
-            <p className="faint text-xs">Saving uses your one change for the next six months.</p>
+            <p className="faint text-xs">
+              Saving uses your one change for the next six months.
+            </p>
           </form>
         ) : (
           <div className="account-rows">
