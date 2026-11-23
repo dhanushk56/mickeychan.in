@@ -39,6 +39,62 @@
   display: block;
 }
 
+.avatar-button {
+  padding: 0;
+  cursor: pointer;
+  font-family: inherit;
+  color: inherit;
+  transition: transform 260ms var(--ease-glide), box-shadow 260ms var(--ease-glide),
+    border-color 260ms var(--ease-glide);
+}
+
+.avatar-button::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: rgba(8, 5, 16, 0);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0);
+  transition: background-color 220ms var(--ease-glide), box-shadow 220ms var(--ease-glide);
+}
+
+.avatar-button:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--primary) 46%, var(--line));
+  box-shadow: 0 22px 40px -26px rgba(76, 29, 149, .8);
+}
+
+.avatar-button:hover::after {
+  background: rgba(8, 5, 16, .2);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .22);
+}
+
+.avatar-button:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 3px;
+}
+
+.photo-viewer-img {
+  width: min(88vmin, 40rem);
+  max-width: 92vw;
+  max-height: 82vh;
+  height: auto;
+  display: block;
+  border-radius: .875rem;
+  border: 1px solid var(--glass-line);
+  background: var(--surface);
+  box-shadow: 0 44px 90px -34px rgba(0, 0, 0, .9);
+  cursor: zoom-out;
+}
+
+.photo-viewer-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  z-index: 2;
+}
+
 .account-rows { display: grid; margin-top: .55rem; }
 
 .account-row {
