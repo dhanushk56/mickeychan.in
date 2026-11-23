@@ -5,7 +5,7 @@ import {
   memberCookieHeader,
   memberFromCookieStore,
   publicProfile,
-  updateMemberProfile,
+  updateMemberAccount,
 } from "@/lib/members";
 import { logActivity } from "@/lib/activity-log";
 
@@ -39,9 +39,12 @@ export async function PATCH(request) {
   }
 
   const body = await request.json().catch(() => ({}));
-  const result = await updateMemberProfile(session.username, {
+  const result = await updateMemberAccount(session.username, {
     name: body?.name,
     phone: body?.phone,
+    email: body?.email,
+    username: body?.username,
+    password: body?.password,
   });
 
   if (result.error) {
@@ -56,11 +59,14 @@ export async function PATCH(request) {
     { headers: { "Cache-Control": "no-store, max-age=0" } }
   );
   response.headers.append("Set-Cookie", memberCookieHeader(createMemberToken(result.member)));
+  const changed = ["name", "phone", "email", "username", "password"].filter(
+    (field) => typeof body?.[field] === "string" && body[field].trim() !== ""
+  );
   await logActivity({
     area: "website",
     action: "profile-update",
-    username: session.username,
-    detail: "Updated account details",
+    username: result.member.username,
+    detail: changed.length > 0 ? `Changed ${changed.join(", ")}` : "Updated account details",
     request,
   });
 

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { authorize } from "@/lib/admin-guard";
-import { deleteMember, setMemberPassword } from "@/lib/members";
+import { adminUpdateMember, deleteMember, publicMember } from "@/lib/members";
 import { isOwnerAccount, isRootOwner } from "@/lib/roles";
 import { logActivity } from "@/lib/activity-log";
 
@@ -20,23 +20,36 @@ export async function PATCH(request, { params }) {
   }
 
   const body = await request.json().catch(() => ({}));
-  const password = typeof body.password === "string" ? body.password : "";
+  const patch = {};
+  for (const field of ["name", "phone", "email", "username", "password"]) {
+    if (typeof body?.[field] === "string") patch[field] = body[field];
+  }
+  if (typeof body?.emailVerified === "boolean") patch.emailVerified = body.emailVerified;
 
-  const result = await setMemberPassword(target, password);
+  const result = await adminUpdateMember(target, patch);
   if (result.error) {
     const missing = result.error.startsWith("No account");
     return NextResponse.json({ error: result.error }, { status: missing ? 404 : 400 });
   }
 
+  const fields = Object.keys(patch).filter((field) => field !== "password");
+  if (patch.password) fields.push("password");
+
   await logActivity({
     area: "admin",
-    action: "account-password",
+    action: patch.password && fields.length === 1 ? "account-password" : "account-update",
     username: gate.access.username,
-    detail: `Changed the password for @${target}`,
+    detail:
+      fields.length > 0
+        ? `Updated ${fields.join(", ")} for @${target}${result.renamed ? ` (now @${result.member.username})` : ""}`
+        : `Updated the account @${target}`,
     request,
   });
 
-  return NextResponse.json({ ok: true }, { headers: { "Cache-Control": "no-store" } });
+  return NextResponse.json(
+    { ok: true, member: publicMember(result.member), renamed: Boolean(result.renamed) },
+    { headers: { "Cache-Control": "no-store" } }
+  );
 }
 
 export async function DELETE(request, { params }) {

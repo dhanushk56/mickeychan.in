@@ -55,6 +55,7 @@ export async function POST(request) {
   const confirm = typeof body.confirmPassword === "string" ? body.confirmPassword : password;
   const name = typeof body.name === "string" ? body.name : "";
   const email = typeof body.email === "string" ? body.email : "";
+  const phone = typeof body.phone === "string" ? body.phone : "";
 
   if (password !== confirm) {
     return NextResponse.json({ error: "Those passwords don't match." }, { status: 400 });
@@ -64,6 +65,7 @@ export async function POST(request) {
     username,
     name,
     email,
+    phone,
     password,
     provider: "password",
     emailVerified: false,

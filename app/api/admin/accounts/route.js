@@ -24,11 +24,17 @@ export async function POST(request) {
   const username = typeof body.username === "string" ? body.username : "";
   const password = typeof body.password === "string" ? body.password : "";
   const name = typeof body.name === "string" ? body.name : "";
+  const email = typeof body.email === "string" ? body.email : "";
+  const phone = typeof body.phone === "string" ? body.phone : "";
+  const emailVerified = body.emailVerified === true;
 
   const result = await registerMember({
     username,
     name,
+    email,
+    phone,
     password,
+    emailVerified,
     allowSharedIp: true,
     createdBy: "admin",
   });
