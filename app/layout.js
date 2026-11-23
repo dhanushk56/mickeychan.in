@@ -1,4 +1,8 @@
 import "./globals.css";
+import "./nav.css";
+import "./ui.css";
+import "./pages.css";
+import "./home.css";
 import "./atmosphere.css";
 import "./motion.css";
 import "./runner.css";
@@ -15,6 +19,7 @@ import RouteWipe from "@/components/RouteWipe";
 import PageEnter from "@/components/PageEnter";
 import PetalCursor from "@/components/PetalCursor";
 import BackToTop from "@/components/BackToTop";
+import ThemeToggle from "@/components/ThemeToggle";
 
 export const metadata = {
   title: {
@@ -62,6 +67,9 @@ export default function RootLayout({ children }) {
         <RouteWipe />
         <Navbar />
         <BackToTop />
+        <div className="theme-dock">
+          <ThemeToggle />
+        </div>
         <main className="relative z-10 pt-24">{children}</main>
         <Footer />
       </body>
