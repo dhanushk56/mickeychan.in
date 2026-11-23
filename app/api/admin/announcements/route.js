@@ -17,8 +17,8 @@ import {
 
 export const dynamic = "force-dynamic";
 
-function actor() {
-  return getSessionFromCookies()?.user?.username || "Admin";
+async function actor() {
+  return (await getSessionFromCookies())?.user?.username || "Admin";
 }
 
 export async function GET() {
@@ -44,7 +44,7 @@ export async function POST(request) {
     body: body.body,
     level: body.level,
     windowHours: body.windowHours,
-    author: actor(),
+    author: await actor(),
   });
 
   if (announcementIsBlank(announcement.title, announcement.body)) {
@@ -70,7 +70,7 @@ export async function POST(request) {
   await logActivity({
     area: "admin",
     action: "announcement",
-    username: actor(),
+    username: await actor(),
     detail: `Posted the ${meta.label.toLowerCase()} announcement “${announcement.title}” for ${announcement.windowHours} hour${announcement.windowHours === 1 ? "" : "s"}`,
     request,
   });
@@ -103,7 +103,7 @@ export async function DELETE(request) {
   await logActivity({
     area: "admin",
     action: "announcement-deleted",
-    username: actor(),
+    username: await actor(),
     detail: `Deleted the announcement “${target.title}”`,
     request,
   });
