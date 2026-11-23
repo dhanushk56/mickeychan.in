@@ -10,6 +10,14 @@ const TEXT_FIELD = [
 
 const HOT = "a, button, summary, label, select, [role='button'], .btn, .chip";
 
+function hasOwnText(element) {
+  if (!element) return false;
+  for (const node of element.childNodes) {
+    if (node.nodeType === Node.TEXT_NODE && /\S/.test(node.nodeValue || "")) return true;
+  }
+  return false;
+}
+
 export default function PetalCursor() {
   const pointerRef = useRef(null);
 
@@ -38,8 +46,9 @@ export default function PetalCursor() {
       const target = event.target instanceof Element ? event.target : null;
       const field = Boolean(target && target.closest(TEXT_FIELD));
       const hot = Boolean(target && target.closest(HOT));
-      pointer.dataset.state = field ? "text" : hot ? "hover" : "default";
-      scale = hot && !field ? 1.04 : 1;
+      const overText = field || (!hot && hasOwnText(target));
+      pointer.dataset.state = overText ? "text" : hot ? "hover" : "default";
+      scale = hot && !overText ? 1.04 : 1;
       pointer.style.opacity = "1";
       apply();
     };

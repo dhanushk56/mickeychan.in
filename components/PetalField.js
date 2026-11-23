@@ -2,7 +2,15 @@
 
 import { useEffect, useState } from "react";
 
-const COLORS = ["#c4b5fd", "#a78bfa", "#f9a8d4", "#93c5fd"];
+const PALETTES = {
+  light: ["#7c3aed", "#c026d3", "#db2777", "#2563eb"],
+  dark: ["#c4b5fd", "#a78bfa", "#f9a8d4", "#93c5fd"],
+};
+
+const ALPHA = {
+  light: [0.3, 0.48],
+  dark: [0.18, 0.4],
+};
 
 function randomPetal(id) {
   const size = 10 + Math.random() * 22;
@@ -14,20 +22,33 @@ function randomPetal(id) {
     delay: -Math.random() * 30,
     drift: Math.random() * 180 - 90,
     rotate: 120 + Math.random() * 360,
-    color: COLORS[Math.floor(Math.random() * COLORS.length)],
-    opacity: 0.18 + Math.random() * 0.22,
+    tone: Math.floor(Math.random() * 4),
+    weight: Math.random(),
     blur: Math.random() > 0.55 ? 4 : 0,
   };
 }
 
 export default function PetalField() {
   const [petals, setPetals] = useState([]);
+  const [theme, setTheme] = useState("light");
+
+  useEffect(() => {
+    const root = document.documentElement;
+    const read = () => setTheme(root.getAttribute("data-theme") === "dark" ? "dark" : "light");
+    read();
+    const observer = new MutationObserver(read);
+    observer.observe(root, { attributes: true, attributeFilter: ["data-theme"] });
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const count = 12 + Math.floor(Math.random() * 8);
     setPetals(Array.from({ length: count }, (_, i) => randomPetal(i)));
   }, []);
+
+  const palette = PALETTES[theme] || PALETTES.light;
+  const [from, to] = ALPHA[theme] || ALPHA.light;
 
   return (
     <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none" aria-hidden="true">
@@ -39,8 +60,8 @@ export default function PetalField() {
             left: `${p.left}%`,
             width: `${p.size}px`,
             height: `${p.size}px`,
-            background: p.color,
-            opacity: p.opacity,
+            background: palette[p.tone],
+            opacity: from + p.weight * (to - from),
             filter: p.blur ? `blur(${p.blur}px)` : undefined,
             animationDuration: `${p.duration}s`,
             animationDelay: `${p.delay}s`,
