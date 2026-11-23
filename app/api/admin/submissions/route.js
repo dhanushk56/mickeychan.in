@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
-import { kvGet, kvSet } from "@/lib/kv";
+import { kvGet } from "@/lib/kv";
 import { authorize, authorizeAny } from "@/lib/admin-guard";
-import { submissionsKey } from "@/lib/applications";
+import { clearSubmissions, listSubmissions } from "@/lib/applications";
+import { listJoinMessages } from "@/lib/join-messages";
 import { listMembers } from "@/lib/members";
 import { annotateBlacklist } from "@/lib/blacklist";
 import { logActivity } from "@/lib/activity-log";
@@ -18,7 +19,7 @@ export async function GET() {
   if (gate.response) return gate.response;
 
   const [join, index, members] = await Promise.all([
-    kvGet("submissions:join", []),
+    listJoinMessages(),
     kvGet("formbuilder:index", []),
     listMembers(),
   ]);
@@ -26,7 +27,7 @@ export async function GET() {
 
   const perForm = await Promise.all(
     index.map(async (entry) => {
-      const submissions = await kvGet(`submissions:applications:${entry.id}`, []);
+      const submissions = await listSubmissions(entry.id);
       return submissions.map((submission) => ({
         ...submission,
         status: submission.status || "pending",
@@ -65,10 +66,9 @@ export async function DELETE(request) {
   const index = await kvGet("formbuilder:index", []);
   const cleared = await Promise.all(
     index.map(async (entry) => {
-      const key = submissionsKey(entry.id);
-      const submissions = await kvGet(key, []);
-      await kvSet(key, []);
-      return Array.isArray(submissions) ? submissions.length : 0;
+      const submissions = await listSubmissions(entry.id);
+      await clearSubmissions(entry.id);
+      return submissions.length;
     })
   );
   const total = cleared.reduce((sum, count) => sum + count, 0);

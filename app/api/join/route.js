@@ -1,12 +1,10 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { kvGet, kvSet } from "@/lib/kv";
+import { addJoinMessage } from "@/lib/join-messages";
 import { memberFromCookieStore } from "@/lib/members";
 import { logActivity } from "@/lib/activity-log";
 import { EMAIL_VERIFICATION_REQUIRED } from "@/lib/features";
 import { blacklistEntry } from "@/lib/blacklist";
-
-const SUBMISSIONS_KEY = "submissions:join";
 
 export const dynamic = "force-dynamic";
 
@@ -75,8 +73,7 @@ export async function POST(request) {
     return NextResponse.json({ error: "Please provide a valid name, email, and message." }, { status: 400 });
   }
 
-  const submissions = await kvGet(SUBMISSIONS_KEY, []);
-  submissions.unshift({
+  await addJoinMessage({
     id: crypto.randomUUID(),
     memberUsername: member.username,
     memberName: member.name,
@@ -86,7 +83,6 @@ export async function POST(request) {
     message,
     createdAt: new Date().toISOString(),
   });
-  await kvSet(SUBMISSIONS_KEY, submissions);
 
   await logActivity({
     area: "website",

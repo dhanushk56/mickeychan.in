@@ -1,9 +1,15 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { kvGet, kvSet } from "@/lib/kv";
+import { kvGet } from "@/lib/kv";
 import { validateResponses } from "@/lib/form-builder/schema";
 import { memberFromCookieStore } from "@/lib/members";
-import { STATUS_TEXT, applicationGate, memberSubmission, submissionsKey } from "@/lib/applications";
+import {
+  STATUS_TEXT,
+  applicationGate,
+  listSubmissions,
+  memberSubmission,
+  saveSubmission,
+} from "@/lib/applications";
 import { logActivity } from "@/lib/activity-log";
 import { EMAIL_VERIFICATION_REQUIRED } from "@/lib/features";
 import { blacklistEntry } from "@/lib/blacklist";
@@ -90,8 +96,7 @@ export async function POST(request) {
     return NextResponse.json({ error: "This form isn't open right now." }, { status: 409 });
   }
 
-  const key = submissionsKey(formId);
-  const submissions = await kvGet(key, []);
+  const submissions = await listSubmissions(formId);
   const gate = applicationGate(form, memberSubmission(submissions, member.username));
 
   if (!gate.canApply) {
@@ -117,7 +122,7 @@ export async function POST(request) {
     return NextResponse.json({ error: "Please fill in all required questions." }, { status: 400 });
   }
 
-  submissions.unshift({
+  await saveSubmission(formId, {
     id: crypto.randomUUID(),
     formId,
     formTitle: form.title,
@@ -128,7 +133,6 @@ export async function POST(request) {
     memberUsername: member.username,
     memberName: member.name,
   });
-  await kvSet(key, submissions);
 
   await logActivity({
     area: "website",

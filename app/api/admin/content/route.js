@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import { kvGet, kvSet } from "@/lib/kv";
+import { listJoinMessages } from "@/lib/join-messages";
 import { authorize } from "@/lib/admin-guard";
 import { logActivity } from "@/lib/activity-log";
 
 const VIDEOS_KEY = "content:videos";
-const SUBMISSIONS_KEY = "submissions:join";
 const FORM_KEY = "content:form";
 
 export async function GET() {
@@ -12,7 +12,7 @@ export async function GET() {
   if (gate.response) return gate.response;
   const [videos, submissions, form] = await Promise.all([
     kvGet(VIDEOS_KEY, []),
-    kvGet(SUBMISSIONS_KEY, []),
+    listJoinMessages(),
     kvGet(FORM_KEY, {}),
   ]);
   return NextResponse.json({ videos, submissions, form });

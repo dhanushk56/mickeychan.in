@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
-import { kvGet, kvSet } from "@/lib/kv";
 import { authorize } from "@/lib/admin-guard";
-import { submissionsKey } from "@/lib/applications";
+import { deleteSubmission, listSubmissions, saveSubmission } from "@/lib/applications";
 import { logActivity } from "@/lib/activity-log";
 
 export const dynamic = "force-dynamic";
@@ -20,8 +19,7 @@ export async function PATCH(request, { params }) {
 
   const note = typeof body.note === "string" ? body.note.trim().slice(0, 500) : "";
 
-  const key = submissionsKey(formId);
-  const submissions = await kvGet(key, []);
+  const submissions = await listSubmissions(formId);
   const index = submissions.findIndex((entry) => entry.id === id);
   if (index === -1) {
     return NextResponse.json({ error: "Application not found." }, { status: 404 });
@@ -34,7 +32,7 @@ export async function PATCH(request, { params }) {
     reviewedAt: status === "pending" ? null : new Date().toISOString(),
     reviewedBy: status === "pending" ? null : session.user.username,
   };
-  await kvSet(key, submissions);
+  await saveSubmission(formId, submissions[index]);
 
   const applicant = submissions[index].memberUsername;
   await logActivity({
@@ -58,15 +56,14 @@ export async function DELETE(request, { params }) {
   if (gate.response) return gate.response;
   const session = gate.session;
 
-  const key = submissionsKey(formId);
-  const submissions = await kvGet(key, []);
+  const submissions = await listSubmissions(formId);
   const target = submissions.find((entry) => entry.id === id);
   const next = submissions.filter((entry) => entry.id !== id);
   if (next.length === submissions.length) {
     return NextResponse.json({ error: "Application not found." }, { status: 404 });
   }
 
-  await kvSet(key, next);
+  await deleteSubmission(formId, id);
 
   await logActivity({
     area: "admin",
