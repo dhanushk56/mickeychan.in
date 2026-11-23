@@ -1,8 +1,9 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { createPortal } from "react-dom";
 import LogoutButton from "@/components/LogoutButton";
 
 const dateFormat = new Intl.DateTimeFormat("en-GB", {
@@ -45,7 +46,13 @@ async function squareImage(file) {
   const scale = Math.max(size / image.width, size / image.height);
   const width = image.width * scale;
   const height = image.height * scale;
-  context.drawImage(image, (size - width) / 2, (size - height) / 2, width, height);
+  context.drawImage(
+    image,
+    (size - width) / 2,
+    (size - height) / 2,
+    width,
+    height,
+  );
   return canvas.toDataURL("image/jpeg", 0.85);
 }
 
@@ -70,12 +77,18 @@ export default function AccountPanel({ profile, verificationRequired = true }) {
   const [busy, setBusy] = useState("");
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const [photoMenu, setPhotoMenu] = useState(false);
+  const [enlarged, setEnlarged] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => setMounted(true), []);
 
   const locked = current.canChange === false;
   const nextChange = formatDate(current.nextChangeAt);
   const joined = formatDate(current.createdAt);
   const needsVerify = verificationRequired && !current.emailVerified;
-  const emailChangeable = current.emailChangeable !== false && current.emailVerified !== true;
+  const emailChangeable =
+    current.emailChangeable !== false && current.emailVerified !== true;
 
   function apply(result) {
     if (result?.profile) {
@@ -96,11 +109,18 @@ export default function AccountPanel({ profile, verificationRequired = true }) {
     setError("");
     setNotice("");
     try {
-      const response = await fetch(url, { ...options, headers: { "Content-Type": "application/json" } });
+      const response = await fetch(url, {
+        ...options,
+        headers: { "Content-Type": "application/json" },
+      });
       const result = await response.json().catch(() => ({}));
       if (!response.ok) {
         if (result.nextChangeAt) {
-          setCurrent((value) => ({ ...value, canChange: false, nextChangeAt: result.nextChangeAt }));
+          setCurrent((value) => ({
+            ...value,
+            canChange: false,
+            nextChangeAt: result.nextChangeAt,
+          }));
         }
         throw new Error(result.error || "That didn't work. Try again.");
       }
@@ -142,7 +162,31 @@ export default function AccountPanel({ profile, verificationRequired = true }) {
 
   async function removePhoto() {
     const result = await send("/api/account/avatar", { method: "DELETE" });
-    if (result) setNotice("Profile photo removed. Your initials are showing instead.");
+    if (result)
+      setNotice("Profile photo removed. Your initials are showing instead.");
+    return Boolean(result);
+  }
+
+  useEffect(() => {
+    if (!photoMenu && !enlarged) return undefined;
+    const onKey = (event) => {
+      if (event.key === "Escape") {
+        setPhotoMenu(false);
+        setEnlarged(false);
+      }
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [photoMenu, enlarged]);
+
+  function changePhoto() {
+    setPhotoMenu(false);
+    fileInput.current?.click();
+  }
+
+  async function removePicture() {
+    const removed = await removePhoto();
+    if (removed) setPhotoMenu(false);
   }
 
   function openEditor() {
@@ -163,15 +207,23 @@ export default function AccountPanel({ profile, verificationRequired = true }) {
     const patch = {};
 
     if (!locked) {
-      if (form.name.trim() !== (current.name || "").trim()) patch.name = form.name;
-      if (form.username.trim().toLowerCase() !== (current.username || "").toLowerCase()) {
+      if (form.name.trim() !== (current.name || "").trim())
+        patch.name = form.name;
+      if (
+        form.username.trim().toLowerCase() !==
+        (current.username || "").toLowerCase()
+      ) {
         patch.username = form.username.trim();
       }
-      if (form.phone.trim() !== (current.phone || "").trim()) patch.phone = form.phone;
+      if (form.phone.trim() !== (current.phone || "").trim())
+        patch.phone = form.phone;
       if (form.password) patch.password = form.password;
     }
 
-    if (emailChangeable && form.email.trim().toLowerCase() !== (current.email || "").toLowerCase()) {
+    if (
+      emailChangeable &&
+      form.email.trim().toLowerCase() !== (current.email || "").toLowerCase()
+    ) {
       patch.email = form.email.trim();
     }
 
@@ -190,7 +242,7 @@ export default function AccountPanel({ profile, verificationRequired = true }) {
       setNotice(
         patch.email
           ? "Saved. Confirm the new email address so it counts as verified."
-          : "Saved. Your details can be changed again in six months."
+          : "Saved. Your details can be changed again in six months.",
       );
     }
   }
@@ -202,11 +254,35 @@ export default function AccountPanel({ profile, verificationRequired = true }) {
       <div className="glass-card account-card animate-rise">
         <div className="account-head">
           <p className="kicker">My account</p>
-          <span className="avatar-frame" aria-hidden="true">
-            {current.avatar ? <img src={current.avatar} alt="" /> : current.initials}
-          </span>
+          {current.avatar ? (
+            <button
+              type="button"
+              className="avatar-frame avatar-button"
+              onClick={() => setPhotoMenu(true)}
+              aria-haspopup="dialog"
+              aria-label="Profile picture options"
+              title="Profile picture options"
+            >
+              <img
+                src={current.avatar}
+                alt={`${current.name || current.username}'s profile picture`}
+              />
+            </button>
+          ) : (
+            <button
+              type="button"
+              className="avatar-frame avatar-button"
+              onClick={() => fileInput.current?.click()}
+              aria-label="Add a profile picture"
+              title="Add a profile picture"
+            >
+              {current.initials}
+            </button>
+          )}
           <div className="account-head-text">
-            <h1 className="font-display text-2xl font-bold leading-tight">{current.name}</h1>
+            <h1 className="font-display text-2xl font-bold leading-tight">
+              {current.name}
+            </h1>
             <p className="muted text-sm">@{current.username}</p>
             <div className="flex flex-wrap gap-2 mt-1">
               <button
@@ -215,19 +291,16 @@ export default function AccountPanel({ profile, verificationRequired = true }) {
                 onClick={() => fileInput.current?.click()}
                 disabled={busy === "photo"}
               >
-                {busy === "photo" ? "Uploading…" : current.avatar ? "Change photo" : "Add a photo"}
+                {busy === "photo"
+                  ? "Uploading…"
+                  : current.avatar
+                    ? "Change photo"
+                    : "Add a photo"}
               </button>
-              {current.avatar && (
-                <button
-                  type="button"
-                  className="btn btn-ghost btn-sm"
-                  onClick={removePhoto}
-                  disabled={busy === "photo"}
-                >
-                  Remove
-                </button>
-              )}
-              <LogoutButton endpoint="/api/auth/member/logout" className="btn btn-ghost btn-sm">
+              <LogoutButton
+                endpoint="/api/auth/member/logout"
+                className="btn btn-ghost btn-sm"
+              >
                 Log out
               </LogoutButton>
             </div>
@@ -246,7 +319,8 @@ export default function AccountPanel({ profile, verificationRequired = true }) {
         <div className="glass-card account-card grid gap-3 animate-rise">
           <p className="kicker">Verify your email</p>
           <p className="muted text-sm leading-relaxed">
-            Confirm {current.email || "your email address"} so applications and messages reach you.
+            Confirm {current.email || "your email address"} so applications and
+            messages reach you.
           </p>
           <Link
             href={`/verify?next=${encodeURIComponent("/my-account")}`}
@@ -258,7 +332,14 @@ export default function AccountPanel({ profile, verificationRequired = true }) {
       )}
 
       {(error || notice) && (
-        <p className={error ? "badge badge-denied p-3 text-sm" : "badge badge-accepted p-3 text-sm"} role="status">
+        <p
+          className={
+            error
+              ? "badge badge-denied p-3 text-sm"
+              : "badge badge-accepted p-3 text-sm"
+          }
+          role="status"
+        >
           {error || notice}
         </p>
       )}
@@ -278,7 +359,9 @@ export default function AccountPanel({ profile, verificationRequired = true }) {
                 value={form.name}
                 maxLength={60}
                 disabled={locked}
-                onChange={(event) => setForm({ ...form, name: event.target.value })}
+                onChange={(event) =>
+                  setForm({ ...form, name: event.target.value })
+                }
                 required
               />
             </label>
@@ -292,10 +375,14 @@ export default function AccountPanel({ profile, verificationRequired = true }) {
                 disabled={locked}
                 autoCapitalize="none"
                 spellCheck={false}
-                onChange={(event) => setForm({ ...form, username: event.target.value })}
+                onChange={(event) =>
+                  setForm({ ...form, username: event.target.value })
+                }
                 required
               />
-              <span className="faint text-xs mt-1">3–24 letters, numbers, dot, dash or underscore.</span>
+              <span className="faint text-xs mt-1">
+                3–24 letters, numbers, dot, dash or underscore.
+              </span>
             </label>
 
             <label className="field">
@@ -307,7 +394,9 @@ export default function AccountPanel({ profile, verificationRequired = true }) {
                 disabled={!emailChangeable}
                 autoCapitalize="none"
                 spellCheck={false}
-                onChange={(event) => setForm({ ...form, email: event.target.value })}
+                onChange={(event) =>
+                  setForm({ ...form, email: event.target.value })
+                }
               />
               <span className="faint text-xs mt-1">
                 {emailChangeable
@@ -325,7 +414,9 @@ export default function AccountPanel({ profile, verificationRequired = true }) {
                 maxLength={24}
                 disabled={locked}
                 placeholder="+91 98765 43210"
-                onChange={(event) => setForm({ ...form, phone: event.target.value })}
+                onChange={(event) =>
+                  setForm({ ...form, phone: event.target.value })
+                }
               />
             </label>
 
@@ -338,7 +429,9 @@ export default function AccountPanel({ profile, verificationRequired = true }) {
                 disabled={locked || !current.hasPassword}
                 autoComplete="new-password"
                 placeholder="Leave blank to keep your password"
-                onChange={(event) => setForm({ ...form, password: event.target.value })}
+                onChange={(event) =>
+                  setForm({ ...form, password: event.target.value })
+                }
               />
               <span className="faint text-xs mt-1">
                 {current.hasPassword
@@ -348,7 +441,11 @@ export default function AccountPanel({ profile, verificationRequired = true }) {
             </label>
 
             <div className="flex flex-wrap gap-2">
-              <button type="submit" className="btn btn-primary btn-sm" disabled={busy === "details"}>
+              <button
+                type="submit"
+                className="btn btn-primary btn-sm"
+                disabled={busy === "details"}
+              >
                 {busy === "details" ? "Saving…" : "Save changes"}
               </button>
               <button
@@ -378,7 +475,11 @@ export default function AccountPanel({ profile, verificationRequired = true }) {
                 className="btn btn-secondary btn-sm"
                 onClick={openEditor}
                 disabled={locked}
-                title={locked ? `You can change this again on ${nextChange}` : undefined}
+                title={
+                  locked
+                    ? `You can change this again on ${nextChange}`
+                    : undefined
+                }
               >
                 Change
               </button>
@@ -392,7 +493,11 @@ export default function AccountPanel({ profile, verificationRequired = true }) {
                 className="btn btn-secondary btn-sm"
                 onClick={openEditor}
                 disabled={locked}
-                title={locked ? `You can change this again on ${nextChange}` : undefined}
+                title={
+                  locked
+                    ? `You can change this again on ${nextChange}`
+                    : undefined
+                }
               >
                 Change
               </button>
@@ -413,7 +518,11 @@ export default function AccountPanel({ profile, verificationRequired = true }) {
                   </Link>
                 )}
                 {emailChangeable ? (
-                  <button type="button" className="btn btn-ghost btn-sm" onClick={openEditor}>
+                  <button
+                    type="button"
+                    className="btn btn-ghost btn-sm"
+                    onClick={openEditor}
+                  >
                     Change
                   </button>
                 ) : (
@@ -432,7 +541,11 @@ export default function AccountPanel({ profile, verificationRequired = true }) {
                 className="btn btn-secondary btn-sm"
                 onClick={openEditor}
                 disabled={locked}
-                title={locked ? `You can change this again on ${nextChange}` : undefined}
+                title={
+                  locked
+                    ? `You can change this again on ${nextChange}`
+                    : undefined
+                }
               >
                 Change
               </button>
@@ -448,7 +561,11 @@ export default function AccountPanel({ profile, verificationRequired = true }) {
                 className="btn btn-secondary btn-sm"
                 onClick={openEditor}
                 disabled={locked || !current.hasPassword}
-                title={locked ? `You can change this again on ${nextChange}` : undefined}
+                title={
+                  locked
+                    ? `You can change this again on ${nextChange}`
+                    : undefined
+                }
               >
                 Change
               </button>
@@ -456,7 +573,9 @@ export default function AccountPanel({ profile, verificationRequired = true }) {
 
             <div className="account-row">
               <span className="account-label">Sign-in</span>
-              <span className="account-value">{PROVIDER_LABEL[current.provider] || "Password"}</span>
+              <span className="account-value">
+                {PROVIDER_LABEL[current.provider] || "Password"}
+              </span>
               <span className="account-lock">
                 {current.hasPassword ? "Password set" : "No password"}
               </span>
@@ -470,6 +589,102 @@ export default function AccountPanel({ profile, verificationRequired = true }) {
           </div>
         )}
       </div>
+
+      {mounted &&
+        photoMenu &&
+        current.avatar &&
+        createPortal(
+          <div
+            className="overlay"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="photo-menu-title"
+            onClick={() => setPhotoMenu(false)}
+          >
+            <div
+              className="glass-card p-6 w-full animate-rise"
+              style={{ maxWidth: "22rem" }}
+              onClick={(event) => event.stopPropagation()}
+            >
+              <span className="badge badge-neutral">Profile picture</span>
+              <h2
+                id="photo-menu-title"
+                className="font-display text-xl font-bold mt-3"
+              >
+                Your photo
+              </h2>
+              <p className="muted text-sm mt-2 leading-relaxed">
+                Enlarge it, swap it for another image, or go back to your
+                initials.
+              </p>
+              <div className="grid gap-2 mt-4">
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => {
+                    setPhotoMenu(false);
+                    setEnlarged(true);
+                  }}
+                  autoFocus
+                >
+                  Enlarge picture
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={changePhoto}
+                  disabled={busy === "photo"}
+                >
+                  Change picture
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-danger"
+                  onClick={removePicture}
+                  disabled={busy === "photo"}
+                >
+                  {busy === "photo" ? "Removing…" : "Remove picture"}
+                </button>
+              </div>
+              <button
+                type="button"
+                className="btn btn-ghost w-full mt-4"
+                onClick={() => setPhotoMenu(false)}
+              >
+                Close
+              </button>
+            </div>
+          </div>,
+          document.body,
+        )}
+
+      {mounted &&
+        enlarged &&
+        current.avatar &&
+        createPortal(
+          <div
+            className="overlay"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Profile picture, enlarged"
+            onClick={() => setEnlarged(false)}
+          >
+            <button
+              type="button"
+              className="btn btn-secondary btn-sm photo-viewer-close"
+              onClick={() => setEnlarged(false)}
+              autoFocus
+            >
+              Close
+            </button>
+            <img
+              className="photo-viewer-img"
+              src={current.avatar}
+              alt={`${current.name || current.username}'s profile picture, enlarged`}
+            />
+          </div>,
+          document.body,
+        )}
     </div>
   );
 }
