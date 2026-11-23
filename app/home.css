@@ -123,20 +123,19 @@
   color: var(--text-muted);
 }
 
-.home-posters-grid { display: grid; gap: 1rem; }
+.home-posters-grid { display: grid; gap: 1rem; align-items: stretch; }
 
 @media (min-width: 1024px) {
   .home-posters-grid {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    align-items: start;
   }
-
-  .home-posters-grid > :last-child { margin-top: 2.5rem; }
 }
 
 .home-poster {
   display: flex;
   flex-direction: column;
+  height: 100%;
+  min-width: 0;
   overflow: hidden;
   border-radius: .75rem;
   border: 1px solid var(--line);
@@ -353,19 +352,35 @@
 .home-lane {
   display: grid;
   gap: .5rem 1.5rem;
-  padding: 1.5rem 0;
+  margin-inline: -.875rem;
+  padding: 1.5rem .875rem;
   border-bottom: 1px solid var(--line-soft);
-  transition: border-bottom-color 160ms ease;
+  border-radius: .75rem;
+  background-image: linear-gradient(100deg, color-mix(in srgb, var(--primary) 13%, transparent), transparent 68%);
+  background-repeat: no-repeat;
+  background-position: left center;
+  background-size: 0% 100%;
+  transition: background-size 560ms cubic-bezier(.16, 1, .3, 1), border-bottom-color 240ms ease;
 }
 
-.home-lane:hover { border-bottom-color: var(--line); }
+.home-lane:hover {
+  background-size: 100% 100%;
+  border-bottom-color: transparent;
+}
+
+.home-lane-index { transition: color 240ms ease; }
+
+.home-lane:hover .home-lane-index,
+.home-lane:hover .home-lane-cta { color: var(--primary); }
+
+.home-lane:hover .home-lane-title { color: color-mix(in srgb, var(--text) 88%, var(--primary-strong)); }
 
 @media (min-width: 900px) {
   .home-lane {
     grid-template-columns: 2.5rem minmax(0, 1.1fr) minmax(0, 1fr) auto;
     align-items: center;
     gap: 2rem;
-    padding: 1.75rem 0;
+    padding: 1.75rem .875rem;
   }
 }
 
@@ -648,7 +663,7 @@
 @media (max-width: 640px) {
   .home-title { font-size: clamp(2.125rem, 10vw, 2.75rem); }
   .home-band-cell { padding: 1rem; }
-  .home-lane { padding: 1.25rem 0; }
+  .home-lane { padding: 1.25rem .875rem; }
   .home-role { grid-template-columns: minmax(0, 1fr) auto; }
   .home-role-meta { display: none; }
   .home-social-grid { gap: .5rem; }
