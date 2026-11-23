@@ -1,11 +1,11 @@
 :root {
   --ease-soft: cubic-bezier(.22, 1, .36, 1);
   --ease-glide: cubic-bezier(.33, 1, .68, 1);
-  --page-enter-delay: 300ms;
+  --page-enter-delay: 900ms;
 }
 
 main[data-entering="true"] > * {
-  animation: page-enter 520ms var(--ease-soft) var(--page-enter-delay) backwards;
+  animation: page-enter 620ms var(--ease-soft) var(--page-enter-delay) backwards;
 }
 
 @keyframes page-enter {

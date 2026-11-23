@@ -149,3 +149,63 @@
   backdrop-filter: blur(34px) saturate(190%) brightness(1.03);
   border-color: color-mix(in srgb, var(--primary) 22%, transparent);
 }
+
+html.petal-cursor-on input,
+html.petal-cursor-on textarea,
+html.petal-cursor-on [contenteditable="true"] {
+  cursor: none !important;
+}
+
+.petal-pointer svg[data-cursor="text"] {
+  opacity: 0;
+  transform: scale(.82);
+}
+
+.petal-pointer[data-state="text"] svg[data-cursor="default"],
+.petal-pointer[data-state="text"] svg[data-cursor="hover"] {
+  opacity: 0;
+  transform: scale(.82);
+}
+
+.petal-pointer[data-state="text"] svg[data-cursor="text"] {
+  opacity: 1;
+  transform: none;
+}
+
+.petal-pointer[data-state="text"] { translate: -12px -10px; }
+
+.flip { max-width: 25rem; margin-inline: auto; }
+
+.flip .glass-card { padding: 1.4rem 1.45rem 1.5rem; }
+
+.flip .glass-inset.icon-button {
+  width: 2rem;
+  height: 2rem;
+  margin-bottom: .9rem;
+  font-size: .9rem;
+}
+
+.flip h1 {
+  font-size: 1.32rem;
+  line-height: 1.15;
+  margin: .6rem 0 .45rem;
+}
+
+.flip .glass-card > p.muted {
+  font-size: .82rem;
+  line-height: 1.55;
+  margin-bottom: 1.1rem;
+}
+
+.flip .field-label { font-size: .72rem; }
+
+.flip .input {
+  padding: .58rem .72rem;
+  font-size: .86rem;
+  border-radius: .7rem;
+}
+
+.flip .btn {
+  padding: .62rem 1.05rem;
+  font-size: .84rem;
+}
