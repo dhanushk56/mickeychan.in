@@ -53,7 +53,7 @@ export default function PasswordGate({ area = "This area" }) {
           <span className="glass-inset icon-button auth-mark mx-auto mb-5" aria-hidden="true">
             ⚿
           </span>
-          <p className="kicker justify-center">Protected</p>
+          <p className="kicker justify-center">Password protected</p>
           <h1 className="font-display text-2xl font-bold mt-3 mb-2 text-center">Password required</h1>
           <p className="muted text-sm leading-relaxed mb-6 text-center">
             {area} is locked. Enter your admin credentials to continue.

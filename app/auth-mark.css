@@ -15,4 +15,28 @@
   background: url("/mickey-logo.png") center / cover no-repeat;
 }
 
-.flip .glass-inset.icon-button { margin-right: .55rem; }
+.flip .glass-inset.icon-button,
+.auth-mark {
+  margin-right: .625rem;
+}
+
+form:has(> .auth-mark) .icon-button[aria-label="Show password"],
+form:has(> .auth-mark) .icon-button[aria-label="Hide password"] {
+  font-size: 0;
+}
+
+form:has(> .auth-mark) .icon-button[aria-label="Show password"]::before,
+form:has(> .auth-mark) .icon-button[aria-label="Hide password"]::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 1.05rem;
+  height: 1.05rem;
+  background-color: currentColor;
+  -webkit-mask: var(--eye) center / contain no-repeat;
+  mask: var(--eye) center / contain no-repeat;
+}
+
+form:has(> .auth-mark) .icon-button[aria-label="Show password"] { --eye: var(--eye-open); }
+form:has(> .auth-mark) .icon-button[aria-label="Hide password"] { --eye: var(--eye-off); }
