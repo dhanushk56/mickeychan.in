@@ -1,0 +1,133 @@
+name: Sync intro title to hand sweep
+on:
+  push:
+    paths:
+      - ".github/workflows/route-intro6.yml"
+  workflow_dispatch:
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Rewrite the title timeline
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+import sys
+p='app/page-wipe.css'
+s=open(p).read()
+
+s = s.replace("""/* Route intro: the character plays to 2.7s, sinks away by 3.1s, and the page name
+   is dragged in from the left from 2.85s, landing at 3.55s and holding for one second.""",
+"""/* Route intro: the character plays to 2.7s, sinks away by 3.1s, and the page name
+   is dragged across with her hands from 2.0s, landing at 2.45s, held one second.""")
+
+for name in ("page-wipe-veil", "page-wipe-cast", "page-wipe-name"):
+    s = s.replace(name + " 4750ms", name + " 3750ms")
+
+s = s.replace("  96.5% { opacity: 1;", "  96% { opacity: 1;")
+
+s = s.replace("""/* Character: plays through 56.8% (2.7s), then sinks, shrinks and fades by 65.3%
+   (3.1s), so it is gone before the title finishes arriving. */""",
+"""/* Character: plays through 72% (2.7s), then sinks, shrinks and fades by 82.7%
+   (3.1s), so it is gone while the title is settling. */""")
+s = s.replace("""  56.8% {
+    opacity: 1;
+    transform: scale(1.02) translate3d(0, 0, 0);
+    animation-timing-function: cubic-bezier(.4, 0, .75, 1);
+  }
+  65.3% {
+    opacity: 0;""",
+"""  72% {
+    opacity: 1;
+    transform: scale(1.02) translate3d(0, 0, 0);
+    animation-timing-function: cubic-bezier(.4, 0, .75, 1);
+  }
+  82.7% {
+    opacity: 0;""")
+
+start = s.index("/* Name: she sweeps")
+end = s.index("/* The overlay is opaque")
+new_name = """/* Name: the offsets below are her right hand's x position, sampled from the clip
+   (skin centroid, 720px frame): at 2.07s it is at 169px and by 2.33s it is at
+   626px, so the title rides that exact sweep - surfacing off the left edge at
+   2.0s, tracking her hand to centre at 2.32s, settling at 2.45s, held for one
+   second to 3.45s, then cleared as the veil fades at 100% (3.75s). */
+@keyframes page-wipe-name {
+  0%, 47.5% {
+    opacity: 0;
+    transform: translate3d(-104%, 0, 0);
+  }
+  50% {
+    opacity: 1;
+    transform: translate3d(-104%, 0, 0);
+  }
+  53.3% {
+    opacity: 1;
+    transform: translate3d(-100%, 0, 0);
+    animation-timing-function: linear;
+  }
+  55.5% {
+    transform: translate3d(-74%, 0, 0);
+  }
+  57.6% {
+    transform: translate3d(-45%, 0, 0);
+  }
+  59.7% {
+    transform: translate3d(-15%, 0, 0);
+  }
+  61.9% {
+    transform: translate3d(0, 0, 0);
+    animation-timing-function: cubic-bezier(.16, 1, .3, 1);
+  }
+  65.3% {
+    transform: translate3d(0, 0, 0);
+  }
+  92% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+    animation-timing-function: cubic-bezier(.4, 0, .2, 1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(5%, 0, 0);
+  }
+}
+
+"""
+s = s[:start] + new_name + s[end:]
+
+for needle in ("3750ms", "translate3d(-104%", "translate3d(-74%", "56.8%"):
+    if (needle in s) != (needle != "56.8%"):
+        sys.exit("patch missing: " + needle)
+open(p,'w').write(s)
+
+j='components/RouteWipe.js'
+t=open(j).read()
+t = t.replace("""// Character plays to 2.7s and sinks away by 3.1s. The page name is dragged in from
+// the left at 2.85s as she swings her hands, lands at 3.55s, holds for one second,
+// clears at 4.75s.
+const DURATION = 4750;""",
+"""// Character plays to 2.7s and sinks away by 3.1s. The page name is dragged across
+// by her hands from 2.0s, lands at 2.45s, holds for one second, clears at 3.75s.
+const DURATION = 3750;""")
+if "const DURATION = 3750;" not in t:
+    sys.exit("DURATION not patched")
+open(j,'w').write(t)
+PY
+          grep -q "3750ms" app/page-wipe.css
+          grep -q "translate3d(-104%" app/page-wipe.css
+          grep -q "DURATION = 3750" components/RouteWipe.js
+          git diff --stat
+      - name: Commit
+        run: |
+          set -euo pipefail
+          rm -f .github/workflows/route-intro6.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Sync the intro title to her hand sweep"
+          git push
