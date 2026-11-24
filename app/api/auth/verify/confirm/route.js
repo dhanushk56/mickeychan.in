@@ -9,8 +9,19 @@ import {
 } from "@/lib/members";
 import { confirmCode } from "@/lib/email-verification";
 import { logActivity } from "@/lib/activity-log";
+import { clearHits, limitReached, recordHit } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
+
+const LIMIT = { max: 10, windowMs: 10 * 60 * 1000 };
+
+function clientKey(request) {
+  return (
+    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    request.headers.get("x-real-ip") ||
+    "local"
+  );
+}
 
 function sameOrigin(request) {
   const origin = request.headers.get("origin");
@@ -47,9 +58,19 @@ export async function POST(request) {
     return NextResponse.json({ error: "Add your email address first." }, { status: 400 });
   }
 
+  const key = clientKey(request);
+  const limit = await limitReached("email-confirm", key, LIMIT);
+  if (limit.limited) {
+    return NextResponse.json(
+      { error: "Too many attempts. Try again in a few minutes." },
+      { status: 429, headers: { "Retry-After": String(limit.retryAfter) } }
+    );
+  }
+
   const body = await request.json().catch(() => ({}));
   const result = await confirmCode(session, body.code);
   if (result.error) {
+    await recordHit("email-confirm", key, LIMIT);
     return NextResponse.json({ error: result.error }, { status: 400 });
   }
 
@@ -58,6 +79,7 @@ export async function POST(request) {
     return NextResponse.json({ error: "Couldn't confirm that account." }, { status: 400 });
   }
 
+  await clearHits("email-confirm", key, LIMIT);
   await logActivity({
     area: "website",
     action: "email-verified",

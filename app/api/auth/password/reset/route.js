@@ -7,8 +7,19 @@ import {
 } from "@/lib/members";
 import { clearResetCode, verifyResetCode } from "@/lib/password-reset";
 import { logActivity } from "@/lib/activity-log";
+import { clearHits, limitReached, recordHit } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
+
+const LIMIT = { max: 10, windowMs: 10 * 60 * 1000 };
+
+function clientKey(request) {
+  return (
+    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    request.headers.get("x-real-ip") ||
+    "local"
+  );
+}
 
 function sameOrigin(request) {
   const origin = request.headers.get("origin");
@@ -32,6 +43,15 @@ export async function POST(request) {
     return NextResponse.json({ error: "Invalid origin." }, { status: 403 });
   }
 
+  const key = clientKey(request);
+  const limit = await limitReached("password-reset", key, LIMIT);
+  if (limit.limited) {
+    return NextResponse.json(
+      { error: "Too many attempts. Try again in a few minutes." },
+      { status: 429, headers: { "Retry-After": String(limit.retryAfter) } }
+    );
+  }
+
   const body = await request.json().catch(() => ({}));
   const email = typeof body.email === "string" ? body.email.trim() : "";
   const code = typeof body.code === "string" ? body.code : "";
@@ -44,6 +64,7 @@ export async function POST(request) {
 
   const member = await findMemberByEmail(email);
   if (!member || member.provider === "google" || member.provider === "discord") {
+    await recordHit("password-reset", key, LIMIT);
     return NextResponse.json({ error: "That code has expired. Send a new one." }, { status: 400 });
   }
 
@@ -56,6 +77,7 @@ export async function POST(request) {
 
   const checked = await verifyResetCode(email, code);
   if (checked.error) {
+    await recordHit("password-reset", key, LIMIT);
     return NextResponse.json({ error: checked.error }, { status: 400 });
   }
 
@@ -68,6 +90,7 @@ export async function POST(request) {
     await markEmailVerified(member.username);
   }
   await clearResetCode(email);
+  await clearHits("password-reset", key, LIMIT);
 
   await logActivity({
     area: "website",
