@@ -4,6 +4,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import MemberLogin from "@/components/MemberLogin";
 import MemberRegister from "@/components/MemberRegister";
+import useLockedViewport from "@/lib/useLockedViewport";
 
 export default function AuthFlip({
   initialFace = "login",
@@ -16,6 +17,7 @@ export default function AuthFlip({
 }) {
   const [face, setFace] = useState(initialFace);
   const [height, setHeight] = useState(null);
+  useLockedViewport();
   const router = useRouter();
   const timer = useRef(null);
   const loginRef = useRef(null);

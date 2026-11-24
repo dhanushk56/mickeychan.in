@@ -1,6 +1,7 @@
 import "./globals.css";
 import "./nav.css";
 import "./account.css";
+import "./auth-view.css";
 import "./motion.css";
 import "./runner.css";
 import "./back-to-top.css";

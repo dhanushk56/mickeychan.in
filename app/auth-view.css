@@ -1,0 +1,46 @@
+/* Sign-in screens (login, register, admin gate): one screen, no footer, no scroll runner. */
+html[data-viewport="locked"] {
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+html[data-viewport="locked"] body {
+  height: 100%;
+  overflow: hidden;
+}
+
+html[data-viewport="locked"] main {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-top: 6.5rem;
+  padding-bottom: 2.5rem;
+}
+
+/* auto margins centre the card while it fits and never clip it when it does not. */
+html[data-viewport="locked"] main > * {
+  flex: 0 0 auto;
+  margin-block: auto;
+}
+
+html[data-viewport="locked"] .page {
+  min-height: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+html[data-viewport="locked"] .site-footer,
+html[data-viewport="locked"] .scroll-runner,
+html[data-viewport="locked"] .back-to-top {
+  display: none;
+}
+
+@media (min-width: 960px) {
+  html[data-viewport="locked"] main {
+    height: calc(100dvh - 4.25rem);
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+  }
+}
