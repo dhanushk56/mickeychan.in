@@ -36,13 +36,6 @@
   backface-visibility: hidden;
 }
 
-/* The clip could not keep real time (cold or slow download), so this run keeps the
-   title and drops the character rather than freezing a frame mid-sweep. */
-.page-wipe.cast-lost .page-wipe-cast {
-  animation: none !important;
-  opacity: 0 !important;
-}
-
 .page-wipe-name {
   position: absolute;
   max-width: 94vw;

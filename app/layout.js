@@ -42,6 +42,11 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
+      <head>
+        {/* Pull the intro clip with the HTML, before hydration asks for it, so the
+            character is ready by the first navigation. */}
+        <link rel="preload" as="video" type="video/mp4" href="/media/route-intro.mp4" />
+      </head>
       <body>
         <div className="grid-veil" aria-hidden="true" />
         <PetalField />

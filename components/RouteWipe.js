@@ -10,10 +10,6 @@ const useClientLayoutEffect = typeof window === "undefined" ? useEffect : useLay
 // clears at 3.75s.
 const DURATION = 3750;
 
-// A clip that has not buffered this much cannot play the sweep in real time, so a
-// cold or slow load runs the beat without the character rather than stuttering.
-const CAST_MIN_BUFFER = 1.4;
-
 // Login and register share one form that flips in place, so the intro is skipped
 // between them. Every other navigation keeps it.
 const AUTH_FACES = new Set(["/login", "/register"]);
@@ -85,21 +81,6 @@ export default function RouteWipe() {
     setLabel(pageLabel(path));
     root.classList.add("is-arriving");
 
-    const bufferedEnd = video && video.buffered.length ? video.buffered.end(0) : 0;
-    const castReady = Boolean(video) && video.readyState >= 3 && bufferedEnd >= CAST_MIN_BUFFER;
-    if (overlay) overlay.classList.toggle("cast-lost", !castReady);
-
-    // If it runs dry partway through, drop the character instead of holding a
-    // frozen frame in front of the title.
-    const onStarve = () => {
-      if (!video || video.currentTime < 0.2 || video.readyState >= 3) return;
-      if (overlay) overlay.classList.add("cast-lost");
-    };
-    if (video) {
-      video.addEventListener("waiting", onStarve);
-      video.addEventListener("stalled", onStarve);
-    }
-
     // Re-adding the class after a forced reflow restarts the CSS animations even
     // when a second navigation lands before the first run has finished.
     if (overlay) {
@@ -133,17 +114,13 @@ export default function RouteWipe() {
         });
       }
     };
-    if (castReady) window.requestAnimationFrame(startVideo);
+    window.requestAnimationFrame(startVideo);
 
     window.clearTimeout(timerRef.current);
     timerRef.current = window.setTimeout(() => {
       if (overlay) overlay.classList.remove("is-running");
       root.classList.remove("is-arriving");
-      if (video) {
-        video.removeEventListener("waiting", onStarve);
-        video.removeEventListener("stalled", onStarve);
-        video.pause();
-      }
+      if (video) video.pause();
     }, DURATION);
   }, []);
 
