@@ -5,17 +5,11 @@ import { isEmailConfigured, resetEmail, sendEmail } from "@/lib/email";
 import { logActivity } from "@/lib/activity-log";
 import { limitReached, recordHit } from "@/lib/rate-limit";
 
+import { clientKey } from "@/lib/request-ips";
+
 export const dynamic = "force-dynamic";
 
 const LIMIT = { max: 8, windowMs: 60 * 60 * 1000 };
-
-function clientKey(request) {
-  return (
-    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-    request.headers.get("x-real-ip") ||
-    "local"
-  );
-}
 
 function sameOrigin(request) {
   const origin = request.headers.get("origin");

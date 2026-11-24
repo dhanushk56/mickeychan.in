@@ -11,17 +11,11 @@ import { memberFromCookieStore } from "@/lib/members";
 import { clearHits, limitReached, recordHit } from "@/lib/rate-limit";
 import { resolveAdmin } from "@/lib/roles";
 
+import { clientKey } from "@/lib/request-ips";
+
 export const dynamic = "force-dynamic";
 
 const LIMIT = { max: 8, windowMs: 10 * 60 * 1000 };
-
-function clientKey(request) {
-  return (
-    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-    request.headers.get("x-real-ip") ||
-    "local"
-  );
-}
 
 export async function POST(request) {
   const origin = request.headers.get("origin");

@@ -11,7 +11,7 @@ import {
   publicMember,
   verifyMemberPassword,
 } from "@/lib/members";
-import { requestIps, requestLocation } from "@/lib/request-ips";
+import { clientKey, requestIps, requestLocation } from "@/lib/request-ips";
 import { logActivity } from "@/lib/activity-log";
 import { clearHits, limitReached, recordHit } from "@/lib/rate-limit";
 
@@ -22,14 +22,6 @@ const LIMIT = { max: 10, windowMs: 10 * 60 * 1000 };
 // Stand-in credentials so a miss costs the same scrypt work as a wrong password.
 const DUMMY_SALT = "0".repeat(32);
 const DUMMY_HASH = "0".repeat(128);
-
-function clientKey(request) {
-  return (
-    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-    request.headers.get("x-real-ip") ||
-    "local"
-  );
-}
 
 function sameOrigin(request) {
   const origin = request.headers.get("origin");

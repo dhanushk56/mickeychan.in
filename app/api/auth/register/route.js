@@ -6,17 +6,11 @@ import { isEmailConfigured } from "@/lib/email";
 import { sendCodeEmail } from "@/lib/email-verification";
 import { limitReached, recordHit } from "@/lib/rate-limit";
 
+import { clientKey } from "@/lib/request-ips";
+
 export const dynamic = "force-dynamic";
 
 const LIMIT = { max: 5, windowMs: 60 * 60 * 1000 };
-
-function clientKey(request) {
-  return (
-    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-    request.headers.get("x-real-ip") ||
-    "local"
-  );
-}
 
 function sameOrigin(request) {
   const origin = request.headers.get("origin");
@@ -83,6 +77,9 @@ export async function POST(request) {
         request,
       });
     }
+    // Rejected attempts count too, so one connection cannot probe usernames or
+    // addresses indefinitely without tripping the limit.
+    await recordHit("register", key, LIMIT);
     const conflict = result.code === "ip_limit" || result.error.includes("already taken");
     return NextResponse.json({ error: result.error, code: result.code }, { status: conflict ? 409 : 400 });
   }

@@ -9,17 +9,11 @@ import { clearResetCode, verifyResetCode } from "@/lib/password-reset";
 import { logActivity } from "@/lib/activity-log";
 import { clearHits, limitReached, recordHit } from "@/lib/rate-limit";
 
+import { clientKey } from "@/lib/request-ips";
+
 export const dynamic = "force-dynamic";
 
 const LIMIT = { max: 10, windowMs: 10 * 60 * 1000 };
-
-function clientKey(request) {
-  return (
-    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-    request.headers.get("x-real-ip") ||
-    "local"
-  );
-}
 
 function sameOrigin(request) {
   const origin = request.headers.get("origin");
