@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 
 const useClientLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect;
@@ -48,20 +48,24 @@ export default function RouteWipe() {
   const previous = useRef(route);
   const overlayRef = useRef(null);
   const videoRef = useRef(null);
+  const timerRef = useRef(0);
+  const lastFire = useRef(0);
   const [label, setLabel] = useState("");
 
-  useClientLayoutEffect(() => {
-    const from = previous.current;
-    previous.current = route;
+  const fire = useCallback((path) => {
+    if (typeof window === "undefined") return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
-    if (from === route) return undefined;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return undefined;
+    // A pathname change and a popstate can describe the same navigation.
+    const now = Date.now();
+    if (now - lastFire.current < 250) return;
+    lastFire.current = now;
 
     const root = document.documentElement;
     const overlay = overlayRef.current;
     const video = videoRef.current;
 
-    setLabel(pageLabel(pathname));
+    setLabel(pageLabel(path));
     root.classList.add("is-arriving");
 
     // Re-adding the class after a forced reflow restarts the CSS animations even
@@ -72,29 +76,89 @@ export default function RouteWipe() {
       overlay.classList.add("is-running");
     }
 
-    if (video) {
+    // iOS refuses play() while the video is still fully transparent, so start it
+    // on the next frame and retry once if the first attempt is rejected.
+    const startVideo = () => {
+      if (!video) return;
       try {
         video.currentTime = 0;
       } catch {
         // A video that has not buffered yet starts from wherever it can.
       }
       const played = video.play();
-      if (played && typeof played.catch === "function") played.catch(() => {});
-    }
+      if (played && typeof played.catch === "function") {
+        played.catch(() => {
+          window.setTimeout(() => {
+            try {
+              video.currentTime = 0;
+            } catch {
+              // Ignore and let the retry play from the current position.
+            }
+            const retried = video.play();
+            if (retried && typeof retried.catch === "function") retried.catch(() => {});
+          }, 160);
+        });
+      }
+    };
+    window.requestAnimationFrame(startVideo);
 
-    const settle = window.setTimeout(() => {
+    window.clearTimeout(timerRef.current);
+    timerRef.current = window.setTimeout(() => {
       if (overlay) overlay.classList.remove("is-running");
       root.classList.remove("is-arriving");
       if (video) video.pause();
     }, DURATION);
+  }, []);
+
+  useClientLayoutEffect(() => {
+    const from = previous.current;
+    previous.current = route;
+    if (from === route) return;
+    fire(pathname);
+  }, [route, pathname, fire]);
+
+  useEffect(() => {
+    // A back/forward cache restore replays no React navigation, and iOS back
+    // swipes often land that way, so run the beat from the history events too.
+    const onRestore = (event) => {
+      if (event && event.type === "pageshow" && !event.persisted) return;
+      previous.current = `${window.location.pathname}?${window.location.search.slice(1)}`;
+      fire(window.location.pathname);
+    };
+
+    // Unlocks inline playback for later programmatic play() calls on iOS.
+    const unlock = () => {
+      const video = videoRef.current;
+      if (!video) return;
+      video.muted = true;
+      const played = video.play();
+      if (played && typeof played.then === "function") {
+        played
+          .then(() => {
+            video.pause();
+            try {
+              video.currentTime = 0;
+            } catch {
+              // Nothing to rewind yet.
+            }
+          })
+          .catch(() => {});
+      }
+    };
+
+    window.addEventListener("pageshow", onRestore);
+    window.addEventListener("popstate", onRestore);
+    window.addEventListener("pointerdown", unlock, { once: true, passive: true });
+    window.addEventListener("touchstart", unlock, { once: true, passive: true });
 
     return () => {
-      window.clearTimeout(settle);
-      if (overlay) overlay.classList.remove("is-running");
-      root.classList.remove("is-arriving");
-      if (video) video.pause();
+      window.removeEventListener("pageshow", onRestore);
+      window.removeEventListener("popstate", onRestore);
+      window.removeEventListener("pointerdown", unlock);
+      window.removeEventListener("touchstart", unlock);
+      window.clearTimeout(timerRef.current);
     };
-  }, [route, pathname]);
+  }, [fire]);
 
   return (
     <div className="page-wipe" ref={overlayRef} aria-hidden="true">
