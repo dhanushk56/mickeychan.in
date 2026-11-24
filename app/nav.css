@@ -299,7 +299,7 @@
   }
 
   @media (min-width: 960px) {
-    .site-nav { position: relative; inset: auto; }
+    .site-nav { position: sticky; }
 
     .nav-shell {
       background:
