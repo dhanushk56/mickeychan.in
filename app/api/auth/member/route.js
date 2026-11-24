@@ -19,6 +19,10 @@ export const dynamic = "force-dynamic";
 
 const LIMIT = { max: 10, windowMs: 10 * 60 * 1000 };
 
+// Stand-in credentials so a miss costs the same scrypt work as a wrong password.
+const DUMMY_SALT = "0".repeat(32);
+const DUMMY_HASH = "0".repeat(128);
+
 function clientKey(request) {
   return (
     request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
@@ -78,33 +82,26 @@ export async function POST(request) {
   const password = typeof body.password === "string" ? body.password : "";
 
   const member = (await findMember(username)) || (await findMemberByEmail(username));
+  const external = Boolean(
+    member && (member.provider === "google" || member.provider === "discord")
+  );
 
-  if (member && (member.provider === "google" || member.provider === "discord")) {
-    const provider = member.provider === "discord" ? "Discord" : "Google";
-    await logActivity({
-      area: "website",
-      action: "login-blocked",
-      username: member.username,
-      detail: `Tried to use a password on a ${provider} account`,
-      ok: false,
-      request,
-    });
-    return NextResponse.json(
-      {
-        error: `That account signs in with ${provider} — use the ${provider} button instead.`,
-        code: "google_only",
-      },
-      { status: 400 }
-    );
+  // Every miss answers the same way. An unknown account, a wrong password and an
+  // OAuth-only account must be indistinguishable to someone who does not hold it;
+  // the audit log keeps the distinction for operators.
+  if (!member || external) {
+    verifyMemberPassword({ salt: DUMMY_SALT, hash: DUMMY_HASH }, password);
   }
 
-  if (!member || !verifyMemberPassword(member, password)) {
+  if (!member || external || !verifyMemberPassword(member, password)) {
     await recordHit("member-login", key, LIMIT);
     await logActivity({
       area: "website",
-      action: "login-failed",
-      username: username || "Unknown",
-      detail: "Wrong username or password",
+      action: external ? "login-blocked" : "login-failed",
+      username: member?.username || username || "Unknown",
+      detail: external
+        ? `Tried to use a password on a ${member.provider === "discord" ? "Discord" : "Google"} account`
+        : "Wrong username or password",
       ok: false,
       request,
     });

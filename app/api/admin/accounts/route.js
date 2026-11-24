@@ -26,15 +26,15 @@ export async function POST(request) {
   const name = typeof body.name === "string" ? body.name : "";
   const email = typeof body.email === "string" ? body.email : "";
   const phone = typeof body.phone === "string" ? body.phone : "";
-  const emailVerified = body.emailVerified === true;
 
+  // Verification state is never taken from the request: an account created here
+  // starts unverified and its owner confirms the address with a code.
   const result = await registerMember({
     username,
     name,
     email,
     phone,
     password,
-    emailVerified,
     allowSharedIp: true,
     createdBy: "admin",
   });
