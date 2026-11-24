@@ -5,7 +5,8 @@ import { usePathname } from "next/navigation";
 
 const useClientLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect;
 
-const DURATION = 2000;
+// The character plays at native speed, then the page name holds for two seconds.
+const DURATION = 6100;
 
 const AUTH_FACES = new Set(["/login", "/register"]);
 
