@@ -1,8 +1,9 @@
 /* Route intro: the character plays to 2.7s, sinks away by 3.1s, and the page name
    zooms in from 2.85s, landing at 3.55s and holding for two seconds.
 
-   Performance notes: the veil layers an animating video, so only one gradient may
-   sit behind it, only transform/opacity animate, and the petals pause. */
+   The clip is opaque H.264 with the page colour baked into it, so it decodes on
+   the GPU everywhere (no alpha plane, no VP9) and the page background matches it
+   exactly - which means the sink and scale can never reveal an edge. */
 
 .page-wipe {
   position: fixed;
@@ -12,8 +13,7 @@
   place-items: center;
   overflow: hidden;
   pointer-events: none;
-  background-color: var(--bg-base);
-  background-image: radial-gradient(1100px 760px at 16% -10%, var(--blob-1), transparent 64%);
+  background: var(--bg-base);
   opacity: 0;
 }
 
@@ -23,6 +23,7 @@
 }
 
 .page-wipe-cast {
+  display: block;
   width: min(1040px, 96vw, 98vh);
   height: auto;
   transform-origin: 50% 58%;

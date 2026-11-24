@@ -181,8 +181,8 @@ export default function RouteWipe() {
       <video
         ref={videoRef}
         className="page-wipe-cast"
-        src="/media/route-intro.webm"
-        poster="/media/route-intro-poster.png"
+        src="/media/route-intro.mp4"
+        poster="/media/route-intro-poster.jpg"
         muted
         playsInline
         preload="auto"
