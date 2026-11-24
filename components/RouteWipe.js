@@ -9,6 +9,10 @@ const useClientLayoutEffect = typeof window === "undefined" ? useEffect : useLay
 // at 2.85s as it goes, lands at 3.55s, holds for two seconds, clears at 5.75s.
 const DURATION = 5750;
 
+// Login and register share one form that flips in place, so the intro is skipped
+// between them. Every other navigation keeps it.
+const AUTH_FACES = new Set(["/login", "/register"]);
+
 const PAGE_LABELS = {
   "/": "Home",
   "/videos": "Videos",
@@ -38,6 +42,14 @@ function pageLabel(pathname) {
   if (pathname.startsWith("/audit")) return "Audit log";
   const segment = pathname.split("/").filter(Boolean).pop();
   return segment ? titleCase(segment) : "Mickey Chan";
+}
+
+function pathOf(route) {
+  return String(route || "").split("?")[0];
+}
+
+function isAuthFlip(fromPath, toPath) {
+  return AUTH_FACES.has(fromPath) && AUTH_FACES.has(toPath);
 }
 
 export default function RouteWipe() {
@@ -111,9 +123,10 @@ export default function RouteWipe() {
   }, []);
 
   useClientLayoutEffect(() => {
-    const from = previous.current;
+    const fromRoute = previous.current;
     previous.current = route;
-    if (from === route) return;
+    if (fromRoute === route) return;
+    if (isAuthFlip(pathOf(fromRoute), pathname)) return;
     fire(pathname);
   }, [route, pathname, fire]);
 
@@ -122,8 +135,11 @@ export default function RouteWipe() {
     // swipes often land that way, so run the beat from the history events too.
     const onRestore = (event) => {
       if (event && event.type === "pageshow" && !event.persisted) return;
-      previous.current = `${window.location.pathname}?${window.location.search.slice(1)}`;
-      fire(window.location.pathname);
+      const fromRoute = previous.current;
+      const toPath = window.location.pathname;
+      previous.current = `${toPath}?${window.location.search.slice(1)}`;
+      if (isAuthFlip(pathOf(fromRoute), toPath)) return;
+      fire(toPath);
     };
 
     // Unlocks inline playback for later programmatic play() calls on iOS.
