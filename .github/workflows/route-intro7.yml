@@ -1,0 +1,57 @@
+name: Lift dragged title
+on:
+  push:
+    paths:
+      - ".github/workflows/route-intro7.yml"
+  workflow_dispatch:
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Raise the title path
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import sys
+
+          p = 'app/page-wipe.css'
+          s = open(p).read()
+          start = s.index('@keyframes page-wipe-name {')
+          block = s[start:]
+
+          for old, new in (
+              ('translate3d(-104%, 0, 0)', 'translate3d(-104%, -22vh, 0)'),
+              ('translate3d(-100%, 0, 0)', 'translate3d(-100%, -22vh, 0)'),
+              ('translate3d(-74%, 0, 0)', 'translate3d(-74%, -22vh, 0)'),
+              ('translate3d(-45%, 0, 0)', 'translate3d(-45%, -22vh, 0)'),
+              ('translate3d(-15%, 0, 0)', 'translate3d(-15%, -22vh, 0)'),
+              ('translate3d(5%, 0, 0)', 'translate3d(5%, -22vh, 0)'),
+              ('translate3d(0, 0, 0)', 'translate3d(0, -22vh, 0)'),
+          ):
+              block = block.replace(old, new)
+
+          block = block.replace(
+              'second to 3.45s, then cleared as the veil fades at 100% (3.75s). */',
+              'second to 3.45s, then cleared as the veil fades at 100% (3.75s). The whole\n   path rides 22vh above centre, so it passes clear of her head while she is\n   still on screen and only settles lower as she sinks away. */',
+          )
+
+          if block.count('-22vh') != 10:
+              sys.exit('expected 10 lifted stops, got %d' % block.count('-22vh'))
+
+          open(p, 'w').write(s[:start] + block)
+          PY
+          grep -c '"-22vh"\|-22vh' app/page-wipe.css
+          git diff --stat
+      - name: Commit
+        run: |
+          set -euo pipefail
+          rm -f .github/workflows/route-intro7.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Lift the dragged title clear of her head"
+          git push
