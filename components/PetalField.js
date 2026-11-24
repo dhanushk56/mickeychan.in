@@ -2,15 +2,8 @@
 
 import { useEffect, useState } from "react";
 
-const PALETTES = {
-  light: ["#7c3aed", "#c026d3", "#db2777", "#2563eb"],
-  dark: ["#c4b5fd", "#a78bfa", "#f9a8d4", "#93c5fd"],
-};
-
-const ALPHA = {
-  light: [0.3, 0.48],
-  dark: [0.18, 0.4],
-};
+const PALETTE = ["#c4b5fd", "#a78bfa", "#f9a8d4", "#93c5fd"];
+const ALPHA = [0.18, 0.4];
 
 function randomPetal(id) {
   const size = 10 + Math.random() * 22;
@@ -30,16 +23,6 @@ function randomPetal(id) {
 
 export default function PetalField() {
   const [petals, setPetals] = useState([]);
-  const [theme, setTheme] = useState("light");
-
-  useEffect(() => {
-    const root = document.documentElement;
-    const read = () => setTheme(root.getAttribute("data-theme") === "dark" ? "dark" : "light");
-    read();
-    const observer = new MutationObserver(read);
-    observer.observe(root, { attributes: true, attributeFilter: ["data-theme"] });
-    return () => observer.disconnect();
-  }, []);
 
   useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
@@ -47,8 +30,7 @@ export default function PetalField() {
     setPetals(Array.from({ length: count }, (_, i) => randomPetal(i)));
   }, []);
 
-  const palette = PALETTES[theme] || PALETTES.light;
-  const [from, to] = ALPHA[theme] || ALPHA.light;
+  const [from, to] = ALPHA;
 
   return (
     <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none" aria-hidden="true">
@@ -60,7 +42,7 @@ export default function PetalField() {
             left: `${p.left}%`,
             width: `${p.size}px`,
             height: `${p.size}px`,
-            background: palette[p.tone],
+            background: PALETTE[p.tone],
             opacity: from + p.weight * (to - from),
             filter: p.blur ? `blur(${p.blur}px)` : undefined,
             animationDuration: `${p.duration}s`,
