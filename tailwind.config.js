@@ -1,5 +1,4 @@
 module.exports = {
-  darkMode: ["selector", '[data-theme="dark"]'],
   content: [
     "./app/**/*.{js,jsx}",
     "./components/**/*.{js,jsx}",
