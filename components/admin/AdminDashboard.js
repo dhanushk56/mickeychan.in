@@ -263,15 +263,6 @@ function AccountRow({
           </p>
         </div>
         <div className="flex w-full shrink-0 flex-col items-stretch gap-1.5 sm:w-44">
-          <button
-            type="button"
-            className="btn btn-secondary btn-sm"
-            style={account.formBlocked ? undefined : { color: "var(--danger)" }}
-            disabled={busy || !canBlock}
-            onClick={() => onBlacklist(account)}
-          >
-            {account.formBlocked ? "Allow forms" : "Block forms"}
-          </button>
           {canManageAdmins && (
             <select
               className="select"
@@ -298,6 +289,18 @@ function AccountRow({
             onClick={openDetails}
           >
             Edit details
+          </button>
+          <button
+            type="button"
+            className="btn btn-secondary btn-sm"
+            style={{
+              marginTop: ".4rem",
+              ...(account.formBlocked ? {} : { color: "var(--danger)" }),
+            }}
+            disabled={busy || !canBlock}
+            onClick={() => onBlacklist(account)}
+          >
+            {account.formBlocked ? "Allow forms" : "Block forms"}
           </button>
           <button
             type="button"
