@@ -1,5 +1,5 @@
-/* Route intro: the character plays at native speed (3.6s), then the page name
-   zooms in, holds for two seconds, and the overlay clears. Total 6.1s. */
+/* Route intro: the character plays at native speed and leaves at 2.8s, the page
+   name enters as it goes, holds for two seconds, and the overlay clears at 5.6s. */
 
 .page-wipe {
   position: fixed;
@@ -17,8 +17,8 @@
   opacity: 0;
 }
 
-.page-wipe[data-active="true"] {
-  animation: page-wipe-veil 6100ms both;
+.page-wipe.is-running {
+  animation: page-wipe-veil 5600ms both;
 }
 
 .page-wipe::after {
@@ -35,8 +35,8 @@
   opacity: 0;
 }
 
-.page-wipe[data-active="true"]::after {
-  animation: page-wipe-sheen 6100ms cubic-bezier(.4, 0, .2, 1) both;
+.page-wipe.is-running::after {
+  animation: page-wipe-sheen 5600ms cubic-bezier(.4, 0, .2, 1) both;
 }
 
 .page-wipe-cast {
@@ -47,8 +47,8 @@
   filter: drop-shadow(0 46px 74px rgba(4, 2, 12, .6));
 }
 
-.page-wipe[data-active="true"] .page-wipe-cast {
-  animation: page-wipe-cast 6100ms both;
+.page-wipe.is-running .page-wipe-cast {
+  animation: page-wipe-cast 5600ms both;
   will-change: transform, opacity;
 }
 
@@ -67,15 +67,15 @@
   opacity: 0;
 }
 
-.page-wipe[data-active="true"] .page-wipe-name {
-  animation: page-wipe-name 6100ms both;
+.page-wipe.is-running .page-wipe-name {
+  animation: page-wipe-name 5600ms both;
   will-change: transform, opacity;
 }
 
 @keyframes page-wipe-veil {
   0% { opacity: 0; animation-timing-function: cubic-bezier(.22, 1, .36, 1); }
   2% { opacity: 1; animation-timing-function: linear; }
-  96.7% { opacity: 1; animation-timing-function: cubic-bezier(.4, 0, .2, 1); }
+  94% { opacity: 1; animation-timing-function: cubic-bezier(.4, 0, .2, 1); }
   100% { opacity: 0; }
 }
 
@@ -86,8 +86,7 @@
   100% { opacity: 0; transform: translate3d(26%, 0, 0); }
 }
 
-/* 0 - 3.42s: the clip plays at its own pace. 3.42 - 3.78s: the character
-   zooms out of frame so the name lands on an empty backdrop. */
+/* Character: plays through 50% (2.8s), then scales out and fades by 62% (3.47s). */
 @keyframes page-wipe-cast {
   0% {
     opacity: 0;
@@ -99,37 +98,34 @@
     transform: scale(1) translate3d(0, 0, 0);
     animation-timing-function: linear;
   }
-  53% {
+  50% {
     opacity: 1;
     transform: scale(1.02);
-  }
-  56% {
-    opacity: 1;
-    transform: scale(1.05);
     animation-timing-function: cubic-bezier(.4, 0, .7, 1);
   }
   62% {
     opacity: 0;
-    transform: scale(1.4);
+    transform: scale(1.5);
   }
   100% {
     opacity: 0;
-    transform: scale(1.4);
+    transform: scale(1.5);
   }
 }
 
-/* Name lands at 64% (3.9s), holds until 96.7% (5.9s), then clears with the veil. */
+/* Name: starts coming in at 50% (2.8s) with the character, lands at 57% (3.19s),
+   holds until 94% (5.26s) - two seconds - then clears with the veil. */
 @keyframes page-wipe-name {
-  0%, 56% {
+  0%, 50% {
     opacity: 0;
     transform: scale(.72);
   }
-  64% {
+  57% {
     opacity: 1;
     transform: scale(1);
     animation-timing-function: cubic-bezier(.16, 1, .3, 1);
   }
-  96.7% {
+  94% {
     opacity: 1;
     transform: scale(1.01);
     animation-timing-function: cubic-bezier(.4, 0, .2, 1);

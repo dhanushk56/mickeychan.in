@@ -1,14 +1,13 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 
 const useClientLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect;
 
-// The character plays at native speed, then the page name holds for two seconds.
-const DURATION = 6100;
-
-const AUTH_FACES = new Set(["/login", "/register"]);
+// The character plays at native speed and leaves at 2.8s; the page name enters
+// as it goes, holds for two seconds, and the overlay clears at 5.6s.
+const DURATION = 5600;
 
 const PAGE_LABELS = {
   "/": "Home",
@@ -43,48 +42,62 @@ function pageLabel(pathname) {
 
 export default function RouteWipe() {
   const pathname = usePathname();
-  const previous = useRef(pathname);
+  const search = useSearchParams();
+  const route = `${pathname}?${search ? search.toString() : ""}`;
+
+  const previous = useRef(route);
+  const overlayRef = useRef(null);
   const videoRef = useRef(null);
-  const [active, setActive] = useState(false);
+  const [label, setLabel] = useState("");
 
   useClientLayoutEffect(() => {
     const from = previous.current;
-    previous.current = pathname;
+    previous.current = route;
 
-    if (from === pathname) return undefined;
-    if (AUTH_FACES.has(from) && AUTH_FACES.has(pathname)) return undefined;
+    if (from === route) return undefined;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return undefined;
 
     const root = document.documentElement;
-    root.classList.add("is-arriving");
-    setActive(true);
-
+    const overlay = overlayRef.current;
     const video = videoRef.current;
+
+    setLabel(pageLabel(pathname));
+    root.classList.add("is-arriving");
+
+    // Re-adding the class after a forced reflow restarts the CSS animations even
+    // when a second navigation lands before the first run has finished.
+    if (overlay) {
+      overlay.classList.remove("is-running");
+      void overlay.offsetWidth;
+      overlay.classList.add("is-running");
+    }
+
     if (video) {
       try {
         video.currentTime = 0;
       } catch {
-        // A video that has not buffered yet will start from wherever it can.
+        // A video that has not buffered yet starts from wherever it can.
       }
       const played = video.play();
       if (played && typeof played.catch === "function") played.catch(() => {});
     }
 
     const settle = window.setTimeout(() => {
-      setActive(false);
+      if (overlay) overlay.classList.remove("is-running");
       root.classList.remove("is-arriving");
       if (video) video.pause();
     }, DURATION);
 
     return () => {
       window.clearTimeout(settle);
+      if (overlay) overlay.classList.remove("is-running");
       root.classList.remove("is-arriving");
       if (video) video.pause();
     };
-  }, [pathname]);
+  }, [route, pathname]);
 
   return (
-    <div className="page-wipe" data-active={active ? "true" : "false"} aria-hidden="true">
+    <div className="page-wipe" ref={overlayRef} aria-hidden="true">
       <video
         ref={videoRef}
         className="page-wipe-cast"
@@ -95,9 +108,7 @@ export default function RouteWipe() {
         preload="auto"
         tabIndex={-1}
       />
-      <span className="page-wipe-name" key={pathname}>
-        {pageLabel(pathname)}
-      </span>
+      <span className="page-wipe-name">{label}</span>
     </div>
   );
 }

@@ -8,6 +8,7 @@ import "./back-to-top.css";
 import "./page-wipe.css";
 import "./hover.css";
 import "./auth-mark.css";
+import { Suspense } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import PetalField from "@/components/PetalField";
@@ -48,7 +49,9 @@ export default function RootLayout({ children }) {
         <ScrollRunner />
         <ScrollReveal />
         <PageEnter />
-        <RouteWipe />
+        <Suspense fallback={null}>
+          <RouteWipe />
+        </Suspense>
         <Navbar />
         <BackToTop />
         <main className="relative z-10 pt-24">{children}</main>
