@@ -5,9 +5,9 @@ import { usePathname, useSearchParams } from "next/navigation";
 
 const useClientLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect;
 
-// The character plays at native speed and leaves at 2.8s; the page name enters
-// as it goes, holds for two seconds, and the overlay clears at 5.6s.
-const DURATION = 5600;
+// Character plays to 2.7s and sinks away by 3.1s. The page name starts zooming in
+// at 2.85s as it goes, lands at 3.55s, holds for two seconds, clears at 5.75s.
+const DURATION = 5750;
 
 const PAGE_LABELS = {
   "/": "Home",
