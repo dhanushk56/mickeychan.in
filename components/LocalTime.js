@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
-export function utc12(iso) {
+function utc12(iso) {
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return "—";
   const hours24 = date.getUTCHours();

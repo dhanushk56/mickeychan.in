@@ -181,7 +181,6 @@
     border-radius: .9rem;
   }
 
-  .hairline { border-color: var(--glass-edge) !important; }
   .kicker {
     display: inline-flex;
     align-items: center;
