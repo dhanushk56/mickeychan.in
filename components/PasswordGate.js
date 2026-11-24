@@ -3,10 +3,12 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import useLockedViewport from "@/lib/useLockedViewport";
 
 export default function PasswordGate({ area = "This area" }) {
   const router = useRouter();
   const pathname = usePathname();
+  useLockedViewport();
   const [member, setMember] = useState(null);
   const [checking, setChecking] = useState(true);
   const [password, setPassword] = useState("");
