@@ -23,7 +23,7 @@
       radial-gradient(120% 190% at 6% 0%, color-mix(in srgb, var(--primary) 22%, transparent), transparent 58%),
       linear-gradient(180deg, rgba(255, 255, 255, .055) 0%, rgba(255, 255, 255, .014) 54%, transparent 100%),
       color-mix(in srgb, var(--bg-base) 82%, transparent);
-    border-bottom: 1px solid color-mix(in srgb, var(--primary) 20%, var(--line-soft));
+    border-bottom: 1px solid color-mix(in srgb, var(--primary) 20%, var(--glass-edge));
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, .07),
       0 24px 48px -42px rgba(0, 0, 0, .95);
     -webkit-backdrop-filter: blur(22px) saturate(160%);
@@ -148,7 +148,7 @@
     width: 2.25rem;
     height: 2.25rem;
     border-radius: .5rem;
-    border: 1px solid var(--line-soft);
+    border: 1px solid var(--glass-edge);
     background: transparent;
     color: var(--text);
     font-size: .95rem;
@@ -157,7 +157,7 @@
 
   .icon-button:hover {
     background: var(--hover-tint);
-    border-color: var(--line);
+    border-color: var(--glass-line);
   }
 
   .menu-button { display: none; }
@@ -196,8 +196,8 @@
     background:
       radial-gradient(90% 55% at 0% 0%, color-mix(in srgb, var(--primary) 24%, transparent), transparent 62%),
       linear-gradient(180deg, rgba(255, 255, 255, .07) 0%, rgba(255, 255, 255, .015) 55%, transparent 100%),
-      color-mix(in srgb, var(--surface) 86%, transparent);
-    border-right: 1px solid color-mix(in srgb, var(--primary) 22%, var(--line));
+      var(--glass-strong);
+    border-right: 1px solid color-mix(in srgb, var(--primary) 22%, var(--glass-line));
     -webkit-backdrop-filter: blur(30px) saturate(170%) brightness(1.03);
     backdrop-filter: blur(30px) saturate(170%) brightness(1.03);
     box-shadow: 0 40px 90px -40px rgba(10, 5, 22, .72),
@@ -283,7 +283,7 @@
         radial-gradient(80% 240% at 10% 0%, color-mix(in srgb, var(--primary) 18%, transparent), transparent 62%),
         linear-gradient(180deg, rgba(255, 255, 255, .05) 0%, rgba(255, 255, 255, .012) 60%, transparent 100%),
         color-mix(in srgb, var(--bg-base) 84%, transparent);
-      border-bottom-color: color-mix(in srgb, var(--primary) 18%, var(--line-soft));
+      border-bottom-color: color-mix(in srgb, var(--primary) 18%, var(--glass-edge));
     }
 
     main { padding-top: 0; }
