@@ -23,8 +23,8 @@
   height: 5.5rem;
   border-radius: 999px;
   overflow: hidden;
-  background: color-mix(in srgb, var(--primary) 18%, var(--surface));
-  border: 1px solid color-mix(in srgb, var(--primary) 24%, var(--line));
+  background: color-mix(in srgb, var(--primary) 18%, var(--glass-strong));
+  border: 1px solid color-mix(in srgb, var(--primary) 24%, var(--glass-line));
   font-family: 'Bricolage Grotesque', 'Plus Jakarta Sans', system-ui, sans-serif;
   font-size: 1.55rem;
   font-weight: 700;
@@ -44,7 +44,7 @@
   cursor: pointer;
   font-family: inherit;
   color: inherit;
-  border-color: color-mix(in srgb, var(--primary) 58%, var(--line));
+  border-color: color-mix(in srgb, var(--primary) 58%, var(--glass-line));
   box-shadow: 0 0 0 4px color-mix(in srgb, var(--primary) 18%, transparent);
   transition: transform 260ms var(--ease-glide), box-shadow 260ms var(--ease-glide),
     border-color 260ms var(--ease-glide);
@@ -63,7 +63,7 @@
 
 .avatar-button:hover {
   transform: translateY(-2px);
-  border-color: color-mix(in srgb, var(--primary) 62%, var(--line));
+  border-color: color-mix(in srgb, var(--primary) 62%, var(--glass-line));
   box-shadow: 0 0 0 5px color-mix(in srgb, var(--primary) 28%, transparent),
     0 22px 40px -26px rgba(76, 29, 149, .8);
 }
@@ -86,7 +86,7 @@
   display: block;
   border-radius: .875rem;
   border: 1px solid var(--glass-line);
-  background: var(--surface);
+  background: var(--glass-strong);
   box-shadow: 0 44px 90px -34px rgba(0, 0, 0, .9);
   cursor: zoom-out;
 }
@@ -107,7 +107,7 @@
   column-gap: 1rem;
   row-gap: .32rem;
   padding: .95rem 0;
-  border-bottom: 1px solid var(--line-soft);
+  border-bottom: 1px solid var(--glass-line);
 }
 
 .account-row:last-child { border-bottom: 0; padding-bottom: 0; }
@@ -149,7 +149,7 @@
   margin-left: .25rem;
   border-radius: 999px;
   overflow: hidden;
-  background: color-mix(in srgb, var(--primary) 22%, var(--surface));
+  background: color-mix(in srgb, var(--primary) 22%, var(--glass-strong));
   border: 2px solid var(--primary);
   color: var(--primary-strong);
   font-size: .72rem;
@@ -185,8 +185,8 @@
   width: 15.5rem;
   padding: .5rem;
   border-radius: .9rem;
-  border: 1px solid color-mix(in srgb, var(--primary) 26%, var(--line));
-  background: color-mix(in srgb, var(--surface) 95%, transparent);
+  border: 1px solid color-mix(in srgb, var(--primary) 26%, var(--glass-line));
+  background: var(--glass-strong);
   box-shadow: 0 30px 60px -28px rgba(6, 3, 14, .95), inset 0 1px 0 rgba(255, 255, 255, .06);
   -webkit-backdrop-filter: blur(18px) saturate(150%);
   backdrop-filter: blur(18px) saturate(150%);
