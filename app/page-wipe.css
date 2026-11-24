@@ -39,7 +39,8 @@
   position: absolute;
   max-width: 94vw;
   font-family: 'Bricolage Grotesque', 'Plus Jakarta Sans', system-ui, sans-serif;
-  font-size: clamp(2.1rem, 7.4vw, 6.6rem);
+  /* Phones stay on the 2.1rem floor; only the desktop ceiling moves. */
+  font-size: clamp(2.1rem, 6.6vw, 5.8rem);
   font-weight: 800;
   line-height: .94;
   letter-spacing: -.045em;
