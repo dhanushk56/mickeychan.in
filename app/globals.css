@@ -4,53 +4,6 @@
 @tailwind components;
 @tailwind utilities;
 :root {
-  color-scheme: light;
-
-  --bg-base: #f4f0ff;
-  --blob-1: rgba(139, 92, 246, .55);
-  --blob-2: rgba(255, 122, 198, .42);
-  --blob-3: rgba(94, 224, 255, .38);
-
-  --text: #16111f;
-  --text-muted: rgba(22, 17, 31, .66);
-  --text-faint: rgba(22, 17, 31, .44);
-
-  --glass: rgba(255, 255, 255, .3);
-  --glass-soft: rgba(255, 255, 255, .18);
-  --glass-strong: rgba(255, 255, 255, .46);
-  --glass-inset: rgba(255, 255, 255, .26);
-  --glass-line: rgba(255, 255, 255, .6);
-  --glass-edge: rgba(22, 17, 31, .08);
-  --glass-shadow: 0 24px 60px -20px rgba(76, 29, 149, .32);
-  --glass-highlight: rgba(255, 255, 255, .92);
-  --glass-sheen: rgba(255, 255, 255, .78);
-  --glass-tint: rgba(255, 255, 255, .22);
-  --hover-tint: rgba(255, 255, 255, .55);
-
-  --grid-line: rgba(22, 17, 31, .035);
-  --nav-glass: rgba(255, 255, 255, .34);
-
-  --primary: #7c4dff;
-  --primary-strong: #5b2ee0;
-  --primary-soft: rgba(124, 77, 255, .12);
-  --accent: #ff6fbf;
-  --success: #12a150;
-  --success-soft: rgba(18, 161, 80, .14);
-  --danger: #e5484d;
-  --danger-soft: rgba(229, 72, 77, .13);
-  --warning: #c76a00;
-  --warning-soft: rgba(199, 106, 0, .14);
-  --focus-ring: rgba(124, 77, 255, .28);
-  --selection: rgba(124, 77, 255, .22);
-  --scroll-thumb: rgba(124, 77, 255, .45);
-
-  --butter: #f0eb93;
-  --butter-deep: #e2d876;
-  --butter-ink: #24200f;
-  --butter-glow: rgba(240, 235, 147, .55);
-}
-
-[data-theme="dark"] {
   color-scheme: dark;
 
   --bg-base: #07050e;
@@ -96,6 +49,8 @@
   --butter-ink: #24200f;
   --butter-glow: rgba(240, 235, 147, .45);
 }
+
+
 
 @layer base {
   * { box-sizing: border-box; }

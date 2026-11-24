@@ -198,18 +198,6 @@
   background: url("/mickey-logo.png") center / contain no-repeat;
 }
 
-:root:not([data-theme="dark"]) .menu-button[aria-expanded="true"] {
-  background-color: color-mix(in srgb, var(--accent) 74%, #fff);
-  border-color: color-mix(in srgb, var(--accent) 62%, transparent);
-  color: #331028;
-  transform: scale(.94);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 20%, transparent);
-}
-
-:root:not([data-theme="dark"]) .menu-button[aria-expanded="true"]:hover {
-  background-color: color-mix(in srgb, var(--accent) 82%, #fff);
-}
-
 .menu-mark {
   position: relative;
   display: block;
