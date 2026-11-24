@@ -1,8 +1,9 @@
 /* Route intro: the character plays to 2.7s, sinks away by 3.1s, and the page name
    zooms in from 2.85s, landing at 3.55s and holding for two seconds.
 
-   Only transform and opacity animate here: filters, gradient sweeps and
-   letter-spacing animation all cost a repaint per frame while the video plays. */
+   Performance notes: the veil layers an animating video, so only one gradient may
+   sit behind it (three stacked radial gradients drop ~6 of 108 video frames) and
+   only transform/opacity animate. Measured with getVideoPlaybackQuality. */
 
 .page-wipe {
   position: fixed;
@@ -13,19 +14,17 @@
   overflow: hidden;
   pointer-events: none;
   background-color: var(--bg-base);
-  background-image:
-    radial-gradient(900px 620px at 12% -8%, var(--blob-1), transparent 62%),
-    radial-gradient(760px 540px at 92% 4%, var(--blob-2), transparent 60%),
-    radial-gradient(820px 620px at 70% 92%, var(--blob-3), transparent 62%);
+  background-image: radial-gradient(1100px 760px at 16% -10%, var(--blob-1), transparent 64%);
   opacity: 0;
 }
 
 .page-wipe.is-running {
   animation: page-wipe-veil 5750ms both;
+  will-change: opacity;
 }
 
 .page-wipe-cast {
-  width: min(1040px, 96vw);
+  width: min(1040px, 96vw, 98vh);
   height: auto;
   transform-origin: 50% 58%;
   opacity: 0;
