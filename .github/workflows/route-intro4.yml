@@ -1,0 +1,52 @@
+name: Route intro themed background
+on:
+  push:
+    paths:
+      - ".github/workflows/route-intro4.yml"
+  workflow_dispatch:
+
+jobs:
+  media:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Paint the background and composite the character
+        run: |
+          set -euo pipefail
+          if ! command -v ffmpeg >/dev/null; then
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq ffmpeg
+          fi
+          git show bef4ccc:public/2026-11-24_19-44-28.mp4 > /tmp/src.mp4
+
+          # Site palette: purple, pink and blue blobs over #07050e, softened and
+          # vignetted so every edge lands back on the page colour.
+          ffmpeg -y -loglevel error \
+            -f lavfi -i "color=c=0x07050e:s=720x720:d=1:r=30" \
+            -f lavfi -i "gradients=s=720x720:type=radial:c0=0x4a2f96:c1=0x000000:x0=70:y0=0:x1=470:y1=430:d=1:r=30" \
+            -f lavfi -i "gradients=s=720x720:type=radial:c0=0x5a1f3a:c1=0x000000:x0=665:y0=25:x1=330:y1=380:d=1:r=30" \
+            -f lavfi -i "gradients=s=720x720:type=radial:c0=0x123c50:c1=0x000000:x0=505:y0=660:x1=210:y1=330:d=1:r=30" \
+            -filter_complex "[0:v]format=gbrp[b0];[1:v]format=gbrp[b1s];[2:v]format=gbrp[b2s];[3:v]format=gbrp[b3s];[b1s][b2s]blend=all_mode=screen[x1];[x1][b3s]blend=all_mode=screen,gblur=sigma=16,vignette=a=2.0[blobs];[b0][blobs]blend=all_mode=screen,format=rgb24[bg]" \
+            -map "[bg]" -frames:v 1 /tmp/bg.png
+
+          ffmpeg -y -loglevel error -loop 1 -framerate 30 -i /tmp/bg.png -i /tmp/src.mp4 \
+            -filter_complex "[0:v]fps=30[bg];[1:v]chromakey=0x28c828:0.12:0.08,despill=type=green,crop=720:720:280:0,format=rgba[fg];[bg][fg]overlay=0:0:shortest=1,format=yuv420p[v]" \
+            -map "[v]" -c:v libx264 -preset medium -crf 24 -movflags +faststart -an \
+            public/media/route-intro.mp4
+
+          ffmpeg -y -loglevel error -ss 0.95 -i public/media/route-intro.mp4 -frames:v 1 -q:v 4 \
+            public/media/route-intro-poster.jpg
+          ls -l public/media
+      - name: Commit the assets
+        run: |
+          set -euo pipefail
+          rm -f .github/workflows/route-intro4.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Bake the site gradient behind the route intro"
+          git push
