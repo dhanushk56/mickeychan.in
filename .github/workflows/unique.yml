@@ -1,0 +1,25 @@
+name: Unique usernames
+on:
+  push:
+    paths:
+      - ".github/workflows/unique.yml"
+  workflow_dispatch:
+jobs:
+  unique:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Apply patch
+        run: python3 .github/unique.py
+      - name: Commit and remove workflow
+        run: |
+          rm -f .github/unique.py .github/workflows/unique.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Prevent duplicate usernames on account creation and rename"
+          git push
