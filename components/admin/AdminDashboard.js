@@ -265,7 +265,7 @@ function AccountRow({
         <div className="flex w-full shrink-0 flex-col items-stretch gap-1.5 sm:w-44">
           <button
             type="button"
-            className="btn btn-ghost btn-sm"
+            className="btn btn-secondary btn-sm"
             style={account.formBlocked ? undefined : { color: "var(--danger)" }}
             disabled={busy || !canBlock}
             onClick={() => onBlacklist(account)}
@@ -301,7 +301,7 @@ function AccountRow({
           </button>
           <button
             type="button"
-            className="btn btn-ghost btn-sm"
+            className="btn btn-secondary btn-sm"
             style={{ color: "var(--danger)" }}
             disabled={busy || !canDelete}
             onClick={() => onDelete(account)}
