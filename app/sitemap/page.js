@@ -28,6 +28,7 @@ const SECTIONS = [
     title: "Your account",
     description: "Signing in and keeping your account secure.",
     links: [
+      { href: "/my-account", label: "My account", note: "Your profile, contact details and sign-in methods" },
       { href: "/login", label: "Log in", note: "Username or email, plus password" },
       { href: "/register", label: "Register", note: "Create an account, or continue with Google" },
       { href: "/verify", label: "Verify your account", note: "Confirm your email address with a 6-digit code" },
