@@ -1,9 +1,9 @@
-/* Route intro: the character plays to 2.7s, sinks away by 3.1s, and the page name
-   is dragged across with her hands from 2.0s, landing at 2.45s, held one second.
+/* Route intro: the character plays to 2.0s and fades out while the page name is
+   dragged in, so she is gone as it lands at 2.45s and the name holds alone.
 
    The clip is opaque H.264 with the page colour baked into it, so it decodes on
    the GPU everywhere (no alpha plane, no VP9) and the page background matches it
-   exactly - which means the sink and scale can never reveal an edge. */
+   exactly - which means the fade can never reveal an edge. */
 
 .page-wipe {
   position: fixed;
@@ -64,8 +64,8 @@
   100% { opacity: 0; }
 }
 
-/* Character: plays through 65.3% (2.45s), then fades back as the title lands and
-   is gone by 77.3% (2.9s), so the name reads cleanly in front of where she was. */
+/* Character: plays through 53.3% (2.0s), then fades out across the 2.0-2.45s
+   entry of the title and is gone by the time it lands at 65.3%. */
 @keyframes page-wipe-cast {
   0% {
     opacity: 0;
@@ -77,18 +77,18 @@
     transform: scale(1) translate3d(0, 0, 0);
     animation-timing-function: linear;
   }
-  65.3% {
+  53.3% {
     opacity: 1;
     transform: scale(1) translate3d(0, 0, 0);
     animation-timing-function: cubic-bezier(.4, 0, .7, 1);
   }
-  77.3% {
+  65.3% {
     opacity: 0;
-    transform: scale(.97) translate3d(0, 3%, 0);
+    transform: scale(.98) translate3d(0, 2%, 0);
   }
   100% {
     opacity: 0;
-    transform: scale(.97) translate3d(0, 3%, 0);
+    transform: scale(.98) translate3d(0, 2%, 0);
   }
 }
 
