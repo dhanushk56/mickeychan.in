@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import LogoutButton from "@/components/LogoutButton";
@@ -17,6 +17,8 @@ export default function Navbar() {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [member, setMember] = useState(null);
+  const [accountOpen, setAccountOpen] = useState(false);
+  const accountRef = useRef(null);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12);
@@ -27,6 +29,7 @@ export default function Navbar() {
 
   useEffect(() => {
     setOpen(false);
+    setAccountOpen(false);
   }, [pathname]);
 
   useEffect(() => {
@@ -41,6 +44,22 @@ export default function Navbar() {
       alive = false;
     };
   }, [pathname]);
+
+  useEffect(() => {
+    if (!accountOpen) return undefined;
+    const onPointerDown = (event) => {
+      if (accountRef.current && !accountRef.current.contains(event.target)) setAccountOpen(false);
+    };
+    const onKey = (event) => {
+      if (event.key === "Escape") setAccountOpen(false);
+    };
+    document.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [accountOpen]);
 
   useEffect(() => {
     if (!open) return;
@@ -78,21 +97,56 @@ export default function Navbar() {
                 <span />
               </span>
             </button>
-            <div className="nav-account">
+            <div className="nav-account" ref={accountRef}>
               {member ? (
-                <Link
-                  href="/my-account"
-                  className="nav-avatar"
-                  data-active={isActive("/my-account")}
-                  title="My account"
-                  aria-label={`My account — ${member.name || member.username}`}
-                >
-                  {member.avatar ? (
-                    <img src={member.avatar} alt="" />
-                  ) : (
-                    <span aria-hidden="true">{member.initials}</span>
+                <div className="nav-account-wrap">
+                  <button
+                    type="button"
+                    className="nav-avatar"
+                    data-active={isActive("/my-account")}
+                    data-open={accountOpen}
+                    title="My account"
+                    aria-label={`My account — ${member.name || member.username}`}
+                    aria-haspopup="true"
+                    aria-expanded={accountOpen}
+                    aria-controls="nav-account-menu"
+                    onClick={() => setAccountOpen(!accountOpen)}
+                  >
+                    {member.avatar ? (
+                      <img src={member.avatar} alt="" />
+                    ) : (
+                      <span aria-hidden="true">{member.initials}</span>
+                    )}
+                  </button>
+
+                  {accountOpen && (
+                    <div className="account-pop" id="nav-account-menu">
+                      <div className="account-pop-head">
+                        <span className="avatar-frame" aria-hidden="true">
+                          {member.avatar ? <img src={member.avatar} alt="" /> : member.initials}
+                        </span>
+                        <span className="account-pop-id">
+                          <span className="account-pop-name">{member.name || member.username}</span>
+                          <span className="account-pop-handle">@{member.username}</span>
+                        </span>
+                      </div>
+                      <Link
+                        href="/my-account"
+                        className="account-pop-item"
+                        onClick={() => setAccountOpen(false)}
+                      >
+                        View full profile
+                        <span aria-hidden="true">→</span>
+                      </Link>
+                      <LogoutButton
+                        endpoint="/api/auth/member/logout"
+                        className="account-pop-item account-pop-logout"
+                      >
+                        Log out
+                      </LogoutButton>
+                    </div>
                   )}
-                </Link>
+                </div>
               ) : (
                 <Link href="/login" className="nav-link">
                   Log in
