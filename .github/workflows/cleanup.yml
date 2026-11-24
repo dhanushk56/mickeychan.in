@@ -1,0 +1,25 @@
+name: Dead code cleanup
+on:
+  push:
+    paths:
+      - ".github/workflows/cleanup.yml"
+  workflow_dispatch:
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Apply cleanup
+        run: python3 .github/cleanup.py
+      - name: Commit and remove workflow
+        run: |
+          rm -f .github/cleanup.py .github/workflows/cleanup.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Remove dead code and drop the unused palette"
+          git push
