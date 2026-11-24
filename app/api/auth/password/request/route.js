@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { findMemberByEmail } from "@/lib/members";
-import { clearResetCode, issueResetCode } from "@/lib/password-reset";
+import { clearResetCode, isCodeSecretConfigured, issueResetCode } from "@/lib/password-reset";
 import { isEmailConfigured, resetEmail, sendEmail } from "@/lib/email";
 import { logActivity } from "@/lib/activity-log";
 import { limitReached, recordHit } from "@/lib/rate-limit";
@@ -12,6 +12,13 @@ export const dynamic = "force-dynamic";
 const LIMIT = { max: 8, windowMs: 60 * 60 * 1000 };
 
 export async function POST(request) {
+  if (!isCodeSecretConfigured()) {
+    return NextResponse.json(
+      { error: "Password reset isn't set up yet. Ask the site owner to finish it." },
+      { status: 503 }
+    );
+  }
+
   if (!isEmailConfigured()) {
     return NextResponse.json(
       { error: "Email confirmation isn't set up yet. Ask the site owner to finish it." },

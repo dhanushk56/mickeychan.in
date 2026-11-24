@@ -7,12 +7,19 @@ import {
   memberFromCookieStore,
 } from "@/lib/members";
 import { isEmailConfigured } from "@/lib/email";
-import { sendCodeEmail } from "@/lib/email-verification";
+import { isCodeSecretConfigured, sendCodeEmail } from "@/lib/email-verification";
 import { logActivity } from "@/lib/activity-log";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(request) {
+  if (!isCodeSecretConfigured()) {
+    return NextResponse.json(
+      { error: "Email confirmation isn't set up yet. Ask the site owner to finish it." },
+      { status: 503 }
+    );
+  }
+
   if (!isEmailConfigured()) {
     return NextResponse.json(
       { error: "Email confirmation isn't set up yet. Ask the site owner to finish it." },

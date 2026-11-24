@@ -7,7 +7,7 @@ import {
   memberFromCookieStore,
   publicMember,
 } from "@/lib/members";
-import { confirmCode } from "@/lib/email-verification";
+import { confirmCode, isCodeSecretConfigured } from "@/lib/email-verification";
 import { logActivity } from "@/lib/activity-log";
 import { clearHits, limitReached, recordHit } from "@/lib/rate-limit";
 
@@ -18,6 +18,13 @@ export const dynamic = "force-dynamic";
 const LIMIT = { max: 10, windowMs: 10 * 60 * 1000 };
 
 export async function POST(request) {
+  if (!isCodeSecretConfigured()) {
+    return NextResponse.json(
+      { error: "Email confirmation isn't set up yet. Ask the site owner to finish it." },
+      { status: 503 }
+    );
+  }
+
   const session = await memberFromCookieStore(cookies());
   if (!session) {
     return NextResponse.json({ error: "Log in first." }, { status: 401 });

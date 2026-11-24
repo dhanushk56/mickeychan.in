@@ -5,7 +5,7 @@ import {
   passwordProblem,
   setMemberPassword,
 } from "@/lib/members";
-import { clearResetCode, verifyResetCode } from "@/lib/password-reset";
+import { clearResetCode, isCodeSecretConfigured, verifyResetCode } from "@/lib/password-reset";
 import { logActivity } from "@/lib/activity-log";
 import { clearHits, limitReached, recordHit } from "@/lib/rate-limit";
 
@@ -16,6 +16,13 @@ export const dynamic = "force-dynamic";
 const LIMIT = { max: 10, windowMs: 10 * 60 * 1000 };
 
 export async function POST(request) {
+  if (!isCodeSecretConfigured()) {
+    return NextResponse.json(
+      { error: "Password reset isn't set up yet. Ask the site owner to finish it." },
+      { status: 503 }
+    );
+  }
+
   const key = clientKey(request);
   const limit = await limitReached("password-reset", key, LIMIT);
   if (limit.limited) {
