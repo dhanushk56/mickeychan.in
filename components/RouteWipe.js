@@ -5,9 +5,9 @@ import { usePathname, useSearchParams } from "next/navigation";
 
 const useClientLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect;
 
-// Character plays to 2.7s and sinks away by 3.05s. The page name crawls in from
-// the left at 1.85s and out the right by 2.95s without stopping.
-const DURATION = 3200;
+// Character plays to 2.7s and sinks away by 3.1s. The page name is dragged across
+// by her hands from 2.0s, lands at 2.45s, holds for one second, clears at 3.75s.
+const DURATION = 3750;
 
 // Login and register share one form that flips in place, so the intro is skipped
 // between them. Every other navigation keeps it.
