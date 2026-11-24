@@ -94,7 +94,8 @@
 
 /* Name: a crawl, not a reveal. It slides in from the left at 1.85s, passes centre
    at 2.40s while her hands are finishing, and carries on out of the right edge by
-   2.95s - constant speed, no pause, sitting in front of her so she is behind it. */
+   2.95s - constant speed in both halves, no pause, sitting in front of her so she
+   is behind it. */
 @keyframes page-wipe-name {
   0%, 57.8% {
     opacity: 0;
@@ -108,10 +109,12 @@
   75% {
     opacity: 1;
     transform: translate3d(0, 0, 0);
+    animation-timing-function: linear;
   }
   92.2% {
     opacity: 1;
     transform: translate3d(104%, 0, 0);
+    animation-timing-function: linear;
   }
   100% {
     opacity: 0;
