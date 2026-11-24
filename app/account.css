@@ -150,7 +150,7 @@
   border-radius: 999px;
   overflow: hidden;
   background: color-mix(in srgb, var(--primary) 22%, var(--surface));
-  border: 1px solid color-mix(in srgb, var(--primary) 22%, var(--line));
+  border: 2px solid var(--primary);
   color: var(--primary-strong);
   font-size: .72rem;
   font-weight: 700;
@@ -169,7 +169,7 @@
 .nav-avatar:hover,
 .nav-avatar[data-open="true"] {
   transform: translateY(-1px);
-  border-color: color-mix(in srgb, var(--primary) 42%, var(--line));
+  border-color: color-mix(in srgb, var(--primary) 45%, #fff);
   box-shadow: 0 10px 20px -14px rgba(76, 29, 149, .55);
 }
 
