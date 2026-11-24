@@ -12,23 +12,6 @@ import { logActivity } from "@/lib/activity-log";
 
 export const dynamic = "force-dynamic";
 
-function sameOrigin(request) {
-  const origin = request.headers.get("origin");
-  if (!origin) return true;
-  let originHost;
-  try {
-    originHost = new URL(origin).host;
-  } catch {
-    return false;
-  }
-  const candidates = [request.headers.get("host"), request.headers.get("x-forwarded-host")];
-  try {
-    candidates.push(new URL(request.url).host);
-  } catch {
-  }
-  return candidates.filter(Boolean).includes(originHost);
-}
-
 function finish(member, action, username, request) {
   const response = NextResponse.json(
     { ok: true, profile: publicProfile(member) },
@@ -46,10 +29,6 @@ function finish(member, action, username, request) {
 }
 
 export async function POST(request) {
-  if (!sameOrigin(request)) {
-    return NextResponse.json({ error: "Invalid origin." }, { status: 403 });
-  }
-
   const session = await memberFromCookieStore(cookies());
   if (!session) {
     return NextResponse.json({ error: "Log in to change your photo." }, { status: 401 });
@@ -66,10 +45,6 @@ export async function POST(request) {
 }
 
 export async function DELETE(request) {
-  if (!sameOrigin(request)) {
-    return NextResponse.json({ error: "Invalid origin." }, { status: 403 });
-  }
-
   const session = await memberFromCookieStore(cookies());
   if (!session) {
     return NextResponse.json({ error: "Log in to change your photo." }, { status: 401 });

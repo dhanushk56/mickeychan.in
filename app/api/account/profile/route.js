@@ -11,28 +11,7 @@ import { logActivity } from "@/lib/activity-log";
 
 export const dynamic = "force-dynamic";
 
-function sameOrigin(request) {
-  const origin = request.headers.get("origin");
-  if (!origin) return true;
-  let originHost;
-  try {
-    originHost = new URL(origin).host;
-  } catch {
-    return false;
-  }
-  const candidates = [request.headers.get("host"), request.headers.get("x-forwarded-host")];
-  try {
-    candidates.push(new URL(request.url).host);
-  } catch {
-  }
-  return candidates.filter(Boolean).includes(originHost);
-}
-
 export async function PATCH(request) {
-  if (!sameOrigin(request)) {
-    return NextResponse.json({ error: "Invalid origin." }, { status: 403 });
-  }
-
   const session = await memberFromCookieStore(cookies());
   if (!session) {
     return NextResponse.json({ error: "Log in to change your details." }, { status: 401 });

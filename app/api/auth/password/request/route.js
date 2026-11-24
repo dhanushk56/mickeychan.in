@@ -11,28 +11,7 @@ export const dynamic = "force-dynamic";
 
 const LIMIT = { max: 8, windowMs: 60 * 60 * 1000 };
 
-function sameOrigin(request) {
-  const origin = request.headers.get("origin");
-  if (!origin) return true;
-  let originHost;
-  try {
-    originHost = new URL(origin).host;
-  } catch {
-    return false;
-  }
-  const candidates = [request.headers.get("host"), request.headers.get("x-forwarded-host")];
-  try {
-    candidates.push(new URL(request.url).host);
-  } catch {
-  }
-  return candidates.filter(Boolean).includes(originHost);
-}
-
 export async function POST(request) {
-  if (!sameOrigin(request)) {
-    return NextResponse.json({ error: "Invalid origin." }, { status: 403 });
-  }
-
   if (!isEmailConfigured()) {
     return NextResponse.json(
       { error: "Email confirmation isn't set up yet. Ask the site owner to finish it." },
