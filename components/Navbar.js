@@ -101,12 +101,10 @@ export default function Navbar() {
             </div>
           </div>
 
-          <div className="nav-brand">
+          <Link href="/" className="nav-brand" aria-label="Mickey Chan home">
             <span className="nav-wordmark">Mickey Chan</span>
-            <Link href="/" className="brand-mark" aria-label="Mickey Chan home">
-              <img src="/mickey-logo.png" alt="" className="brand-logo" width={34} height={34} />
-            </Link>
-          </div>
+            <img src="/mickey-logo.png" alt="" className="brand-logo" width={34} height={34} />
+          </Link>
 
           <div className="nav-end">
             <nav className="nav-links" aria-label="Main">
