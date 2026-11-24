@@ -165,7 +165,6 @@ function ApplicationCard({ entry, busy, onStatus, onDelete, canReview, canDelete
 function AccountRow({
   account,
   onDelete,
-  onPassword,
   onEdit,
   onBlacklist,
   adminEntry,
@@ -173,11 +172,9 @@ function AccountRow({
   canManageAdmins,
   canBlock,
   canDelete,
-  canPassword,
   canEdit,
   onRoleChange,
 }) {
-  const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [details, setDetails] = useState(null);
   const [savingDetails, setSavingDetails] = useState(false);
@@ -194,15 +191,6 @@ function AccountRow({
     : verified
       ? { label: "Email verified", className: "badge-accepted" }
       : { label: "Email unverified", className: "badge-pending" };
-
-  async function submit(event) {
-    event.preventDefault();
-    if (password.length < 8) return;
-    setBusy(true);
-    const ok = await onPassword(account, password);
-    setBusy(false);
-    if (ok) setPassword("");
-  }
 
   function openDetails() {
     setDetails({
@@ -274,10 +262,10 @@ function AccountRow({
             {account.updatedAt ? ` · password set ${formatDateTime(account.updatedAt)}` : ""}
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex w-full shrink-0 flex-col items-stretch gap-1.5 sm:w-44">
           <button
             type="button"
-            className="btn btn-ghost"
+            className="btn btn-ghost btn-sm"
             style={account.formBlocked ? undefined : { color: "var(--danger)" }}
             disabled={busy || !canBlock}
             onClick={() => onBlacklist(account)}
@@ -287,7 +275,7 @@ function AccountRow({
           {canManageAdmins && (
             <select
               className="select"
-              style={{ maxWidth: "11rem" }}
+              style={{ maxWidth: "11rem", width: "100%", fontSize: ".78rem", padding: ".45rem .7rem" }}
               value={adminEntry ? (adminEntry.owner ? "owner" : adminEntry.roleId) : ""}
               disabled={busy || adminEntry?.root || adminEntry?.manageable === false}
               onChange={(event) => onRoleChange(account, event.target.value)}
@@ -305,7 +293,7 @@ function AccountRow({
           )}
           <button
             type="button"
-            className="btn btn-secondary"
+            className="btn btn-secondary btn-sm"
             disabled={busy || !canEdit}
             onClick={openDetails}
           >
@@ -313,7 +301,7 @@ function AccountRow({
           </button>
           <button
             type="button"
-            className="btn btn-ghost"
+            className="btn btn-ghost btn-sm"
             style={{ color: "var(--danger)" }}
             disabled={busy || !canDelete}
             onClick={() => onDelete(account)}
@@ -322,28 +310,6 @@ function AccountRow({
           </button>
         </div>
       </div>
-
-      <form onSubmit={submit} className="flex flex-wrap items-end gap-2 mt-3">
-        <label className="field flex-1" style={{ minWidth: "12rem" }}>
-          <span className="field-label">New password</span>
-          <input
-            className="input"
-            type="password"
-            value={password}
-            disabled={!canPassword}
-            onChange={(event) => setPassword(event.target.value)}
-            placeholder="At least 8 characters"
-            autoComplete="new-password"
-          />
-        </label>
-        <button
-          type="submit"
-          className="btn btn-secondary btn-sm"
-          disabled={busy || password.length < 8 || !canPassword}
-        >
-          {busy ? "Saving…" : "Set password"}
-        </button>
-      </form>
 
       {details && (
         <form onSubmit={saveDetails} className="grid gap-3 mt-3">
@@ -696,25 +662,6 @@ export default function AdminDashboard({ currentUser }) {
       setError(err.message);
     } finally {
       setBusyId("");
-    }
-  }
-
-  async function changeAccountPassword(account, password) {
-    try {
-      const response = await fetch(`/api/admin/accounts/${encodeURIComponent(account.username)}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password }),
-      });
-      const result = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(result.error || "Could not change that password.");
-      setError("");
-      setNotice(`Password updated for @${account.username} — their old sessions are signed out.`);
-      load();
-      return true;
-    } catch (err) {
-      setError(err.message);
-      return false;
     }
   }
 
@@ -1227,14 +1174,12 @@ export default function AdminDashboard({ currentUser }) {
                   key={account.username}
                   account={account}
                   onDelete={deleteAccount}
-                  onPassword={changeAccountPassword}
                   onBlacklist={toggleBlacklist}
                   adminEntry={adminByUsername.get(String(account.username).toLowerCase())}
                   roles={adminState.roles}
                   canManageAdmins={canManageAdmins}
                   canBlock={can("accounts.block")}
                   canDelete={can("accounts.delete")}
-                  canPassword={can("accounts.password")}
                   canEdit={can("accounts.password")}
                   onEdit={editAccountDetails}
                   onRoleChange={changeAdminRole}
