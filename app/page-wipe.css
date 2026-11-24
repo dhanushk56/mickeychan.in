@@ -1,5 +1,8 @@
 /* Route intro: the character plays to 2.7s, sinks away by 3.1s, and the page name
-   zooms in from 2.85s, landing at 3.55s and holding for two seconds. */
+   zooms in from 2.85s, landing at 3.55s and holding for two seconds.
+
+   Only transform and opacity animate here: filters, gradient sweeps and
+   letter-spacing animation all cost a repaint per frame while the video plays. */
 
 .page-wipe {
   position: fixed;
@@ -21,40 +24,22 @@
   animation: page-wipe-veil 5750ms both;
 }
 
-.page-wipe::after {
-  content: "";
-  position: absolute;
-  inset: -25% -55%;
-  background: linear-gradient(
-    104deg,
-    transparent 42%,
-    color-mix(in srgb, var(--primary) 14%, transparent) 49%,
-    color-mix(in srgb, var(--accent) 10%, transparent) 53%,
-    transparent 60%
-  );
-  opacity: 0;
-}
-
-.page-wipe.is-running::after {
-  animation: page-wipe-sheen 5750ms cubic-bezier(.4, 0, .2, 1) both;
-}
-
 .page-wipe-cast {
-  width: min(600px, 82vmin);
+  width: min(1040px, 96vw);
   height: auto;
-  transform-origin: 50% 60%;
+  transform-origin: 50% 58%;
   opacity: 0;
-  filter: drop-shadow(0 46px 74px rgba(4, 2, 12, .6));
 }
 
 .page-wipe.is-running .page-wipe-cast {
   animation: page-wipe-cast 5750ms both;
   will-change: transform, opacity;
+  backface-visibility: hidden;
 }
 
 .page-wipe-name {
   position: absolute;
-  max-width: 92vw;
+  max-width: 94vw;
   font-family: 'Bricolage Grotesque', 'Plus Jakarta Sans', system-ui, sans-serif;
   font-size: clamp(2.1rem, 7.4vw, 6.6rem);
   font-weight: 800;
@@ -63,13 +48,13 @@
   text-align: center;
   text-transform: uppercase;
   color: var(--text);
-  text-shadow: 0 30px 70px rgba(6, 3, 16, .7);
   opacity: 0;
 }
 
 .page-wipe.is-running .page-wipe-name {
   animation: page-wipe-name 5750ms both;
-  will-change: transform, opacity, letter-spacing;
+  will-change: transform, opacity;
+  backface-visibility: hidden;
 }
 
 @keyframes page-wipe-veil {
@@ -77,13 +62,6 @@
   2% { opacity: 1; animation-timing-function: linear; }
   96.5% { opacity: 1; animation-timing-function: cubic-bezier(.4, 0, .2, 1); }
   100% { opacity: 0; }
-}
-
-@keyframes page-wipe-sheen {
-  0% { opacity: 0; transform: translate3d(-26%, 0, 0); }
-  10% { opacity: .8; }
-  70% { opacity: .5; }
-  100% { opacity: 0; transform: translate3d(26%, 0, 0); }
 }
 
 /* Character: plays through 47% (2.7s), then sinks, shrinks and fades by 54% (3.1s),
@@ -120,35 +98,29 @@
   0%, 49.5% {
     opacity: 0;
     transform: scale(.3);
-    letter-spacing: .06em;
   }
   58% {
     opacity: 1;
     transform: scale(1.06);
-    letter-spacing: -.03em;
     animation-timing-function: cubic-bezier(.16, 1, .3, 1);
   }
   62% {
     opacity: 1;
     transform: scale(.985);
-    letter-spacing: -.045em;
     animation-timing-function: cubic-bezier(.22, 1, .36, 1);
   }
   70% {
     opacity: 1;
     transform: scale(1);
-    letter-spacing: -.045em;
   }
   96.5% {
     opacity: 1;
     transform: scale(1.015);
-    letter-spacing: -.045em;
     animation-timing-function: cubic-bezier(.4, 0, .2, 1);
   }
   100% {
     opacity: 0;
     transform: scale(1.03);
-    letter-spacing: -.045em;
   }
 }
 
