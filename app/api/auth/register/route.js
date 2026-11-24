@@ -3,7 +3,7 @@ import { createMemberToken, memberCookieHeader, publicMember, registerMember } f
 import { requestIps, requestLocation } from "@/lib/request-ips";
 import { logActivity } from "@/lib/activity-log";
 import { isEmailConfigured } from "@/lib/email";
-import { sendCodeEmail } from "@/lib/email-verification";
+import { isCodeSecretConfigured, sendCodeEmail } from "@/lib/email-verification";
 import { limitReached, recordHit } from "@/lib/rate-limit";
 
 import { clientKey } from "@/lib/request-ips";
@@ -13,6 +13,15 @@ export const dynamic = "force-dynamic";
 const LIMIT = { max: 5, windowMs: 60 * 60 * 1000 };
 
 export async function POST(request) {
+  // Sending a confirmation code needs the session secret. Without it the send
+  // would throw halfway through registration, so say what's missing instead.
+  if (isEmailConfigured() && !isCodeSecretConfigured()) {
+    return NextResponse.json(
+      { error: "Sign-up isn't fully set up yet. Ask the site owner to finish it." },
+      { status: 503 }
+    );
+  }
+
   const key = clientKey(request);
   const limit = await limitReached("register", key, LIMIT);
   if (limit.limited) {
