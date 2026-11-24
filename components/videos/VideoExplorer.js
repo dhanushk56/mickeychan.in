@@ -17,7 +17,7 @@ function VideoCard({ video, onPlay }) {
         style={{ backgroundImage: `url(${video.thumbnail})` }}
       >
         <span className="play-badge" aria-hidden="true">▶</span>
-        {isShort && <span className="thumb-pill">Short</span>}
+        <span className="thumb-pill">{isShort ? "Short" : "Video"}</span>
         {video.duration && <span className="thumb-badge">{video.duration}</span>}
       </div>
       <div className="video-body">

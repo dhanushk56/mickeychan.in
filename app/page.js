@@ -34,10 +34,6 @@ function shortName(social) {
   return social.short || social.name.split(" (")[0];
 }
 
-function tileName(social) {
-  return social.name.replace(/\s*\(YouTube\)$/, "");
-}
-
 function channelName(channel) {
   const handle = String(channel.handle || "").toLowerCase();
   const social = socials.find((entry) =>
@@ -61,7 +57,7 @@ function Poster({ entry, order }) {
           aria-hidden="true"
         />
         <span className="home-poster-index" aria-hidden="true">{order}</span>
-        {video.type === "short" && <span className="thumb-pill">Short</span>}
+        <span className="thumb-pill">{video.type === "short" ? "Short" : "New"}</span>
         {video.duration && <span className="thumb-badge">{video.duration}</span>}
         <span className="play-badge" aria-hidden="true">▶</span>
       </div>
@@ -85,7 +81,7 @@ function VideoCard({ video }) {
         />
         <span className="play-badge" aria-hidden="true">▶</span>
         {video.duration && <span className="thumb-badge">{video.duration}</span>}
-        {video.type === "short" && <span className="thumb-pill">Short</span>}
+        <span className="thumb-pill">{video.type === "short" ? "Short" : "Video"}</span>
       </div>
       <div className="home-card-body">
         <p className="home-card-title">{video.title}</p>
@@ -146,30 +142,42 @@ export default async function Home() {
         <div className="shell home-hero-inner">
           <div className="home-hero-copy">
             <span className="eyebrow home-in" style={{ "--d": "80ms" }}>
-              Minecraft videos, shorts and ARGs
+              <span className="eyebrow-dot" />
+              Gamer · Streamer · Storyteller
             </span>
 
             <h1 className="home-title">
-              <span className="home-line">
-                <span>One rule, thirty minutes,</span>
-              </span>
-              <span className="home-line">
-                <span className="accent-text">one very loud episode.</span>
-              </span>
+              <span className="home-line"><span>Play boldly.</span></span>
+              <span className="home-line"><span className="gradient-text">Tell better stories.</span></span>
             </h1>
 
-            <p className="home-lede home-in" style={{ "--d": "220ms" }}>
-              Every long-form challenge, stream and short from Mickey Chan&apos;s two channels, in
-              one library that plays here instead of sending you to YouTube.
+            <p className="home-lede home-in" style={{ "--d": "320ms" }}>
+              Welcome to Mickey Chan&apos;s world of games, streams, and stories. Catch the latest
+              uploads, find every social, and join the community.
             </p>
 
-            <div className="home-actions home-in" style={{ "--d": "300ms" }}>
+            <div className="home-actions home-in" style={{ "--d": "440ms" }}>
               <Link href="/videos" className="btn btn-primary">
-                Browse the videos
+                Explore videos <span aria-hidden="true">↗</span>
               </Link>
               <Link href="/join" className="btn btn-secondary">
-                Send a message
+                Join the community
               </Link>
+            </div>
+
+            <div className="home-stats home-in" style={{ "--d": "560ms" }}>
+              {[
+                { value: longForm.length, label: "Videos live" },
+                { value: shorts.length, label: "Shorts" },
+                openRoles.length > 0
+                  ? { value: openRoles.length, label: "Open roles" }
+                  : { value: channels.length, label: "Channels" },
+              ].map((stat) => (
+                <div className="home-stat" key={stat.label}>
+                  <span className="home-stat-value">{stat.value}</span>
+                  <span className="home-stat-label">{stat.label}</span>
+                </div>
+              ))}
             </div>
           </div>
 
@@ -177,7 +185,7 @@ export default async function Home() {
             <div className="home-posters home-in" style={{ "--d": "300ms" }}>
               <div className="home-posters-head">
                 <p className="kicker">Latest uploads</p>
-                <span className="home-posters-note">
+                <span className="badge badge-neutral">
                   {heroChannels.size > 1 ? "Both channels" : channelName(featured[0].channel)}
                 </span>
               </div>
@@ -190,7 +198,7 @@ export default async function Home() {
 
               <div className="home-posters-foot">
                 <Link href="/videos" className="home-text-link">
-                  All videos
+                  All videos ↗
                 </Link>
                 <a
                   href={featured[0].video.channelUrl || featured[0].channel.url}
@@ -202,6 +210,29 @@ export default async function Home() {
                 </a>
               </div>
 
+              {shorts.length > 0 && (
+                <div className="home-mini-rail home-in" style={{ "--d": "640ms" }}>
+                  <div className="home-mini-head">
+                    <span className="kicker">Quick hits</span>
+                    <Link href="/videos" className="home-text-link">All shorts ↗</Link>
+                  </div>
+                  <div className="home-mini-grid">
+                    {shorts.slice(0, 5).map((video) => (
+                      <Link key={video.id} href={`/videos?v=${video.id}`} className="home-mini">
+                        <span className="home-mini-thumb">
+                          <span
+                            className="home-mini-img"
+                            style={{ backgroundImage: `url(${video.thumbnail})` }}
+                            aria-hidden="true"
+                          />
+                          <span className="home-mini-view" aria-hidden="true">▶</span>
+                        </span>
+                        <span className="home-mini-meta">{video.views || "Short"}</span>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -306,7 +337,7 @@ export default async function Home() {
           <div className="home-section-head">
             <div data-home-reveal>
               <p className="kicker">Inside the channel</p>
-              <h2 className="display-lg mt-2">Long-form, shorts and ARGs.</h2>
+              <h2 className="display-lg mt-2">Three kinds of chaos, one channel.</h2>
             </div>
             <p className="muted text-sm max-w-sm leading-relaxed" data-home-reveal>
               Long-form episodes built around one ridiculous rule, shorts made for a quick scroll,
@@ -348,11 +379,12 @@ export default async function Home() {
                 </div>
                 <div className="home-lane-meta">
                   {lane.meta.map((item) => (
-                    <span key={item}>{item}</span>
+                    <span key={item} className="badge badge-neutral">{item}</span>
                   ))}
                 </div>
                 <Link href={lane.href} className="home-lane-cta">
                   {lane.cta}
+                  <span aria-hidden="true">↗</span>
                 </Link>
               </div>
             ))}
@@ -366,10 +398,10 @@ export default async function Home() {
             <div className="home-section-head">
               <div data-home-reveal>
                 <p className="kicker">From the channel</p>
-                <h2 className="display-lg mt-2">The three newest uploads.</h2>
+                <h2 className="display-lg mt-2">Fresh out of the recording booth.</h2>
               </div>
               <Link href="/videos" className="btn btn-secondary btn-sm">
-                All videos
+                All videos ↗
               </Link>
             </div>
             <div className="home-reel">
@@ -386,11 +418,11 @@ export default async function Home() {
           <div className="shell">
             <div className="home-section-head">
               <div data-home-reveal>
-                <p className="kicker">Shorts</p>
-                <h2 className="display-lg mt-2">Under a minute, cut from streams.</h2>
+                <p className="kicker">Quick hits</p>
+                <h2 className="display-lg mt-2">Shorts worth a scroll.</h2>
               </div>
               <Link href="/videos" className="btn btn-secondary btn-sm">
-                All shorts
+                All shorts ↗
               </Link>
             </div>
             <div className="home-rail">
@@ -441,7 +473,7 @@ export default async function Home() {
               ))}
             </dl>
             <Link href="/join" className="btn btn-secondary w-full mt-5">
-              Get in touch
+              Get in touch <span aria-hidden="true">↗</span>
             </Link>
           </aside>
         </div>
@@ -452,10 +484,10 @@ export default async function Home() {
           <div className="home-section-head">
             <div data-home-reveal>
               <p className="kicker">Find me elsewhere</p>
-              <h2 className="display-lg mt-2">Elsewhere.</h2>
+              <h2 className="display-lg mt-2">Every place the community lives.</h2>
             </div>
             <Link href="/socials" className="btn btn-secondary btn-sm">
-              All socials
+              All socials ↗
             </Link>
           </div>
           <div className="home-social-grid">
@@ -471,7 +503,7 @@ export default async function Home() {
                 <span className="home-tile-icon">
                   <SocialIcon name={social.icon} className="w-4 h-4" />
                 </span>
-                <span className="home-tile-name">{tileName(social)}</span>
+                <span className="home-tile-name">{social.name}</span>
                 <span className="home-tile-arrow" aria-hidden="true">↗</span>
               </a>
             ))}
@@ -490,7 +522,7 @@ export default async function Home() {
                 </h2>
               </div>
               <Link href="/positions" className="btn btn-secondary btn-sm">
-                All positions
+                All positions ↗
               </Link>
             </div>
 
@@ -506,6 +538,7 @@ export default async function Home() {
                     <span className="home-role-meta">
                       {role.createdAt ? `Posted ${new Date(role.createdAt).toLocaleDateString()}` : "Open now"}
                     </span>
+                    <span className="home-role-arrow" aria-hidden="true">↗</span>
                   </Link>
                 ))}
               </div>
@@ -551,7 +584,7 @@ export default async function Home() {
           </p>
           <div className="home-actions home-actions-center">
             <Link href="/join" className="btn btn-primary">
-              Start a conversation
+              Start a conversation <span aria-hidden="true">↗</span>
             </Link>
             <Link href="/positions" className="btn btn-secondary">
               Open positions

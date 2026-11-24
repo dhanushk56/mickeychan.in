@@ -29,7 +29,7 @@ export default function ScrollReveal() {
           observer.unobserve(entry.target);
         }
       },
-      { rootMargin: "0px 0px -4% 0px", threshold: 0.02 }
+      { rootMargin: "0px 0px -8% 0px", threshold: 0.12 }
     );
 
     const counters = new WeakMap();
