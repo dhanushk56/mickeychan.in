@@ -1,5 +1,5 @@
 /* Route intro: the character plays to 2.7s, sinks away by 3.1s, and the page name
-   zooms in from 2.85s, landing at 3.55s and holding for two seconds.
+   is dragged in from the left from 2.85s, landing at 3.55s and holding for one second.
 
    The clip is opaque H.264 with the page colour baked into it, so it decodes on
    the GPU everywhere (no alpha plane, no VP9) and the page background matches it
@@ -18,7 +18,7 @@
 }
 
 .page-wipe.is-running {
-  animation: page-wipe-veil 5750ms both;
+  animation: page-wipe-veil 4750ms both;
   will-change: opacity;
 }
 
@@ -31,7 +31,7 @@
 }
 
 .page-wipe.is-running .page-wipe-cast {
-  animation: page-wipe-cast 5750ms both;
+  animation: page-wipe-cast 4750ms both;
   will-change: transform, opacity;
   backface-visibility: hidden;
 }
@@ -52,7 +52,7 @@
 }
 
 .page-wipe.is-running .page-wipe-name {
-  animation: page-wipe-name 5750ms both;
+  animation: page-wipe-name 4750ms both;
   will-change: transform, opacity;
   backface-visibility: hidden;
 }
@@ -64,8 +64,8 @@
   100% { opacity: 0; }
 }
 
-/* Character: plays through 47% (2.7s), then sinks, shrinks and fades by 54% (3.1s),
-   so it is gone before the title finishes arriving. */
+/* Character: plays through 56.8% (2.7s), then sinks, shrinks and fades by 65.3%
+   (3.1s), so it is gone before the title finishes arriving. */
 @keyframes page-wipe-cast {
   0% {
     opacity: 0;
@@ -77,12 +77,12 @@
     transform: scale(1) translate3d(0, 0, 0);
     animation-timing-function: linear;
   }
-  47% {
+  56.8% {
     opacity: 1;
     transform: scale(1.02) translate3d(0, 0, 0);
     animation-timing-function: cubic-bezier(.4, 0, .75, 1);
   }
-  54% {
+  65.3% {
     opacity: 0;
     transform: scale(.88) translate3d(0, 16%, 0);
   }
@@ -92,35 +92,32 @@
   }
 }
 
-/* Name: starts at 49.5% (2.85s) as the character goes, punches through to 1.06 at
-   58% (3.34s), settles at 62% (3.57s), holds to 96.5% (5.55s), then clears. */
+/* Name: she sweeps her hands left to right as the last of the clip plays, so the
+   name is dragged in behind them - surfacing off the left edge from 60% (2.85s),
+   sliding right to land at 74.7% (3.55s), held for one second to 95.8% (4.55s),
+   then carried off to the right as the veil clears at 100% (4.75s). */
 @keyframes page-wipe-name {
-  0%, 49.5% {
+  0%, 60% {
     opacity: 0;
-    transform: scale(.3);
+    transform: translate3d(-56%, 0, 0) scale(.98);
   }
-  58% {
+  65.3% {
     opacity: 1;
-    transform: scale(1.06);
-    animation-timing-function: cubic-bezier(.16, 1, .3, 1);
-  }
-  62% {
-    opacity: 1;
-    transform: scale(.985);
+    transform: translate3d(-24%, 0, 0) scale(.99);
     animation-timing-function: cubic-bezier(.22, 1, .36, 1);
   }
-  70% {
+  74.7% {
     opacity: 1;
-    transform: scale(1);
+    transform: translate3d(0, 0, 0) scale(1);
   }
-  96.5% {
+  95.8% {
     opacity: 1;
-    transform: scale(1.015);
+    transform: translate3d(0, 0, 0) scale(1.012);
     animation-timing-function: cubic-bezier(.4, 0, .2, 1);
   }
   100% {
     opacity: 0;
-    transform: scale(1.03);
+    transform: translate3d(7%, 0, 0) scale(1.012);
   }
 }
 
