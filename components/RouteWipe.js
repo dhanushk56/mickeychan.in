@@ -5,9 +5,14 @@ import { usePathname, useSearchParams } from "next/navigation";
 
 const useClientLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect;
 
-// Character plays to 2.7s and sinks away by 3.1s. The page name is dragged across
-// by her hands from 2.0s, lands at 2.45s, holds for one second, clears at 3.75s.
+// Character plays to 2.0s and fades out during the title's entry. The page name is
+// dragged across by her hands from 2.0s, lands at 2.45s, holds for one second,
+// clears at 3.75s.
 const DURATION = 3750;
+
+// A clip that has not buffered this much cannot play the sweep in real time, so a
+// cold or slow load runs the beat without the character rather than stuttering.
+const CAST_MIN_BUFFER = 1.4;
 
 // Login and register share one form that flips in place, so the intro is skipped
 // between them. Every other navigation keeps it.
@@ -80,6 +85,21 @@ export default function RouteWipe() {
     setLabel(pageLabel(path));
     root.classList.add("is-arriving");
 
+    const bufferedEnd = video && video.buffered.length ? video.buffered.end(0) : 0;
+    const castReady = Boolean(video) && video.readyState >= 3 && bufferedEnd >= CAST_MIN_BUFFER;
+    if (overlay) overlay.classList.toggle("cast-lost", !castReady);
+
+    // If it runs dry partway through, drop the character instead of holding a
+    // frozen frame in front of the title.
+    const onStarve = () => {
+      if (!video || video.currentTime < 0.2 || video.readyState >= 3) return;
+      if (overlay) overlay.classList.add("cast-lost");
+    };
+    if (video) {
+      video.addEventListener("waiting", onStarve);
+      video.addEventListener("stalled", onStarve);
+    }
+
     // Re-adding the class after a forced reflow restarts the CSS animations even
     // when a second navigation lands before the first run has finished.
     if (overlay) {
@@ -93,7 +113,8 @@ export default function RouteWipe() {
     const startVideo = () => {
       if (!video) return;
       try {
-        video.currentTime = 0;
+        // Seeking to where it already is costs a decoder reset and a visible hitch.
+        if (video.currentTime > 0.05) video.currentTime = 0;
       } catch {
         // A video that has not buffered yet starts from wherever it can.
       }
@@ -102,7 +123,7 @@ export default function RouteWipe() {
         played.catch(() => {
           window.setTimeout(() => {
             try {
-              video.currentTime = 0;
+              if (video.currentTime > 0.05) video.currentTime = 0;
             } catch {
               // Ignore and let the retry play from the current position.
             }
@@ -112,13 +133,17 @@ export default function RouteWipe() {
         });
       }
     };
-    window.requestAnimationFrame(startVideo);
+    if (castReady) window.requestAnimationFrame(startVideo);
 
     window.clearTimeout(timerRef.current);
     timerRef.current = window.setTimeout(() => {
       if (overlay) overlay.classList.remove("is-running");
       root.classList.remove("is-arriving");
-      if (video) video.pause();
+      if (video) {
+        video.removeEventListener("waiting", onStarve);
+        video.removeEventListener("stalled", onStarve);
+        video.pause();
+      }
     }, DURATION);
   }, []);
 
@@ -153,7 +178,7 @@ export default function RouteWipe() {
           .then(() => {
             video.pause();
             try {
-              video.currentTime = 0;
+              if (video.currentTime > 0.05) video.currentTime = 0;
             } catch {
               // Nothing to rewind yet.
             }
