@@ -275,7 +275,7 @@ function AccountRow({
           {canManageAdmins && (
             <select
               className="select"
-              style={{ maxWidth: "11rem", width: "100%", fontSize: ".78rem", padding: ".45rem .7rem" }}
+              style={{ width: "100%", fontSize: ".78rem", padding: ".45rem .7rem" }}
               value={adminEntry ? (adminEntry.owner ? "owner" : adminEntry.roleId) : ""}
               disabled={busy || adminEntry?.root || adminEntry?.manageable === false}
               onChange={(event) => onRoleChange(account, event.target.value)}
