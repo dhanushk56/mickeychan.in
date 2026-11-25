@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname } from "next/navigation";
 
 const useClientLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect;
 
@@ -45,20 +45,17 @@ function pageLabel(pathname) {
   return segment ? titleCase(segment) : "Mickey Chan";
 }
 
-function pathOf(route) {
-  return String(route || "").split("?")[0];
-}
-
 function isAuthFlip(fromPath, toPath) {
   return AUTH_FACES.has(fromPath) && AUTH_FACES.has(toPath);
 }
 
 export default function RouteWipe() {
   const pathname = usePathname();
-  const search = useSearchParams();
-  const route = `${pathname}?${search ? search.toString() : ""}`;
 
-  const previous = useRef(route);
+  // Only a pathname change counts as a navigation. Query strings drive filters
+  // and sorts that belong to the page already on screen, so rewriting them must
+  // not replay the intro.
+  const previous = useRef(pathname);
   const overlayRef = useRef(null);
   const videoRef = useRef(null);
   const timerRef = useRef(0);
@@ -125,22 +122,23 @@ export default function RouteWipe() {
   }, []);
 
   useClientLayoutEffect(() => {
-    const fromRoute = previous.current;
-    previous.current = route;
-    if (fromRoute === route) return;
-    if (isAuthFlip(pathOf(fromRoute), pathname)) return;
+    const fromPath = previous.current;
+    previous.current = pathname;
+    if (fromPath === pathname) return;
+    if (isAuthFlip(fromPath, pathname)) return;
     fire(pathname);
-  }, [route, pathname, fire]);
+  }, [pathname, fire]);
 
   useEffect(() => {
     // A back/forward cache restore replays no React navigation, and iOS back
     // swipes often land that way, so run the beat from the history events too.
     const onRestore = (event) => {
       if (event && event.type === "pageshow" && !event.persisted) return;
-      const fromRoute = previous.current;
+      const fromPath = previous.current;
       const toPath = window.location.pathname;
-      previous.current = `${toPath}?${window.location.search.slice(1)}`;
-      if (isAuthFlip(pathOf(fromRoute), toPath)) return;
+      previous.current = toPath;
+      if (fromPath === toPath) return;
+      if (isAuthFlip(fromPath, toPath)) return;
       fire(toPath);
     };
 
