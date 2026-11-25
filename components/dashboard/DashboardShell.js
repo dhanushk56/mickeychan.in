@@ -10,6 +10,7 @@ import EmptyState from "@/components/ui/EmptyState";
 const TABS = [
   { id: "overview", label: "Overview" },
   { id: "library", label: "Library" },
+  { id: "community", label: "Community" },
   { id: "applications", label: "Applications" },
   { id: "settings", label: "Settings" },
 ];
@@ -96,7 +97,10 @@ export default function DashboardShell({
       });
       const result = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(result.error || "That didn't work. Try again.");
-      if (result.library) setLibrary(result.library);
+      if (result.library) {
+        setLibrary(result.library);
+        if (result.library.settings) setSettings(result.library.settings);
+      }
       if (okMessage) push(okMessage, "success");
       router.refresh();
       return result;
@@ -170,6 +174,22 @@ export default function DashboardShell({
     await run({ action: "settings:update", settings }, "Library settings saved.");
   }
 
+  async function toggleProfile() {
+    const next = !settings.profileVisible;
+    await run(
+      { action: "settings:update", settings: { ...settings, profileVisible: next } },
+      next ? "Your public profile is live." : "Your public profile is private again."
+    );
+  }
+
+  async function togglePublicPlaylists() {
+    const next = !settings.publicPlaylists;
+    await run(
+      { action: "settings:update", settings: { ...settings, publicPlaylists: next } },
+      next ? "Public playlists can now appear on your profile." : "Public playlists are hidden."
+    );
+  }
+
   return (
     <div className="dash">
       <header className="glass-card dash-head">
@@ -205,7 +225,9 @@ export default function DashboardShell({
                 ? counts.watchLater + counts.playlists
                 : entry.id === "applications"
                   ? counts.applications
-                  : 0}
+                  : entry.id === "community"
+                    ? library.playlists.filter((playlist) => playlist.public).length
+                    : 0}
             </span>
           </button>
         ))}
@@ -398,6 +420,59 @@ export default function DashboardShell({
                 ))}
               </ul>
             )}
+          </div>
+        </section>
+      )}
+
+      {tab === "community" && (
+        <section className="grid gap-4">
+          <div className="glass-card dash-card">
+            <div className="dash-card-head">
+              <h2 className="font-display font-bold">Public profile</h2>
+              <span className={`badge ${settings.profileVisible ? "badge-accepted" : "badge-neutral"}`}>
+                {settings.profileVisible ? "Live" : "Private"}
+              </span>
+            </div>
+            <p className="muted text-sm leading-relaxed">
+              A public profile shows your name, handle, photo and the playlists you mark public.
+              It never shows your email, phone number, watch later list or history.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <button type="button" className="btn btn-primary btn-sm" onClick={toggleProfile} disabled={busy === "settings:update"}>
+                {settings.profileVisible ? "Make my profile private" : "Make my profile public"}
+              </button>
+              {settings.profileVisible && (
+                <Link href={`/community/${profile.username}`} className="btn btn-secondary btn-sm">
+                  View my public profile
+                </Link>
+              )}
+            </div>
+          </div>
+
+          <div className="glass-card dash-card">
+            <div className="dash-card-head">
+              <h2 className="font-display font-bold">Playlists on your profile</h2>
+              <span className="badge badge-neutral">
+                {library.playlists.filter((playlist) => playlist.public).length} public
+              </span>
+            </div>
+            <p className="muted text-sm leading-relaxed">
+              Playlists are private until you mark one public. Marking a playlist public only
+              publishes it when this switch is on and the playlist itself is public.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                className="btn btn-secondary btn-sm"
+                onClick={togglePublicPlaylists}
+                disabled={busy === "settings:update"}
+              >
+                {settings.publicPlaylists ? "Hide public playlists" : "Show public playlists"}
+              </button>
+              <button type="button" className="btn btn-ghost btn-sm" onClick={() => go("library")}>
+                Manage playlists
+              </button>
+            </div>
           </div>
         </section>
       )}

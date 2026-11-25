@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import LogoutButton from "@/components/LogoutButton";
+import NotificationsBell from "@/components/NotificationsBell";
 
 const LINKS = [
   { href: "/videos", label: "Videos" },
@@ -97,6 +98,7 @@ export default function Navbar() {
                 <span />
               </span>
             </button>
+            {member && <NotificationsBell key={member.username} />}
             <div className="nav-account" ref={accountRef}>
               {member ? (
                 <div className="nav-account-wrap">

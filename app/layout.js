@@ -2,6 +2,7 @@ import "./globals.css";
 import "./nav.css";
 import "./account.css";
 import "./dashboard.css";
+import "./community.css";
 import "./auth-view.css";
 import "./motion.css";
 import "./runner.css";

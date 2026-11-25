@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { authorizeAny } from "@/lib/admin-guard";
 import { logActivity } from "@/lib/activity-log";
+import { addNotification } from "@/lib/notifications";
 import {
   deleteEnquiry,
   isEnquiryStatus,
@@ -34,6 +35,7 @@ export async function PATCH(request) {
     return NextResponse.json({ error: "Unknown status." }, { status: 400 });
   }
 
+  const before = (await listEnquiries()).find((entry) => entry.id === id);
   const updated = await updateEnquiry(id, {
     status: body.status,
     note: typeof body.note === "string" ? body.note : undefined,
@@ -41,6 +43,15 @@ export async function PATCH(request) {
   });
 
   if (!updated) return NextResponse.json({ error: "That enquiry is gone." }, { status: 404 });
+
+  if (updated.memberUsername && before?.status !== updated.status) {
+    await addNotification(updated.memberUsername, {
+      kind: "message",
+      title: `Your message is ${statusMeta(updated.status).label.toLowerCase()}`,
+      body: `${updated.reference || "Your enquiry"} — ${updated.subject || "sent from the contact page"}`,
+      href: "/contact",
+    });
+  }
 
   await logActivity({
     area: "admin",

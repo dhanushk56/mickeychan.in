@@ -5,9 +5,11 @@ import {
   isValidStatus,
   listSubmissions,
   saveSubmission,
+  statusMeta,
   withTimelineEvent,
 } from "@/lib/applications";
 import { logActivity } from "@/lib/activity-log";
+import { addNotification } from "@/lib/notifications";
 
 export const dynamic = "force-dynamic";
 
@@ -47,6 +49,15 @@ export async function PATCH(request, { params }) {
   await saveSubmission(formId, submissions[index]);
 
   const applicant = submissions[index].memberUsername;
+  if (applicant) {
+    const meta = statusMeta(status);
+    await addNotification(applicant, {
+      kind: "application",
+      title: `Application: ${meta.label}`,
+      body: `“${submissions[index].formTitle || formId}” — ${meta.applicant}`,
+      href: "/dashboard?tab=applications",
+    });
+  }
   await logActivity({
     area: "admin",
     action: "application-status",
