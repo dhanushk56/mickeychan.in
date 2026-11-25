@@ -6,7 +6,7 @@ const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "
 
 function utc12(iso) {
   const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return "—";
+  if (Number.isNaN(date.getTime())) return "-";
   const hours24 = date.getUTCHours();
   const hours = hours24 % 12 === 0 ? 12 : hours24 % 12;
   const minutes = String(date.getUTCMinutes()).padStart(2, "0");

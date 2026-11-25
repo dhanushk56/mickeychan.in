@@ -1,19 +1,14 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useConfirm, usePrompt } from "@/components/ConfirmDialog";
-import { useToast } from "@/components/ui/Toast";
 import EmptyState from "@/components/ui/EmptyState";
-import { buildAchievements } from "@/lib/achievements";
+import { ideaStatusMeta } from "@/lib/ideas";
 
 const TABS = [
   { id: "overview", label: "Overview" },
-  { id: "library", label: "Library" },
-  { id: "community", label: "Community" },
   { id: "applications", label: "Applications" },
-  { id: "settings", label: "Settings" },
 ];
 
 function formatDay(value) {
@@ -33,166 +28,23 @@ function Stat({ label, value, hint }) {
   );
 }
 
-function VideoLine({ id, meta, when, children }) {
-  const video = meta || { id, title: "Video unavailable", thumbnail: "", type: "video" };
-  return (
-    <li className="dash-video">
-      <Link href={`/videos/${id}`} className="dash-video-main">
-        <span
-          className="dash-video-thumb"
-          data-short={video.type === "short"}
-          style={video.thumbnail ? { backgroundImage: `url(${video.thumbnail})` } : undefined}
-          aria-hidden="true"
-        />
-        <span className="dash-video-text">
-          <span className="dash-video-title">{video.title}</span>
-          <span className="faint text-xs">
-            {[when ? formatDay(when) : "", video.channelLabel].filter(Boolean).join(" · ") || "On YouTube"}
-          </span>
-        </span>
-      </Link>
-      {children}
-    </li>
-  );
-}
-
 export default function DashboardShell({
   profile,
-  initialLibrary,
-  videosById = {},
   applications = [],
+  myIdeas = [],
+  stats = { applications: 0, ideasPosted: 0, ideasBacked: 0 },
+  achievements = { items: [], earned: 0, total: 0 },
+  profileVisible = false,
   initialTab = "overview",
 }) {
   const router = useRouter();
-  const [library, setLibrary] = useState(initialLibrary);
-  const [tab, setTab] = useState(TABS.some((entry) => entry.id === initialTab) ? initialTab : "overview");
-  const [busy, setBusy] = useState("");
-  const [newPlaylist, setNewPlaylist] = useState("");
-  const [settings, setSettings] = useState(initialLibrary.settings);
-  const { push, view: toastView } = useToast();
-  const [confirmView, askConfirm] = useConfirm();
-  const [promptView, askPrompt] = usePrompt();
-
-  const counts = useMemo(
-    () => ({
-      watchLater: library.watchLater.length,
-      playlists: library.playlists.length,
-      history: library.history.length,
-      applications: applications.length,
-    }),
-    [library, applications]
-  );
-  const achievements = useMemo(
-    () => buildAchievements({ library, applications, settings }),
-    [library, applications, settings]
+  const [tab, setTab] = useState(
+    TABS.some((entry) => entry.id === initialTab) ? initialTab : "overview"
   );
 
   function go(next) {
     setTab(next);
     router.replace(`/dashboard?tab=${next}`, { scroll: false });
-  }
-
-  async function run(payload, okMessage) {
-    setBusy(payload.action);
-    try {
-      const response = await fetch("/api/library", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      const result = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(result.error || "That didn't work. Try again.");
-      if (result.library) {
-        setLibrary(result.library);
-        if (result.library.settings) setSettings(result.library.settings);
-      }
-      if (okMessage) push(okMessage, "success");
-      router.refresh();
-      return result;
-    } catch (problem) {
-      push(problem.message, "error");
-      return null;
-    } finally {
-      setBusy("");
-    }
-  }
-
-  async function removeSaved(videoId) {
-    await run({ action: "watch:toggle", videoId, save: false }, "Removed from watch later.");
-  }
-
-  async function clearHistory() {
-    const yes = await askConfirm({
-      title: "Clear your watch history?",
-      description: "This removes every video from your history. Watch later and playlists stay as they are.",
-      confirmLabel: "Clear history",
-      tone: "danger",
-    });
-    if (!yes) return;
-    await run({ action: "history:clear" }, "History cleared.");
-  }
-
-  async function createPlaylist(event) {
-    event.preventDefault();
-    const name = newPlaylist.trim();
-    if (!name) return;
-    const result = await run({ action: "playlist:create", name }, `Created “${name}”.`);
-    if (result) setNewPlaylist("");
-  }
-
-  async function renamePlaylist(playlist) {
-    const name = await askPrompt({
-      title: "Rename playlist",
-      label: "Playlist name",
-      placeholder: playlist.name,
-      confirmLabel: "Save name",
-      maxLength: 60,
-    });
-    if (!name || name === playlist.name) return;
-    await run({ action: "playlist:update", id: playlist.id, name }, "Playlist renamed.");
-  }
-
-  async function deletePlaylist(playlist) {
-    const yes = await askConfirm({
-      title: `Delete “${playlist.name}”?`,
-      description: "The playlist is removed. The videos themselves stay on YouTube and in your history.",
-      confirmLabel: "Delete playlist",
-      tone: "danger",
-    });
-    if (!yes) return;
-    await run({ action: "playlist:delete", id: playlist.id }, "Playlist deleted.");
-  }
-
-  async function togglePlaylistPublic(playlist) {
-    await run(
-      { action: "playlist:update", id: playlist.id, public: !playlist.public },
-      playlist.public ? "Playlist is private again." : "Playlist is public on your profile."
-    );
-  }
-
-  async function removePlaylistItem(playlist, videoId) {
-    await run({ action: "playlist:item", id: playlist.id, videoId, present: false }, "Removed from playlist.");
-  }
-
-  async function saveSettings(event) {
-    event.preventDefault();
-    await run({ action: "settings:update", settings }, "Library settings saved.");
-  }
-
-  async function toggleProfile() {
-    const next = !settings.profileVisible;
-    await run(
-      { action: "settings:update", settings: { ...settings, profileVisible: next } },
-      next ? "Your public profile is live." : "Your public profile is private again."
-    );
-  }
-
-  async function togglePublicPlaylists() {
-    const next = !settings.publicPlaylists;
-    await run(
-      { action: "settings:update", settings: { ...settings, publicPlaylists: next } },
-      next ? "Public playlists can now appear on your profile." : "Public playlists are hidden."
-    );
   }
 
   return (
@@ -205,7 +57,7 @@ export default function DashboardShell({
           <p className="kicker">Dashboard</p>
           <h1 className="display-lg">{profile.name || profile.username}</h1>
           <p className="muted text-sm">
-            @{profile.username} · everything you keep on the site lives here.
+            @{profile.username} · your applications, ideas and achievements.
           </p>
         </div>
         <Link href="/my-account" className="btn btn-secondary btn-sm">
@@ -226,29 +78,18 @@ export default function DashboardShell({
           >
             <span>{entry.label}</span>
             <span className="tab-count">
-              {entry.id === "library"
-                ? counts.watchLater + counts.playlists
-                : entry.id === "applications"
-                  ? counts.applications
-                  : entry.id === "community"
-                    ? library.playlists.filter((playlist) => playlist.public).length
-                    : 0}
+              {entry.id === "applications" ? stats.applications : 0}
             </span>
           </button>
         ))}
       </div>
 
-      {toastView}
-      {confirmView}
-      {promptView}
-
       {tab === "overview" && (
         <section className="grid gap-4">
           <div className="dash-stats">
-            <Stat label="Watch later" value={counts.watchLater} hint="Videos you saved for later" />
-            <Stat label="Playlists" value={counts.playlists} hint="Your own collections" />
-            <Stat label="History" value={counts.history} hint="Recent watches" />
-            <Stat label="Applications" value={counts.applications} hint="Roles you applied to" />
+            <Stat label="Applications" value={stats.applications} hint="Roles you applied to" />
+            <Stat label="Ideas posted" value={stats.ideasPosted} hint="Suggestions you sent in" />
+            <Stat label="Ideas backed" value={stats.ideasBacked} hint="Ideas you voted for" />
           </div>
 
           <div className="glass-card dash-card">
@@ -269,7 +110,9 @@ export default function DashboardShell({
                       style={{ width: `${Math.round((entry.have / entry.need) * 100)}%` }}
                     />
                   </span>
-                  <span className="faint text-xs">{entry.earned ? "Earned" : `${entry.have} of ${entry.need}`}</span>
+                  <span className="faint text-xs">
+                    {entry.earned ? "Earned" : `${entry.have} of ${entry.need}`}
+                  </span>
                 </li>
               ))}
             </ul>
@@ -277,230 +120,68 @@ export default function DashboardShell({
 
           <div className="glass-card dash-card">
             <div className="dash-card-head">
-              <h2 className="font-display font-bold">Recently saved</h2>
-              <button type="button" className="btn btn-ghost btn-sm" onClick={() => go("library")}>
-                Open library
-              </button>
+              <h2 className="font-display font-bold">Your ideas</h2>
+              <Link href="/ideas" className="btn btn-secondary btn-sm">
+                Idea board
+              </Link>
             </div>
-            {library.watchLater.length === 0 ? (
+            {myIdeas.length === 0 ? (
               <EmptyState
-                title="Nothing saved yet"
-                description="Use Save on any video to keep it here for later."
+                title="No ideas yet"
+                description="Post what you want to see next and other members can back it."
                 action={
-                  <Link href="/videos" className="btn btn-secondary btn-sm">
-                    Browse videos
+                  <Link href="/ideas" className="btn btn-primary btn-sm">
+                    Post an idea
                   </Link>
                 }
               />
             ) : (
-              <ul className="dash-list">
-                {library.watchLater.slice(0, 4).map((entry) => (
-                  <VideoLine key={entry.id} id={entry.id} meta={videosById[entry.id]} when={entry.at} />
-                ))}
-              </ul>
-            )}
-          </div>
-        </section>
-      )}
-
-      {tab === "library" && (
-        <section className="grid gap-4">
-          <div className="glass-card dash-card">
-            <div className="dash-card-head">
-              <h2 className="font-display font-bold">Watch later</h2>
-              <span className="badge badge-neutral">{counts.watchLater}</span>
-            </div>
-            {library.watchLater.length === 0 ? (
-              <EmptyState
-                title="Watch later is empty"
-                description="Save a video from its page and it shows up here."
-                action={
-                  <Link href="/videos" className="btn btn-secondary btn-sm">
-                    Find something to watch
-                  </Link>
-                }
-              />
-            ) : (
-              <ul className="dash-list">
-                {library.watchLater.map((entry) => (
-                  <VideoLine key={entry.id} id={entry.id} meta={videosById[entry.id]} when={entry.at}>
-                    <button
-                      type="button"
-                      className="btn btn-ghost btn-sm"
-                      onClick={() => removeSaved(entry.id)}
-                      disabled={busy === "watch:toggle"}
-                    >
-                      Remove
-                    </button>
-                  </VideoLine>
-                ))}
-              </ul>
-            )}
-          </div>
-
-          <div className="glass-card dash-card">
-            <div className="dash-card-head">
-              <h2 className="font-display font-bold">Playlists</h2>
-              <span className="badge badge-neutral">{counts.playlists}</span>
-            </div>
-            <form className="dash-inline-form" onSubmit={createPlaylist}>
-              <label className="field">
-                <span className="field-label">New playlist</span>
-                <input
-                  className="input"
-                  value={newPlaylist}
-                  maxLength={60}
-                  placeholder="e.g. Editing favourites"
-                  onChange={(event) => setNewPlaylist(event.target.value)}
-                />
-              </label>
-              <button type="submit" className="btn btn-primary btn-sm" disabled={busy === "playlist:create"}>
-                Create
-              </button>
-            </form>
-
-            {library.playlists.length === 0 ? (
-              <EmptyState
-                title="No playlists yet"
-                description="Group videos into your own collections — private until you make one public."
-              />
-            ) : (
-              <ul className="dash-playlists">
-                {library.playlists.map((playlist) => (
-                  <li key={playlist.id} className="dash-playlist">
-                    <div className="dash-playlist-head">
-                      <div>
-                        <p className="font-semibold">{playlist.name}</p>
-                        <p className="faint text-xs">
-                          {playlist.items.length} {playlist.items.length === 1 ? "video" : "videos"} ·{" "}
-                          {playlist.public ? "Public on your profile" : "Private"}
-                        </p>
+              <ul className="dash-apps">
+                {myIdeas.map((idea) => {
+                  const meta = ideaStatusMeta(idea.status);
+                  return (
+                    <li key={idea.id} className="dash-app">
+                      <div className="dash-app-head">
+                        <Link href="/ideas" className="font-semibold hover:underline">
+                          {idea.title}
+                        </Link>
+                        <span className={`badge ${meta.badge}`}>{meta.label}</span>
                       </div>
-                      <div className="flex flex-wrap gap-2">
-                        <button
-                          type="button"
-                          className="btn btn-secondary btn-sm"
-                          onClick={() => renamePlaylist(playlist)}
-                        >
-                          Rename
-                        </button>
-                        <button
-                          type="button"
-                          className="btn btn-secondary btn-sm"
-                          onClick={() => togglePlaylistPublic(playlist)}
-                        >
-                          {playlist.public ? "Make private" : "Make public"}
-                        </button>
-                        <button
-                          type="button"
-                          className="btn btn-danger btn-sm"
-                          onClick={() => deletePlaylist(playlist)}
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </div>
-                    {playlist.items.length === 0 ? (
-                      <p className="faint text-xs">Empty — add videos from any video page.</p>
-                    ) : (
-                      <ul className="dash-list">
-                        {playlist.items.map((videoId) => (
-                          <VideoLine key={videoId} id={videoId} meta={videosById[videoId]}>
-                            <button
-                              type="button"
-                              className="btn btn-ghost btn-sm"
-                              onClick={() => removePlaylistItem(playlist, videoId)}
-                            >
-                              Remove
-                            </button>
-                          </VideoLine>
-                        ))}
-                      </ul>
-                    )}
-                  </li>
-                ))}
+                      <p className="faint text-xs">
+                        {idea.backers} {idea.backers === 1 ? "backer" : "backers"}
+                        {idea.createdAt ? ` · posted ${formatDay(idea.createdAt)}` : ""}
+                      </p>
+                    </li>
+                  );
+                })}
               </ul>
             )}
           </div>
 
           <div className="glass-card dash-card">
             <div className="dash-card-head">
-              <h2 className="font-display font-bold">History</h2>
-              {library.history.length > 0 && (
-                <button type="button" className="btn btn-secondary btn-sm" onClick={clearHistory}>
-                  Clear history
-                </button>
-              )}
-            </div>
-            {!library.settings.historyOn ? (
-              <EmptyState
-                title="History is switched off"
-                description="Turn it back on in Settings to keep track of what you watch."
-              />
-            ) : library.history.length === 0 ? (
-              <EmptyState
-                title="No history yet"
-                description="Videos you open while signed in show up here, up to your daily limit."
-              />
-            ) : (
-              <ul className="dash-list">
-                {library.history.slice(0, 24).map((entry) => (
-                  <VideoLine key={entry.id} id={entry.id} meta={videosById[entry.id]} when={entry.at} />
-                ))}
-              </ul>
-            )}
-          </div>
-        </section>
-      )}
-
-      {tab === "community" && (
-        <section className="grid gap-4">
-          <div className="glass-card dash-card">
-            <div className="dash-card-head">
-              <h2 className="font-display font-bold">Public profile</h2>
-              <span className={`badge ${settings.profileVisible ? "badge-accepted" : "badge-neutral"}`}>
-                {settings.profileVisible ? "Live" : "Private"}
-              </span>
-            </div>
-            <p className="muted text-sm leading-relaxed">
-              A public profile shows your name, handle, photo and the playlists you mark public.
-              It never shows your email, phone number, watch later list or history.
-            </p>
-            <div className="flex flex-wrap gap-2">
-              <button type="button" className="btn btn-primary btn-sm" onClick={toggleProfile} disabled={busy === "settings:update"}>
-                {settings.profileVisible ? "Make my profile private" : "Make my profile public"}
-              </button>
-              {settings.profileVisible && (
-                <Link href={`/community/${profile.username}`} className="btn btn-secondary btn-sm">
-                  View my public profile
-                </Link>
-              )}
-            </div>
-          </div>
-
-          <div className="glass-card dash-card">
-            <div className="dash-card-head">
-              <h2 className="font-display font-bold">Playlists on your profile</h2>
+              <h2 className="font-display font-bold">Take part</h2>
               <span className="badge badge-neutral">
-                {library.playlists.filter((playlist) => playlist.public).length} public
+                {profileVisible ? "Profile live" : "Profile private"}
               </span>
             </div>
             <p className="muted text-sm leading-relaxed">
-              Playlists are private until you mark one public. Marking a playlist public only
-              publishes it when this switch is on and the playlist itself is public.
+              Polls, the calendar and the idea board live in the community section. Your public
+              profile is switched on or off from account settings.
             </p>
             <div className="flex flex-wrap gap-2">
-              <button
-                type="button"
-                className="btn btn-secondary btn-sm"
-                onClick={togglePublicPlaylists}
-                disabled={busy === "settings:update"}
-              >
-                {settings.publicPlaylists ? "Hide public playlists" : "Show public playlists"}
-              </button>
-              <button type="button" className="btn btn-ghost btn-sm" onClick={() => go("library")}>
-                Manage playlists
-              </button>
+              <Link href="/community" className="btn btn-primary btn-sm">
+                Open community
+              </Link>
+              <Link href="/polls" className="btn btn-secondary btn-sm">
+                Polls
+              </Link>
+              <Link href="/events" className="btn btn-secondary btn-sm">
+                Events
+              </Link>
+              <Link href="/positions" className="btn btn-secondary btn-sm">
+                Open positions
+              </Link>
             </div>
           </div>
         </section>
@@ -543,62 +224,6 @@ export default function DashboardShell({
               ))}
             </ul>
           )}
-        </section>
-      )}
-
-      {tab === "settings" && (
-        <section className="glass-card dash-card">
-          <div className="dash-card-head">
-            <h2 className="font-display font-bold">Library settings</h2>
-          </div>
-          <form className="dash-settings" onSubmit={saveSettings}>
-            <label className="dash-switch">
-              <input
-                type="checkbox"
-                checked={settings.historyOn}
-                onChange={(event) => setSettings({ ...settings, historyOn: event.target.checked })}
-              />
-              <span>
-                <span className="dash-switch-title">Keep my watch history</span>
-                <span className="faint text-xs block">
-                  Off means nothing new is recorded. Existing history stays until you clear it.
-                </span>
-              </span>
-            </label>
-
-            <label className="field">
-              <span className="field-label">Videos kept per day</span>
-              <input
-                className="input"
-                type="number"
-                min={10}
-                max={300}
-                value={settings.historyCap}
-                onChange={(event) => setSettings({ ...settings, historyCap: event.target.value })}
-              />
-              <span className="faint text-xs mt-1">
-                Between 10 and 300. Once a day hits the limit, new watches are not recorded.
-              </span>
-            </label>
-
-            <label className="dash-switch">
-              <input
-                type="checkbox"
-                checked={settings.publicPlaylists}
-                onChange={(event) => setSettings({ ...settings, publicPlaylists: event.target.checked })}
-              />
-              <span>
-                <span className="dash-switch-title">Show public playlists on my profile</span>
-                <span className="faint text-xs block">
-                  Only playlists you mark public appear. Your watch later and history never do.
-                </span>
-              </span>
-            </label>
-
-            <button type="submit" className="btn btn-primary btn-sm justify-self-start" disabled={busy === "settings:update"}>
-              {busy === "settings:update" ? "Saving…" : "Save settings"}
-            </button>
-          </form>
         </section>
       )}
     </div>

@@ -27,12 +27,12 @@ function whenLabel(event) {
   if (!event.endsAt) return startText;
   const end = new Date(event.endsAt);
   if (Number.isNaN(end.getTime())) return startText;
-  return `${startText} – ${end.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}`;
+  return `${startText} to ${end.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}`;
 }
 
 function EventCard({ event, past }) {
   const start = new Date(event.startsAt);
-  const day = Number.isNaN(start.getTime()) ? "–" : DAY.format(start);
+  const day = Number.isNaN(start.getTime()) ? "-" : DAY.format(start);
   const month = Number.isNaN(start.getTime()) ? "" : MONTH.format(start).toUpperCase();
 
   return (
@@ -78,7 +78,7 @@ export default async function EventsPage() {
           <p className="kicker">Events</p>
           <h1 className="display-lg mt-3 mb-4">Where to be.</h1>
           <p className="muted text-lg leading-relaxed">
-            Streams, premieres and meet-ups, soonest first. Nothing here is a maybe — only events
+            Streams, premieres and meet-ups, soonest first. Nothing here is a maybe, only events
             that are actually on the calendar.
           </p>
         </div>

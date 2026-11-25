@@ -67,7 +67,7 @@ export default function MemberRegister({
       <p className="kicker justify-center">Site account</p>
       <h1 className="font-display text-2xl font-bold mt-3 mb-2 text-center">Create an account</h1>
       <p className="muted text-sm leading-relaxed mb-6 text-center">
-        You need an account to apply for a role — it keeps one application per person and lets you
+        You need an account to apply for a role: it keeps one application per person and lets you
         follow your status afterwards.
       </p>
 

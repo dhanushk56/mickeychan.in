@@ -75,9 +75,9 @@ function countBy(entries, key) {
 }
 
 function timeAgo(iso) {
-  if (!iso) return "—";
+  if (!iso) return "-";
   const diff = Date.now() - new Date(iso).getTime();
-  if (Number.isNaN(diff)) return "—";
+  if (Number.isNaN(diff)) return "-";
   const mins = Math.floor(diff / 60000);
   if (mins < 1) return "just now";
   if (mins < 60) return `${mins}m ago`;
@@ -89,9 +89,9 @@ function timeAgo(iso) {
 }
 
 function formatDateTime(iso) {
-  if (!iso) return "—";
+  if (!iso) return "-";
   const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return "—";
+  if (Number.isNaN(date.getTime())) return "-";
   return date.toLocaleString(undefined, {
     dateStyle: "medium",
     timeStyle: "short",
@@ -241,7 +241,7 @@ export default function AuditLog({ currentUser }) {
             </span>
           </div>
           <p className="faint text-xs mt-1 leading-relaxed">
-            Every sign-in — admin or site account — and every action taken here or on the site,
+            Every sign-in (admin or site account) and every action taken here or on the site,
             newest first. Times use your own local clock. The log is append-only: there are no
             controls to edit or delete entries, by design.
           </p>
@@ -330,7 +330,7 @@ export default function AuditLog({ currentUser }) {
             <span className="faint text-xs">
               {filtersActive
                 ? `${filtered.length} of ${activity.length} match`
-                : "No filters applied — every recorded action is listed"}
+                : "No filters applied, every recorded action is listed"}
             </span>
           </div>
         </div>
@@ -371,7 +371,7 @@ export default function AuditLog({ currentUser }) {
                     {formatDateTime(new Date(entry.at).toISOString())}
                   </span>
                 </div>
-                <p className="text-sm mt-2 whitespace-pre-wrap break-words">{entry.detail || "—"}</p>
+                <p className="text-sm mt-2 whitespace-pre-wrap break-words">{entry.detail || "-"}</p>
                 {(entry.ip || entry.city || entry.country) && (
                   <p className="faint text-xs mt-1">
                     {[entry.ip, entry.city, entry.country, entry.timezone].filter(Boolean).join(" · ")}

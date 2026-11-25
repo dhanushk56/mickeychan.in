@@ -62,7 +62,7 @@ export default async function ApplyPage({ params }) {
     return (
       <Card kicker="Not ready" title="This form has no questions yet.">
         <p className="muted text-sm">
-          Nothing to fill in yet — the team is still putting this one together. Check back soon.
+          Nothing to fill in yet. The team is still putting this one together. Check back soon.
         </p>
       </Card>
     );
@@ -166,7 +166,7 @@ export default async function ApplyPage({ params }) {
         {gate.status === "denied" && gate.canApply && (
           <div className="grid gap-2 mb-4">
             <p className="badge badge-neutral self-start">
-              Your last application was rejected — you&apos;re free to apply again.
+              Your last application was rejected, so you&apos;re free to apply again.
             </p>
             <p className="muted text-sm whitespace-pre-wrap">
               {gate.submission.reviewNote || STATUS_TEXT.denied}

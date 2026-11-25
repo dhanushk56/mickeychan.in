@@ -25,7 +25,7 @@ export default async function JoinPage() {
             <p className="kicker">Start a conversation</p>
             <h1 className="font-display text-2xl font-bold">Log in to send a message</h1>
             <p className="muted text-sm leading-relaxed">
-              Messages are tied to an account so the team always knows who they&apos;re replying to —
+              Messages are tied to an account so the team always knows who they&apos;re replying to.
               and so an application&apos;s accept or reject always lands on the right person.
             </p>
             <div className="flex flex-wrap gap-2 mt-2">

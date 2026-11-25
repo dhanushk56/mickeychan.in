@@ -55,7 +55,7 @@ export default function ContactForm({ defaultName = "", defaultEmail = "", email
     return (
       <div className="glass-card p-6 md:p-8 grid gap-3 animate-rise" role="status">
         <span className="badge badge-accepted">Message sent</span>
-        <h2 className="font-display text-2xl font-bold">Thanks — that reached us.</h2>
+        <h2 className="font-display text-2xl font-bold">Thanks, that reached us.</h2>
         <p className="muted text-sm">
           Your reference is{" "}
           <strong className="font-semibold" style={{ color: "var(--text)" }}>
@@ -144,7 +144,7 @@ export default function ContactForm({ defaultName = "", defaultEmail = "", email
           value={fields.message}
           onChange={(event) => update("message", event.target.value)}
           maxLength={MAX_MESSAGE}
-          placeholder="Tell us what you need — the more context, the better."
+          placeholder="Tell us what you need. The more context, the better."
           required
         />
         <span className="faint text-xs">

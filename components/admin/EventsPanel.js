@@ -35,7 +35,7 @@ export default function EventsPanel({ canCreate, canDelete }) {
     try {
       const response = await fetch("/api/admin/events", { cache: "no-store" });
       if (response.status === 401) {
-        setError("Your admin session expired — sign in again.");
+        setError("Your admin session expired. Sign in again.");
         return;
       }
       if (!response.ok) throw new Error("Could not load events.");

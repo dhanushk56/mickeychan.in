@@ -24,8 +24,8 @@ export default function Countdown({ to, className = "", expiredLabel = "now" }) 
   }, []);
 
   const target = new Date(to).getTime();
-  if (Number.isNaN(target)) return <span className={className}>—</span>;
-  if (now === null) return <span className={className}>—</span>;
+  if (Number.isNaN(target)) return <span className={className}>-</span>;
+  if (now === null) return <span className={className}>-</span>;
 
   const remaining = target - now;
   if (remaining <= 0) return <span className={className}>{expiredLabel}</span>;

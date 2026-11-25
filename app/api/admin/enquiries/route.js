@@ -48,7 +48,7 @@ export async function PATCH(request) {
     await addNotification(updated.memberUsername, {
       kind: "message",
       title: `Your message is ${statusMeta(updated.status).label.toLowerCase()}`,
-      body: `${updated.reference || "Your enquiry"} — ${updated.subject || "sent from the contact page"}`,
+      body: `${updated.reference || "Your enquiry"}: ${updated.subject || "sent from the contact page"}`,
       href: "/contact",
     });
   }

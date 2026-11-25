@@ -1,13 +1,13 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { findMember } from "@/lib/members";
-import { readSettings, getPlaylist, listPlaylists } from "@/lib/library";
-import { getVideos } from "@/lib/content";
+import { readProfileSettings } from "@/lib/profile";
+import { ideaStatusMeta, listIdeas, rankIdeas } from "@/lib/ideas";
 
 export const dynamic = "force-dynamic";
 
 // A public profile is opt-in: it only exists while the member has switched it on
-// in their dashboard, and it never shows an email address or phone number.
+// in account settings, and it never shows an email address or phone number.
 function handleOf(value) {
   return String(value || "").trim().toLowerCase();
 }
@@ -23,7 +23,7 @@ async function loadProfile(rawHandle) {
   if (!handle) return null;
   const member = await findMember(handle);
   if (!member) return null;
-  const settings = await readSettings(handle);
+  const settings = await readProfileSettings(handle);
   if (!settings.profileVisible) return null;
   return { member, settings };
 }
@@ -35,7 +35,7 @@ export async function generateMetadata({ params }) {
   const name = profile.member.name || profile.member.username;
   return {
     title: `${name} (@${profile.member.username})`,
-    description: `${name}'s public profile on MickeyChan.in — public playlists and community details.`,
+    description: `${name}'s public profile on MickeyChan.in: the ideas they posted and backed.`,
     alternates: { canonical: `/community/${profile.member.username}` },
   };
 }
@@ -45,96 +45,76 @@ export default async function CommunityProfilePage({ params }) {
   const profile = await loadProfile(username);
   if (!profile) notFound();
 
-  const { member, settings } = profile;
+  const { member } = profile;
   const name = member.name || member.username;
   const joined = joinedLabel(member);
 
-  let playlists = [];
-  if (settings.publicPlaylists) {
-    const summaries = await listPlaylists(member.username);
-    const docs = await Promise.all(
-      summaries.filter((entry) => entry.public).map((entry) => getPlaylist(member.username, entry.id))
-    );
-    playlists = docs.filter((doc) => doc && doc.public);
-  }
-
-  const badges = [];
-  if (playlists.length >= 1) badges.push("Shared a playlist");
-  if (playlists.length >= 3) badges.push("Curator");
-
-  const videos = playlists.length > 0 ? await getVideos() : [];
-  const byId = new Map(videos.map((video) => [video.id, video]));
+  const ideas = await listIdeas();
+  const posted = rankIdeas(ideas.filter((idea) => idea.author === member.username));
+  const backed = ideas.filter(
+    (idea) => Array.isArray(idea.votes) && idea.votes.includes(member.username)
+  ).length;
 
   return (
     <main className="page">
-      <div className="shell">
-        <Link href="/videos" className="faint text-xs hover:underline">
-          ← Back to the site
+      <div className="shell" style={{ maxWidth: "52rem" }}>
+        <Link href="/community" className="faint text-xs hover:underline">
+          ← Back to community
         </Link>
 
         <header className="glass-card community-head">
           <span className="avatar-frame" aria-hidden="true">
-            {member.avatar ? <img src={member.avatar} alt="" /> : (member.initials || name.slice(0, 2))}
+            {member.avatar ? <img src={member.avatar} alt="" /> : member.initials || name.slice(0, 2)}
           </span>
           <div className="community-id">
-            <p className="kicker">Community</p>
+            <p className="kicker">Member</p>
             <h1 className="display-lg">{name}</h1>
             <p className="muted text-sm">@{member.username}</p>
             {joined && <p className="faint text-xs">Member since {joined}</p>}
-            {badges.length > 0 && (
-              <ul className="community-badges">
-                {badges.map((badge) => (
-                  <li key={badge} className="badge badge-accepted">
-                    {badge}
-                  </li>
-                ))}
-              </ul>
-            )}
           </div>
         </header>
 
-        <section className="glass-card community-card">
+        <div className="dash-stats profile-stats">
+          <div className="dash-stat">
+            <span className="dash-stat-value">{posted.length}</span>
+            <span className="dash-stat-label">Ideas posted</span>
+          </div>
+          <div className="dash-stat">
+            <span className="dash-stat-value">{backed}</span>
+            <span className="dash-stat-label">Ideas backed</span>
+          </div>
+        </div>
+
+        <section className="glass-card dash-card">
           <div className="dash-card-head">
-            <h2 className="font-display font-bold">Public playlists</h2>
-            <span className="badge badge-neutral">{playlists.length}</span>
+            <h2 className="font-display font-bold">Ideas from {name}</h2>
+            <Link href="/ideas" className="btn btn-secondary btn-sm">
+              Idea board
+            </Link>
           </div>
 
-          {!settings.publicPlaylists || playlists.length === 0 ? (
+          {posted.length === 0 ? (
             <p className="muted text-sm">
-              {name} hasn&apos;t shared a playlist yet. Profiles are opt-in and only show what
-              the member chooses to publish.
+              {name} hasn&apos;t posted an idea yet. Profiles are opt-in and show only what the
+              member has chosen to publish.
             </p>
           ) : (
-            <div className="community-playlists">
-              {playlists.map((playlist) => (
-                <article key={playlist.id} className="community-playlist">
-                  <h3 className="font-semibold">{playlist.name}</h3>
-                  <p className="faint text-xs">
-                    {playlist.items.length} {playlist.items.length === 1 ? "video" : "videos"}
-                  </p>
-                  <ul className="dash-list">
-                    {playlist.items.slice(0, 8).map((videoId) => {
-                      const video = byId.get(videoId);
-                      return (
-                        <li key={videoId} className="dash-video">
-                          <Link href={`/videos/${videoId}`} className="dash-video-main">
-                            <span
-                              className="dash-video-thumb"
-                              data-short={video?.type === "short"}
-                              style={video?.thumbnail ? { backgroundImage: `url(${video.thumbnail})` } : undefined}
-                              aria-hidden="true"
-                            />
-                            <span className="dash-video-text">
-                              <span className="dash-video-title">{video?.title || "Video"}</span>
-                            </span>
-                          </Link>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </article>
-              ))}
-            </div>
+            <ul className="dash-apps">
+              {posted.map((idea) => {
+                const meta = ideaStatusMeta(idea.status);
+                return (
+                  <li key={idea.id} className="dash-app">
+                    <div className="dash-app-head">
+                      <span className="font-semibold">{idea.title}</span>
+                      <span className={`badge ${meta.badge}`}>{meta.label}</span>
+                    </div>
+                    <p className="faint text-xs">
+                      {idea.votes.length} {idea.votes.length === 1 ? "backer" : "backers"}
+                    </p>
+                  </li>
+                );
+              })}
+            </ul>
           )}
         </section>
       </div>

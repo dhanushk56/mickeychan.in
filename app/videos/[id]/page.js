@@ -1,12 +1,8 @@
 import Link from "next/link";
-import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import { channels, getVideo, getVideos, relatedVideos } from "@/lib/content";
 import { isoDurationFromSeconds } from "@/lib/youtube";
 import VideoShare from "@/components/videos/VideoShare";
-import SaveMenu from "@/components/videos/SaveMenu";
-import { memberFromCookieStore } from "@/lib/members";
-import { recordHistory } from "@/lib/library";
 
 export const dynamic = "force-dynamic";
 
@@ -18,7 +14,7 @@ function subtitle(video) {
   const description = String(video?.description || "").trim();
   if (description) return description.slice(0, 300);
   const channel = channelOf(video);
-  return `${video?.title || "Video"} — ${channel?.name || "Mickey Chan"} on YouTube.`;
+  return `${video?.title || "Video"} by ${channel?.name || "Mickey Chan"} on YouTube.`;
 }
 
 export async function generateMetadata({ params }) {
@@ -52,10 +48,6 @@ export default async function VideoPage({ params }) {
   const all = await getVideos();
   const video = all.find((entry) => entry.id === id) || (await getVideo(id));
   if (!video) notFound();
-
-  // Opening a video while signed in is what fills the dashboard's history.
-  const session = await memberFromCookieStore(cookies());
-  if (session) await recordHistory(session.username, video.id);
 
   const channel = channelOf(video);
   const related = relatedVideos(all, video, 8);
@@ -123,7 +115,6 @@ export default async function VideoPage({ params }) {
 
             <div className="video-actions">
               <VideoShare videoId={video.id} title={video.title} url={video.url} />
-              <SaveMenu videoId={video.id} />
             </div>
 
             {video.description ? (
@@ -137,7 +128,7 @@ export default async function VideoPage({ params }) {
                 <p className="faint text-sm mt-2">
                   {video.source === "api"
                     ? "This video has no description on YouTube."
-                    : "The description is only available when YouTube's API is configured — open the video on YouTube to read it."}
+                    : "The description is only available when YouTube's API is configured. Open the video on YouTube to read it."}
                 </p>
               </div>
             )}

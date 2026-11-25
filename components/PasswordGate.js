@@ -176,7 +176,7 @@ export default function PasswordGate({ area = "This area" }) {
             <p className="muted text-sm mt-2 leading-relaxed">{denied}</p>
             <p className="faint text-xs mt-2 leading-relaxed">
               The console signs you in as your own site account. Only accounts that have been given
-              access can open it — if you think that should be you, ask the site owner to grant it.
+              access can open it. If you think that should be you, ask the site owner to grant it.
             </p>
             <div className="flex flex-wrap gap-2 mt-5">
               <button type="button" className="btn btn-primary btn-sm" onClick={dismissDenied}>

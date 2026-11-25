@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 export const metadata = {
   title: "Videos",
   description:
-    "Every Mickey Chan upload — long-form videos and shorts, searchable, filterable and playable right here.",
+    "Every Mickey Chan upload, long-form videos and shorts, searchable, filterable and playable right here.",
   alternates: { canonical: "/videos" },
 };
 
@@ -65,7 +65,7 @@ export default async function VideosPage({ searchParams }) {
 
         {savedOnly && (
           <p className="badge badge-pending mb-4">
-            YouTube is unreachable right now — showing the saved list, without live view counts or dates.
+            YouTube is unreachable right now. Showing the saved list, without live view counts or dates.
           </p>
         )}
 

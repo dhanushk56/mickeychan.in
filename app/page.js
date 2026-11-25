@@ -14,7 +14,7 @@ const MARQUEE = ["Challenges", "Shorts", "ARGs", "Collabs", "Storylines", "Commu
 const QUESTIONS = [
   {
     q: "Where do I watch the full videos?",
-    a: "Every upload lives on the videos page and plays right here — no redirect to YouTube unless you want one. The channel archive is also on @mickeychaan.",
+    a: "Every upload lives on the videos page and plays right here, with no redirect to YouTube unless you want one. The channel archive is also on @mickeychaan.",
   },
   {
     q: "How do I apply for a role?",
@@ -26,7 +26,7 @@ const QUESTIONS = [
   },
   {
     q: "Do shorts get their own feed?",
-    a: "Shorts are mixed into the videos library with a Shorts filter. They are the quick ones — guessing games, edits, and clips pulled straight from streams.",
+    a: "Shorts are mixed into the video list with a Shorts filter. They are the quick ones: guessing games, edits, and clips pulled straight from streams.",
   },
 ];
 
@@ -312,8 +312,8 @@ export default async function Home() {
                 title={`${channel.label} on YouTube`}
               >
                 <span className="home-band-label">Subscribers</span>
-                <span className="home-count" data-count={channel.subscribers || "—"}>
-                  {channel.subscribers || "—"}
+                <span className="home-count" data-count={channel.subscribers || "-"}>
+                  {channel.subscribers || "-"}
                 </span>
                 <span className="home-band-sub">@{channel.handle} ↗</span>
               </a>
@@ -349,7 +349,7 @@ export default async function Home() {
             {[
               {
                 title: "Long-form challenges",
-                body: "One rule, one goal, and thirty minutes of things going sideways — random teleports, blind runs, and servers that were not built for this.",
+                body: "One rule, one goal, and thirty minutes of things going sideways: random teleports, blind runs, and servers that were not built for this.",
                 meta: [`${longForm.length} videos`, "13–30 min", "Weekly-ish"],
                 href: "/videos",
                 cta: "Watch the episodes",
@@ -363,7 +363,7 @@ export default async function Home() {
               },
               {
                 title: "ARG stories",
-                body: "Hidden codes, cryptic clues and puzzles that spill off the screen — the storylines you piece together with everyone else watching.",
+                body: "Hidden codes, cryptic clues and puzzles that spill off the screen: the storylines you piece together with everyone else watching.",
                 meta: ["Hidden clues", "Puzzles", "Story arcs"],
                 href: "/videos",
                 cta: "Follow the story",
@@ -441,13 +441,13 @@ export default async function Home() {
             <h2 className="home-story-quote">Minecraft, but make it a story.</h2>
             <p className="muted leading-relaxed">
               Mickey Chan makes Minecraft videos that start with a simple question and end
-              somewhere ridiculous — testing clickbait ideas, surviving cursed servers, and
+              somewhere ridiculous: testing clickbait ideas, surviving cursed servers, and
               turning one small rule into a whole episode.
             </p>
             <p className="muted leading-relaxed">
               Around the episodes there is the rest of it: shorts cut from the funniest moments,
               collabs with friends across the community, and a team made up of editors, builders,
-              and moderators who keep the worlds running. New ideas are always welcome — the
+              and moderators who keep the worlds running. New ideas are always welcome, and the
               contact form is open.
             </p>
             <div className="home-tags">
@@ -518,7 +518,7 @@ export default async function Home() {
               <div>
                 <p className="kicker">Join the team</p>
                 <h2 className="display-lg mt-2">
-                  {openRoles.length > 0 ? "We're hiring right now." : "No open roles — yet."}
+                  {openRoles.length > 0 ? "We're hiring right now." : "No open roles yet."}
                 </h2>
               </div>
               <Link href="/positions" className="btn btn-secondary btn-sm">
@@ -579,7 +579,7 @@ export default async function Home() {
           <p className="kicker justify-center">Collaborations &amp; community</p>
           <h2 className="home-cta-title">Have something in mind?</h2>
           <p className="muted max-w-xl mx-auto leading-relaxed">
-            Sponsorships, collabs, editing help, or just a hello — send a message and it lands
+            Sponsorships, collabs, editing help, or just a hello: send a message and it lands
             straight in the inbox.
           </p>
           <div className="home-actions home-actions-center">

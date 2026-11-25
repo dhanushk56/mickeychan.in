@@ -35,7 +35,7 @@ export default function PollsPanel({ canCreate, canDelete }) {
     try {
       const response = await fetch("/api/admin/polls", { cache: "no-store" });
       if (response.status === 401) {
-        setError("Your admin session expired — sign in again.");
+        setError("Your admin session expired. Sign in again.");
         return;
       }
       if (!response.ok) throw new Error("Could not load polls.");
@@ -194,7 +194,7 @@ export default function PollsPanel({ canCreate, canDelete }) {
           </label>
 
           <label className="field">
-            <span className="field-label">Options — one per line</span>
+            <span className="field-label">Options, one per line</span>
             <textarea
               className="textarea"
               rows={4}

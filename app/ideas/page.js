@@ -9,7 +9,7 @@ export const revalidate = 0;
 
 export const metadata = {
   title: "Idea board",
-  description: "Suggest what to make next and back the ideas you want to see — the most-backed ones rise to the top.",
+  description: "Suggest what to make next and back the ideas you want to see. The most-backed ones rise to the top.",
   alternates: { canonical: "/ideas" },
 };
 

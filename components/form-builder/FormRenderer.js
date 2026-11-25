@@ -192,7 +192,7 @@ export default function FormRenderer({ form, mode = "fill", onSubmit, submitting
       return;
     }
     if (mode === "preview") {
-      setPreviewNotice("Preview only — responses aren't saved.");
+      setPreviewNotice("Preview only. Responses aren't saved.");
       return;
     }
     onSubmit?.(responses);

@@ -11,7 +11,7 @@ const { listRecords, readRecordsMap, saveRecord, deleteRecord, clearRecords } = 
 const results = [];
 function check(name, ok, detail = "") {
   results.push(ok);
-  console.log(`${ok ? "PASS" : "FAIL"}  ${name}${detail ? `  — ${detail}` : ""}`);
+  console.log(`${ok ? "PASS" : "FAIL"}  ${name}${detail ? `  (${detail})` : ""}`);
 }
 
 const stamp = (i) => new Date(2026, 0, 1, 0, 0, i).toISOString();

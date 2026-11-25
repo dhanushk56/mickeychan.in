@@ -25,10 +25,10 @@ import BackToTop from "@/components/BackToTop";
 export const metadata = {
   title: {
     default: "Mickey Chan",
-    template: "%s — Mickey Chan",
+    template: "%s | Mickey Chan",
   },
   description:
-    "The official home of Mickey Chan — gamer, streamer, and storyteller. Watch the latest videos and shorts, follow the channel, explore open roles, and apply to join the team.",
+    "The official home of Mickey Chan: gamer, streamer and storyteller. Watch the latest videos and shorts, follow the channel, explore open roles, and apply to join the team.",
   metadataBase: new URL("https://mickeychan.in"),
   icons: {
     icon: [{ url: "/mickey-logo.png", type: "image/png" }],

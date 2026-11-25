@@ -107,7 +107,7 @@ export default function FormsList({ initialForms, currentUser }) {
                       </span>
                     </div>
                     <p className="faint text-xs mt-1">
-                      Updated {form.updatedAt ? new Date(form.updatedAt).toLocaleString() : "—"}
+                      Updated {form.updatedAt ? new Date(form.updatedAt).toLocaleString() : "-"}
                     </p>
                   </Link>
                   <div className="flex flex-wrap items-center gap-2">

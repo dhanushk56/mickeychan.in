@@ -28,7 +28,7 @@ const EMPTY_DRAFT = {
 
 function formatWhen(iso) {
   const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return "—";
+  if (Number.isNaN(date.getTime())) return "-";
   return date.toLocaleString(undefined, {
     dateStyle: "medium",
     timeStyle: "short",
@@ -61,7 +61,7 @@ export default function AnnouncementsPanel() {
     try {
       const response = await fetch("/api/admin/announcements", { cache: "no-store" });
       if (response.status === 401) {
-        setError("Your admin session expired — lock the console and sign in again.");
+        setError("Your admin session expired. Lock the console and sign in again.");
         return;
       }
       if (!response.ok) throw new Error("Could not load the announcements.");
@@ -100,7 +100,7 @@ export default function AnnouncementsPanel() {
       if (!response.ok) throw new Error(result.error || "Could not post that announcement.");
       setDraft(EMPTY_DRAFT);
       toast.push(
-        `Posted — stays current for ${hoursLabel(Number(draft.windowHours))}, then moves to past on its own.`
+        `Posted. It stays current for ${hoursLabel(Number(draft.windowHours))}, then moves to past on its own.`
       );
       load();
     } catch (err) {
@@ -147,7 +147,7 @@ export default function AnnouncementsPanel() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="muted text-sm max-w-xl">
           Every announcement runs for the number of hours you set, then moves to Past on its own.
-          Priority and emergency notices are only ranked higher while they run — they run out of
+          Priority and emergency notices are only ranked higher while they run. They run out of
           time like everything else.
         </p>
         <button type="button" className="btn btn-secondary btn-sm" onClick={load} disabled={loading}>
@@ -264,7 +264,7 @@ export default function AnnouncementsPanel() {
         </div>
 
         <p className="faint text-xs leading-relaxed">
-          {meta.note} When the time you set runs out it moves to Past announcements on its own —
+          {meta.note} When the time you set runs out it moves to Past announcements on its own.
           there is no fixed 24-hour window, and nothing to switch off by hand. 24 is one day, 168
           is one week.
         </p>

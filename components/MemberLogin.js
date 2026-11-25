@@ -52,7 +52,7 @@ export default function MemberLogin({
 
       {!hasAccounts && (
         <p className="badge badge-pending mb-4 w-full justify-center" role="alert">
-          No accounts exist yet — create one below.
+          No accounts exist yet. Create one below.
         </p>
       )}
 

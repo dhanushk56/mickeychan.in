@@ -29,9 +29,9 @@ const STAGE_ACTIONS = [
 ];
 
 function timeAgo(iso) {
-  if (!iso) return "—";
+  if (!iso) return "-";
   const diff = Date.now() - new Date(iso).getTime();
-  if (Number.isNaN(diff)) return "—";
+  if (Number.isNaN(diff)) return "-";
   const mins = Math.floor(diff / 60000);
   if (mins < 1) return "just now";
   if (mins < 60) return `${mins}m ago`;
@@ -43,9 +43,9 @@ function timeAgo(iso) {
 }
 
 function formatDateTime(iso) {
-  if (!iso) return "—";
+  if (!iso) return "-";
   const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return "—";
+  if (Number.isNaN(date.getTime())) return "-";
   return date.toLocaleString(undefined, {
     dateStyle: "medium",
     timeStyle: "short",
@@ -54,8 +54,8 @@ function formatDateTime(iso) {
 }
 
 function formatValue(value) {
-  if (Array.isArray(value)) return value.join(", ") || "—";
-  if (value === undefined || value === null || value === "") return "—";
+  if (Array.isArray(value)) return value.join(", ") || "-";
+  if (value === undefined || value === null || value === "") return "-";
   return String(value);
 }
 
@@ -698,7 +698,7 @@ export default function AdminDashboard({ currentUser }) {
       setError("");
       setNotice(
         result.renamed
-          ? `Saved — @${account.username} is now @${result.member?.username}.`
+          ? `Saved. @${account.username} is now @${result.member?.username}.`
           : `Saved the details for @${result.member?.username || account.username}.`
       );
       load();
@@ -748,7 +748,7 @@ export default function AdminDashboard({ currentUser }) {
     } else {
       const answer = await askPrompt({
         title: "Block this account from forms?",
-        description: `@${account.username} won't be able to submit anything — every form, new or existing, and the join us message — until you unblock them.`,
+        description: `@${account.username} won't be able to submit anything (every form, new or existing, and the join us message) until you unblock them.`,
         label: "Reason (optional)",
         placeholder: "e.g. spamming applications",
         confirmLabel: "Block forms",
@@ -796,7 +796,7 @@ export default function AdminDashboard({ currentUser }) {
       if (!response.ok) throw new Error(result.error || "Could not create that account.");
       setError("");
       setNotice(
-        `Account @${result.member?.username || newAccount.username} created — give them the password you set.`
+        `Account @${result.member?.username || newAccount.username} created. Give them the password you set.`
       );
       setNewAccount({ username: "", name: "", email: "", phone: "", password: "" });
       load();
@@ -878,7 +878,7 @@ export default function AdminDashboard({ currentUser }) {
       setCopied(id);
       setTimeout(() => setCopied(""), 2000);
     } catch {
-      setNotice("Copy failed — select the link manually.");
+      setNotice("Copy failed. Select the link manually.");
     }
   }
 
@@ -1279,7 +1279,7 @@ export default function AdminDashboard({ currentUser }) {
                       <p className="faint text-xs mt-1">
                         {form.submissions || 0} submissions
                         {form.pending ? ` · ${form.pending} pending` : ""} · updated{" "}
-                        {form.updatedAt ? timeAgo(form.updatedAt) : "—"}
+                        {form.updatedAt ? timeAgo(form.updatedAt) : "-"}
                       </p>
                     </Link>
                     <div className="flex flex-wrap items-center gap-2">

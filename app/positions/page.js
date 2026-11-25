@@ -32,7 +32,7 @@ function StatusBlock({ gate, member }) {
   if (!member) {
     return (
       <p className="faint text-sm">
-        Log in to apply — your application, its status and any reapply timer stay on your account.
+        Log in to apply. Your application, its status and any reapply timer stay on your account.
       </p>
     );
   }
@@ -40,7 +40,7 @@ function StatusBlock({ gate, member }) {
   if (EMAIL_VERIFICATION_REQUIRED && !member.emailVerified && gate.status === "none") {
     return (
       <p className="faint text-sm">
-        Verify your email address to apply — a confirmed address keeps one real person per
+        Verify your email address to apply. A confirmed address keeps one real person per
         application.
       </p>
     );
@@ -62,7 +62,7 @@ function StatusBlock({ gate, member }) {
 
       {gate.status === "denied" &&
         (gate.canApply ? (
-          <p className="muted text-sm">Your cooldown is over — you can apply again now.</p>
+          <p className="muted text-sm">Your cooldown is over. You can apply again now.</p>
         ) : (
           <p className="muted text-sm">
             You can reapply in{" "}
@@ -102,7 +102,7 @@ export default async function PositionsPage() {
           <p className="kicker">Join the team</p>
           <h1 className="display-lg mt-3 mb-4">Open Positions</h1>
           <p className="muted text-lg leading-relaxed">
-            Roles we&apos;re currently looking to fill. Each listing opens a short application form —
+            Roles we&apos;re currently looking to fill. Each listing opens a short application form.
             answers go straight to the review queue.
           </p>
           {!member && (
@@ -179,7 +179,7 @@ export default async function PositionsPage() {
           <div>
             <p className="font-display text-lg font-bold">Nothing fits?</p>
             <p className="muted text-sm mt-1">
-              Tell us what you&apos;d bring to the channel — we read everything.
+              Tell us what you&apos;d bring to the channel. We read everything.
             </p>
           </div>
           <Link href="/join" className="btn btn-primary">

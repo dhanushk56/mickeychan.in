@@ -10,7 +10,7 @@ export const revalidate = 0;
 
 export const metadata = {
   title: "Polls",
-  description: "Quick votes from the community — what to cover next, which clips to revisit, and more.",
+  description: "Quick votes from the community: what to cover next, which clips to revisit, and more.",
   alternates: { canonical: "/polls" },
 };
 

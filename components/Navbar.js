@@ -109,7 +109,7 @@ export default function Navbar() {
                     data-active={isActive("/my-account")}
                     data-open={accountOpen}
                     title="My account"
-                    aria-label={`My account — ${member.name || member.username}`}
+                    aria-label={`My account, ${member.name || member.username}`}
                     aria-haspopup="true"
                     aria-expanded={accountOpen}
                     aria-controls="nav-account-menu"

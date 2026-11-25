@@ -165,7 +165,7 @@ export async function PATCH(request) {
     area: "admin",
     action: "role-edited",
     username: gate.access.username,
-    detail: `Edited the role “${updated.name}” — ${updated.permissions.length} permission${updated.permissions.length === 1 ? "" : "s"}`,
+    detail: `Edited the role “${updated.name}”: ${updated.permissions.length} permission${updated.permissions.length === 1 ? "" : "s"}`,
     request,
   });
 
@@ -204,7 +204,7 @@ export async function DELETE(request) {
     area: "admin",
     action: "role-deleted",
     username: gate.access.username,
-    detail: `Deleted the role “${target.name}”${moved ? ` — ${moved} admin${moved === 1 ? "" : "s"} moved to Viewer` : ""}`,
+    detail: `Deleted the role “${target.name}”${moved ? `: ${moved} admin${moved === 1 ? "" : "s"} moved to Viewer` : ""}`,
     request,
   });
 

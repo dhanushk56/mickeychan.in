@@ -15,7 +15,7 @@ export default function Error({ error, reset }) {
           <p className="kicker">Something broke</p>
           <h1 className="display-lg">That didn&apos;t load.</h1>
           <p className="muted text-lg leading-relaxed">
-            The page hit an error while rendering. Trying again usually sorts it out — if it keeps
+            The page hit an error while rendering. Trying again usually sorts it out. If it keeps
             happening, tell us through the contact page.
           </p>
           <div className="flex flex-wrap gap-2 mt-2">

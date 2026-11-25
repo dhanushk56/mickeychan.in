@@ -80,8 +80,45 @@ export default function AccountPanel({ profile, verificationRequired = true }) {
   const [photoMenu, setPhotoMenu] = useState(false);
   const [enlarged, setEnlarged] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [profileVisible, setProfileVisible] = useState(false);
+  const [profileBusy, setProfileBusy] = useState(false);
 
   useEffect(() => setMounted(true), []);
+
+  useEffect(() => {
+    let alive = true;
+    fetch("/api/profile", { cache: "no-store" })
+      .then((response) => (response.ok ? response.json() : null))
+      .then((data) => {
+        if (alive && data?.settings) setProfileVisible(data.settings.profileVisible === true);
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  async function toggleProfile() {
+    setProfileBusy(true);
+    setError("");
+    setNotice("");
+    try {
+      const response = await fetch("/api/profile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ visible: !profileVisible }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || "That didn't save. Try again.");
+      const visible = data.settings?.profileVisible === true;
+      setProfileVisible(visible);
+      setNotice(visible ? "Your public profile is live." : "Your public profile is private again.");
+    } catch (problem) {
+      setError(problem.message);
+    } finally {
+      setProfileBusy(false);
+    }
+  }
 
   const locked = current.canChange === false;
   const nextChange = formatDate(current.nextChangeAt);
@@ -330,6 +367,41 @@ export default function AccountPanel({ profile, verificationRequired = true }) {
           </Link>
         </div>
       )}
+
+      <div className="glass-card account-card animate-rise">
+        <div className="flex items-center justify-between gap-3 mb-1">
+          <p className="kicker">Public profile</p>
+          <span className={`badge ${profileVisible ? "badge-accepted" : "badge-neutral"}`}>
+            {profileVisible ? "Live" : "Private"}
+          </span>
+        </div>
+        <p className="muted text-sm leading-relaxed mt-2">
+          A public profile shows your name, handle, photo and the ideas you have posted. It never
+          shows your email, phone number or applications.
+        </p>
+        <div className="flex flex-wrap gap-2 mt-3">
+          <button
+            type="button"
+            className="btn btn-primary btn-sm"
+            onClick={toggleProfile}
+            disabled={profileBusy}
+          >
+            {profileBusy
+              ? "Saving…"
+              : profileVisible
+                ? "Make my profile private"
+                : "Make my profile public"}
+          </button>
+          {profileVisible && (
+            <Link
+              href={`/community/${current.username}`}
+              className="btn btn-secondary btn-sm"
+            >
+              View my public profile
+            </Link>
+          )}
+        </div>
+      </div>
 
       {(error || notice) && (
         <p
@@ -583,7 +655,7 @@ export default function AccountPanel({ profile, verificationRequired = true }) {
 
             <div className="account-row">
               <span className="account-label">Joined</span>
-              <span className="account-value">{joined || "—"}</span>
+              <span className="account-value">{joined || "-"}</span>
               <span className="account-lock" />
             </div>
           </div>

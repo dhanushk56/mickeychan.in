@@ -6,7 +6,7 @@ import { ENQUIRY_STATUSES, MAX_NOTE, categoryMeta, statusMeta } from "@/lib/enqu
 
 function formatWhen(iso) {
   const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return "—";
+  if (Number.isNaN(date.getTime())) return "-";
   return date.toLocaleString(undefined, {
     dateStyle: "medium",
     timeStyle: "short",
@@ -167,7 +167,7 @@ export default function EnquiriesPanel({ canManage = false, canDelete = false })
     try {
       const response = await fetch("/api/admin/enquiries", { cache: "no-store" });
       if (response.status === 401) {
-        setError("Your admin session expired — lock the console and sign in again.");
+        setError("Your admin session expired. Lock the console and sign in again.");
         return;
       }
       if (!response.ok) throw new Error("Could not load the enquiries.");

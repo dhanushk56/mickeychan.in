@@ -109,7 +109,7 @@ export default function NotificationsBell() {
           </div>
 
           {items.length === 0 ? (
-            <p className="faint text-xs">Nothing yet — updates about your applications and messages land here.</p>
+            <p className="faint text-xs">Nothing yet. Updates about your applications and messages land here.</p>
           ) : (
             <ul className="bell-list">
               {items.slice(0, 12).map((entry) => (

@@ -12,7 +12,7 @@ export default function VideoShare({ videoId, title, url }) {
       await navigator.clipboard.writeText(shareUrl);
       setStatus("Link copied");
     } catch {
-      setStatus("Couldn't copy — select the address bar instead");
+      setStatus("Couldn't copy. Select the address bar instead");
     }
     window.setTimeout(() => setStatus(""), 2200);
   }
@@ -23,7 +23,7 @@ export default function VideoShare({ videoId, title, url }) {
         await navigator.share({ title, url: shareUrl });
         return;
       } catch {
-        // Dismissed or unsupported — fall through to copying.
+        // Dismissed or unsupported, so fall through to copying.
       }
     }
     copy();

@@ -246,7 +246,7 @@ export default function FormBuilder({ initialForm, publicUrl, currentUser, formI
       });
       if (!response.ok) throw new Error("Could not update visibility.");
       setDirty(false);
-      setStatus(next ? "Published — listed on open positions." : "Unpublished — link only.");
+      setStatus(next ? "Published, listed on open positions." : "Unpublished, link only.");
     } catch (error) {
       setStatus(error.message);
     }

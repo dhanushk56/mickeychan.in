@@ -35,7 +35,7 @@ export async function POST(request) {
   if (EMAIL_VERIFICATION_REQUIRED && member.emailVerified !== true) {
     return NextResponse.json(
       {
-        error: "Confirm your email address before applying — open Verify your account from the menu.",
+        error: "Confirm your email address before applying. Open Verify your account from the menu.",
         code: "email_unverified",
       },
       { status: 403 }

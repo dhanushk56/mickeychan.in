@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 export const metadata = {
   title: "Contact",
   description:
-    "Get in touch with Mickey Chan — collaborations, sponsorships, business, suggestions or support. No account needed.",
+    "Get in touch with Mickey Chan: collaborations, sponsorships, business, suggestions or support. No account needed.",
   alternates: { canonical: "/contact" },
 };
 
@@ -23,7 +23,7 @@ export default async function ContactPage() {
           <p className="kicker">Say hello</p>
           <h1 className="display-lg mt-3 mb-4">Contact</h1>
           <p className="muted text-lg leading-relaxed">
-            Collaborations, sponsorships, business, ideas or a problem with the site — send it here
+            Collaborations, sponsorships, business, ideas or a problem with the site. Send it here
             and a real person will read it. You don&apos;t need an account.
           </p>
         </div>

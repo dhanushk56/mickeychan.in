@@ -160,7 +160,7 @@ export default function VerifyEmail({ email = "", next = "/positions", emailConf
             <Link href={next} className="hover:underline" style={{ color: "var(--primary)" }}>
               Do this later
             </Link>{" "}
-            — the banner stays until you confirm.
+            , the banner stays until you confirm.
           </p>
         </div>
       </div>

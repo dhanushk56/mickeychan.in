@@ -39,7 +39,7 @@ export default async function LoginPage({ searchParams }) {
 
   const errorCode = typeof query?.error === "string" ? query.error : "";
   const notice =
-    query?.reset === "1" ? "Password updated — log in with your new password." : "";
+    query?.reset === "1" ? "Password updated. Log in with your new password." : "";
 
   return (
     <AuthFlip

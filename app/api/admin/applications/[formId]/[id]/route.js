@@ -54,7 +54,7 @@ export async function PATCH(request, { params }) {
     await addNotification(applicant, {
       kind: "application",
       title: `Application: ${meta.label}`,
-      body: `“${submissions[index].formTitle || formId}” — ${meta.applicant}`,
+      body: `“${submissions[index].formTitle || formId}”: ${meta.applicant}`,
       href: "/dashboard?tab=applications",
     });
   }

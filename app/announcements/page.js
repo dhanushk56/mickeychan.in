@@ -9,7 +9,7 @@ export const fetchCache = "force-no-store";
 
 export const metadata = {
   title: "Announcements",
-  description: "What's happening right now, and everything posted before — from the Mickey Chan team.",
+  description: "What's happening right now, and everything posted before, from the Mickey Chan team.",
   alternates: { canonical: "/announcements" },
 };
 

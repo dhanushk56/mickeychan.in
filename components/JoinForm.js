@@ -14,7 +14,7 @@ const defaults = {
   messageLabel: "Message",
   messagePlaceholder: "Tell us what you have in mind…",
   submitLabel: "Send message ↗",
-  successMessage: "Thanks — your message has been sent.",
+  successMessage: "Thanks, your message has been sent.",
 };
 
 export default function JoinForm({ member }) {
@@ -75,7 +75,7 @@ export default function JoinForm({ member }) {
               <span className="icon-button flex-shrink-0" aria-hidden="true">◷</span>
               <div>
                 <p className="font-semibold text-sm">Typical reply time</p>
-                <p className="faint text-xs mt-0.5">A few days — everything is read.</p>
+                <p className="faint text-xs mt-0.5">A few days. Everything is read.</p>
               </div>
             </div>
             <div className="glass-soft p-4 flex items-start gap-3">

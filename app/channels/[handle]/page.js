@@ -11,7 +11,7 @@ export async function generateMetadata({ params }) {
   if (!data) return { title: "Channel not found" };
   return {
     title: `${data.channel.name} videos`,
-    description: `Every ${data.channel.name} upload on mickeychan.in — ${data.videos.length} videos and shorts.`,
+    description: `Every ${data.channel.name} upload on mickeychan.in: ${data.videos.length} videos and shorts.`,
     alternates: { canonical: `/channels/${data.channel.handle}` },
   };
 }
@@ -43,7 +43,7 @@ export default async function ChannelPage({ params }) {
             )}
             {!overview?.description && (
               <p className="muted mt-3">
-                Everything uploaded to this channel — long-form videos and shorts, searchable and playable here.
+                Everything uploaded to this channel: long-form videos and shorts, searchable and playable here.
               </p>
             )}
           </div>
@@ -83,7 +83,7 @@ export default async function ChannelPage({ params }) {
 
         {overview?.source === "scrape" && (
           <p className="faint text-xs mb-4">
-            Follower totals come from the public channel page — exact figures need the YouTube API
+            Follower totals come from the public channel page. Exact figures need the YouTube API
             key configured on the site.
           </p>
         )}
