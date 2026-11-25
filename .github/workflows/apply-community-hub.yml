@@ -1,0 +1,28 @@
+name: Apply community
+on:
+  push:
+    paths:
+      - "transfer/go11.txt"
+permissions:
+  contents: write
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply
+        run: |
+          set -euo pipefail
+          cat transfer/cm1.b64 transfer/cm2.b64 transfer/cm3.b64 transfer/cm4.b64 transfer/cm5.b64 transfer/cm6.b64 transfer/cm7.b64 transfer/cm8.b64 > /tmp/all.b64
+          echo "total: $(wc -c < /tmp/all.b64)"
+          base64 -d /tmp/all.b64 | gunzip > /tmp/p.patch
+          echo "patch sha: $(sha256sum /tmp/p.patch | cut -d' ' -f1)"
+          test "$(sha256sum /tmp/p.patch | cut -d' ' -f1)" = "b487f6cad6263367d5ab43acede9007fe230cd87dd5a70fb5ce6fd66e727dcad"
+          git apply /tmp/p.patch
+          rm -rf transfer
+          git rm -q .github/workflows/apply-community-hub.yml
+          git config user.name "patch-bot"
+          git config user.email "patch-bot@users.noreply.github.com"
+          git add -A
+          git commit -m "Polls, events and the idea board"
+          git push
