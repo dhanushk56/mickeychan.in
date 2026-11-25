@@ -19,6 +19,7 @@ jobs:
     env:
       ADMIN_PASSWORD: smoke-console-password
       SESSION_SECRET: smoke-session-secret
+      SMOKE_OWNER_PASSWORD: Smoke-Owner-Pass-2026
     steps:
       - uses: actions/checkout@v4
 
@@ -32,6 +33,9 @@ jobs:
 
       - name: Check the record store under concurrency
         run: npm run data-model
+
+      - name: Seed the owner account the smoke suite signs in as
+        run: npm run smoke:seed
 
       - name: Build
         run: npm run build
