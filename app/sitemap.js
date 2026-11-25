@@ -10,6 +10,7 @@ const PAGES = [
   { path: "/forums", changeFrequency: "daily", priority: 0.7 },
   { path: "/announcements", changeFrequency: "daily", priority: 0.85 },
   { path: "/stories", changeFrequency: "weekly", priority: 0.8 },
+  { path: "/studio", changeFrequency: "weekly", priority: 0.7 },
   { path: "/positions", changeFrequency: "daily", priority: 0.9 },
   { path: "/socials", changeFrequency: "monthly", priority: 0.7 },
   { path: "/contact", changeFrequency: "monthly", priority: 0.6 },

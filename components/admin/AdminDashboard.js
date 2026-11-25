@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import AnnouncementsPanel from "@/components/admin/AnnouncementsPanel";
 import StoriesPanel from "@/components/admin/StoriesPanel";
+import StudioPanel from "@/components/admin/StudioPanel";
 import PollsPanel from "@/components/admin/PollsPanel";
 import EventsPanel from "@/components/admin/EventsPanel";
 import IdeasPanel from "@/components/admin/IdeasPanel";
@@ -1006,6 +1007,7 @@ export default function AdminDashboard({ currentUser }) {
               { id: "events", label: "Events", show: can("events.view") },
               { id: "ideas", label: "Ideas", show: can("ideas.view") },
               { id: "stories", label: "Stories", show: can("content.view") },
+              { id: "studio", label: "Studio", show: can("content.view") },
               { id: "admins", label: "Admins", count: adminState.admins.length, show: can("admins.view") },
               { id: "roles", label: "Roles", show: can("roles.view") },
             ]
@@ -1283,6 +1285,8 @@ export default function AdminDashboard({ currentUser }) {
         {tab === "announcements" && <AnnouncementsPanel />}
 
         {tab === "stories" && <StoriesPanel canEdit={can("content.edit")} />}
+
+        {tab === "studio" && <StudioPanel canEdit={can("content.edit")} />}
 
         {tab === "polls" && (
           <PollsPanel canCreate={can("polls.create")} canDelete={can("polls.delete")} />

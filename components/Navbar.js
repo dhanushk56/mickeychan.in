@@ -18,6 +18,7 @@ const NAV = [
       { href: "/announcements", label: "Announcements", note: "What is new on the channel" },
       { href: "/forums", label: "Forums", note: "Threads and replies" },
       { href: "/stories", label: "Stories", note: "Arcs, clues and how they ended" },
+      { href: "/studio", label: "Studio", note: "The team and what is next" },
       { href: "/socials", label: "Socials", note: "Everywhere else to follow" },
     ],
   },
