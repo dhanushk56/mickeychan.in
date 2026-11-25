@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import { unstable_noStore as noStore } from "next/cache";
 import { memberFromCookieStore } from "@/lib/members";
-import { listIdeas, rankIdeas } from "@/lib/ideas";
+import { ideaVoteCount, listIdeas, rankIdeas } from "@/lib/ideas";
 import IdeaBoard from "@/components/community/IdeaBoard";
 
 export const dynamic = "force-dynamic";
@@ -18,11 +18,14 @@ export default async function IdeasPage() {
 
   const session = await memberFromCookieStore(cookies());
   const username = session?.username || null;
-  const ideas = rankIdeas(await listIdeas()).map(({ votes, ...idea }) => ({
-    ...idea,
-    voteCount: votes.length,
-    voted: username ? votes.includes(username) : false,
-  }));
+  const ideas = rankIdeas(await listIdeas()).map((idea) => {
+    const { votes, ...rest } = idea;
+    return {
+      ...rest,
+      voteCount: ideaVoteCount(idea),
+      voted: username ? votes.includes(username) : false,
+    };
+  });
 
   return (
     <main className="page">

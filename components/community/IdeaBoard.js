@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { IDEA_STATUSES, ideaStatusMeta, rankIdeas } from "@/lib/ideas";
+import { IDEA_STATUSES, ideaStatusMeta, ideaVoteCount, rankIdeas } from "@/lib/ideas";
 
 export default function IdeaBoard({ initialIdeas, signedIn }) {
   const [ideas, setIdeas] = useState(initialIdeas || []);
@@ -63,7 +63,7 @@ export default function IdeaBoard({ initialIdeas, signedIn }) {
       setIdeas((current) =>
         current.map((entry) =>
           entry.id === idea.id
-            ? { ...entry, voted: !!data.voted, voteCount: Number(data.votes) || 0 }
+            ? { ...entry, voted: !!data.voted, voteCount: Number(data.votes) || 0, votes: undefined }
             : entry
         )
       );
@@ -157,7 +157,7 @@ export default function IdeaBoard({ initialIdeas, signedIn }) {
                     disabled={!signedIn || busyId === idea.id}
                     onClick={() => toggleVote(idea)}
                   >
-                    <span className="idea-vote-count">{idea.voteCount ?? 0}</span>
+                    <span className="idea-vote-count">{ideaVoteCount(idea)}</span>
                     <span className="idea-vote-label">{idea.voted ? "Backed" : "Back"}</span>
                   </button>
 

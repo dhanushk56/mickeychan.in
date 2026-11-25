@@ -21,7 +21,7 @@ async function actor() {
 }
 
 export async function GET() {
-  const gate = await authorize("announcements.view");
+  const gate = await authorize("polls.view");
   if (gate.response) return gate.response;
   return NextResponse.json(
     { ok: true, polls: readPolls(await kvGet(POLLS_KEY, [])) },
@@ -30,7 +30,7 @@ export async function GET() {
 }
 
 export async function POST(request) {
-  const gate = await authorize("announcements.create");
+  const gate = await authorize("polls.create");
   if (gate.response) return gate.response;
 
   const body = await request.json().catch(() => null);
@@ -72,7 +72,7 @@ export async function POST(request) {
 }
 
 export async function PATCH(request) {
-  const gate = await authorize("announcements.create");
+  const gate = await authorize("polls.create");
   if (gate.response) return gate.response;
 
   const body = await request.json().catch(() => ({}));
@@ -100,7 +100,7 @@ export async function PATCH(request) {
 }
 
 export async function DELETE(request) {
-  const gate = await authorize("announcements.delete");
+  const gate = await authorize("polls.delete");
   if (gate.response) return gate.response;
 
   const id = new URL(request.url).searchParams.get("id");

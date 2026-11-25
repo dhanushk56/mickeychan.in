@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useConfirm } from "@/components/ConfirmDialog";
 import { useToast } from "@/components/ui/Toast";
 import EmptyState from "@/components/ui/EmptyState";
-import { IDEA_STATUSES, ideaStatusMeta, rankIdeas } from "@/lib/ideas";
+import { IDEA_STATUSES, ideaStatusMeta, ideaVoteCount, rankIdeas } from "@/lib/ideas";
 
 export default function IdeasPanel({ canEdit, canDelete }) {
   const [ideas, setIdeas] = useState([]);
@@ -113,7 +113,7 @@ export default function IdeasPanel({ canEdit, canDelete }) {
                 <div className="grid gap-1" style={{ minWidth: 0 }}>
                   <span className="font-semibold">{idea.title}</span>
                   <span className="faint text-xs">
-                    {idea.votes.length} {idea.votes.length === 1 ? "backer" : "backers"}
+                    {ideaVoteCount(idea)} {ideaVoteCount(idea) === 1 ? "backer" : "backers"}
                     {idea.authorName ? ` · ${idea.authorName}` : ""}
                     {` · ${ideaStatusMeta(idea.status).label}`}
                   </span>

@@ -4,6 +4,7 @@ import { kvGet, kvSet } from "@/lib/kv";
 import { findMember, memberFromCookieStore } from "@/lib/members";
 import {
   IDEAS_KEY,
+  ideaVoteCount,
   MAX_IDEA_NOTE,
   MAX_IDEA_TITLE,
   MAX_IDEAS,
@@ -30,11 +31,14 @@ export async function GET() {
     {
       ok: true,
       signedIn: !!username,
-      ideas: ideas.map(({ votes, ...idea }) => ({
-        ...idea,
-        voteCount: votes.length,
-        voted: username ? votes.includes(username) : false,
-      })),
+      ideas: ideas.map((idea) => {
+        const { votes, ...rest } = idea;
+        return {
+          ...rest,
+          voteCount: ideaVoteCount(idea),
+          voted: username ? votes.includes(username) : false,
+        };
+      }),
     },
     { headers: NO_STORE }
   );

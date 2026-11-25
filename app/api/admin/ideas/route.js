@@ -14,13 +14,13 @@ async function actor() {
 }
 
 export async function GET() {
-  const gate = await authorize("announcements.view");
+  const gate = await authorize("ideas.view");
   if (gate.response) return gate.response;
   return NextResponse.json({ ok: true, ideas: readIdeas(await kvGet(IDEAS_KEY, [])) }, { headers: NO_STORE });
 }
 
 export async function PATCH(request) {
-  const gate = await authorize("announcements.create");
+  const gate = await authorize("ideas.moderate");
   if (gate.response) return gate.response;
 
   const body = await request.json().catch(() => ({}));
@@ -52,7 +52,7 @@ export async function PATCH(request) {
 }
 
 export async function DELETE(request) {
-  const gate = await authorize("announcements.delete");
+  const gate = await authorize("ideas.delete");
   if (gate.response) return gate.response;
 
   const id = new URL(request.url).searchParams.get("id");
