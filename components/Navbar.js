@@ -9,6 +9,7 @@ import NotificationsBell from "@/components/NotificationsBell";
 const LINKS = [
   { href: "/videos", label: "Videos" },
   { href: "/announcements", label: "Announcements" },
+  { href: "/community", label: "Community" },
   { href: "/socials", label: "Socials" },
   { href: "/positions", label: "Open positions" },
 ];

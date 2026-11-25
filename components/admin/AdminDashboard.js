@@ -4,6 +4,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import AnnouncementsPanel from "@/components/admin/AnnouncementsPanel";
+import PollsPanel from "@/components/admin/PollsPanel";
+import EventsPanel from "@/components/admin/EventsPanel";
+import IdeasPanel from "@/components/admin/IdeasPanel";
 import EnquiriesPanel from "@/components/admin/EnquiriesPanel";
 import { AdminsPanel, RolesPanel } from "@/components/admin/AccessPanels";
 import { useConfirm, usePrompt } from "@/components/ConfirmDialog";
@@ -945,6 +948,9 @@ export default function AdminDashboard({ currentUser }) {
               { id: "forms", label: "Forms", count: data.forms.length, show: can("forms.view") },
               { id: "accounts", label: "Accounts", count: data.accounts.length, show: can("accounts.view") },
               { id: "announcements", label: "Announcements", show: can("announcements.view") },
+              { id: "polls", label: "Polls", show: can("announcements.view") },
+              { id: "events", label: "Events", show: can("announcements.view") },
+              { id: "ideas", label: "Ideas", show: can("announcements.view") },
               { id: "admins", label: "Admins", count: adminState.admins.length, show: can("admins.view") },
               { id: "roles", label: "Roles", show: can("roles.view") },
             ]
@@ -1218,6 +1224,18 @@ export default function AdminDashboard({ currentUser }) {
         )}
 
         {tab === "announcements" && <AnnouncementsPanel />}
+
+        {tab === "polls" && (
+          <PollsPanel canCreate={can("announcements.create")} canDelete={can("announcements.delete")} />
+        )}
+
+        {tab === "events" && (
+          <EventsPanel canCreate={can("announcements.create")} canDelete={can("announcements.delete")} />
+        )}
+
+        {tab === "ideas" && (
+          <IdeasPanel canEdit={can("announcements.create")} canDelete={can("announcements.delete")} />
+        )}
 
         {tab === "admins" && <AdminsPanel canManage={canManageAdmins} />}
 
