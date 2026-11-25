@@ -372,6 +372,8 @@
   .checkbox {
     width: 1.05rem;
     height: 1.05rem;
+    /* A long option label must not squeeze the box in a flex row. */
+    flex: none;
     accent-color: var(--primary);
     cursor: pointer;
   }
