@@ -1,6 +1,6 @@
 import RichText from "@/components/RichText";
 import LocalTime from "@/components/LocalTime";
-import { categoryMeta, levelMeta, timeLeftMs } from "@/lib/announcements";
+import { categoryMeta, expiryTime, levelMeta, timeLeftMs } from "@/lib/announcements";
 
 function formatLeft(ms) {
   const minutes = Math.max(1, Math.round(ms / 60000));
@@ -27,6 +27,7 @@ export default function AnnouncementCard({ announcement, past = false, now = Dat
   const category = categoryMeta(announcement.category);
   const left = timeLeftMs(announcement, now);
   const hours = announcement.windowHours;
+  const hasEnd = expiryTime(announcement) != null;
 
   return (
     <article className="glass-card announcement-card" data-level={announcement.level}>
@@ -50,7 +51,7 @@ export default function AnnouncementCard({ announcement, past = false, now = Dat
         Posted <LocalTime iso={announcement.createdAt} />
         {left != null && <> · moves to past in {formatLeft(left)}</>}
         {past && Number.isFinite(hours) && <> · was current for {hoursLabel(hours)}</>}
-        {!past && !Number.isFinite(hours) && <> · no time limit set</>}
+        {!past && !hasEnd && <> · no time limit set</>}
       </p>
     </article>
   );

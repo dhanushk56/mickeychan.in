@@ -826,6 +826,23 @@
     background: var(--glass-soft);
   }
 
+  .question-block[data-dragging="true"] {
+    opacity: .55;
+    border-style: dashed;
+  }
+
+  .drag-handle { cursor: grab; touch-action: none; }
+  .drag-handle:active { cursor: grabbing; }
+
+  .question-drop {
+    padding: .6rem;
+    border: 1px dashed var(--glass-line);
+    border-radius: 1rem;
+    text-align: center;
+    font-size: .75rem;
+    color: var(--text-faint);
+  }
+
   .option-row { display: flex; align-items: center; gap: .55rem; }
 
   .option-marker { width: .95rem; text-align: center; color: var(--text-faint); font-size: .8rem; }

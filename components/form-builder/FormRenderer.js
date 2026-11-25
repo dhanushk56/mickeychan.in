@@ -2,10 +2,14 @@
 
 import { useEffect, useRef, useState } from "react";
 import {
+  MAX_UPLOAD_BYTES,
+  acceptAttribute,
   questionHint,
+  questionIsVisible,
   questionRules,
   typeMeta,
   validateSection,
+  visibleQuestions,
 } from "@/lib/form-builder/schema";
 import RichText from "@/components/RichText";
 
@@ -217,15 +221,80 @@ function SignatureField({ question, value, onChange }) {
   );
 }
 
-function FileLinkField({ question, value, onChange }) {
+function FileField({ question, value, onChange }) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const upload = value && typeof value === "object" && value.kind === "upload" ? value : null;
+  const link = typeof value === "string" ? value : "";
+
+  async function pick(event) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+    if (file.size > MAX_UPLOAD_BYTES) {
+      setError(`Keep files under ${Math.round(MAX_UPLOAD_BYTES / 1024)} KB.`);
+      return;
+    }
+    setBusy(true);
+    setError("");
+    try {
+      const body = new FormData();
+      body.append("file", file);
+      const response = await fetch("/api/form-builder/uploads", { method: "POST", body });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(result.error || "Could not upload that file.");
+      onChange(question.id, {
+        kind: "upload",
+        id: result.id,
+        name: result.name,
+        size: result.size,
+        type: result.type,
+      });
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
-    <input
-      type="url"
-      className="input"
-      placeholder="Paste a link (Drive, Dropbox, WeTransfer, …)"
-      value={value || ""}
-      onChange={(event) => onChange(question.id, event.target.value)}
-    />
+    <div className="grid gap-2">
+      {upload ? (
+        <div className="glass-inset flex flex-wrap items-center justify-between gap-2 px-3 py-2 text-sm">
+          <span className="min-w-0 break-all">{upload.name}</span>
+          <button
+            type="button"
+            className="btn btn-ghost btn-sm"
+            onClick={() => onChange(question.id, "")}
+          >
+            Remove
+          </button>
+        </div>
+      ) : (
+        <label className="btn btn-secondary btn-sm self-start">
+          {busy ? "Uploading…" : "Choose a file"}
+          <input
+            type="file"
+            className="sr-only"
+            accept={acceptAttribute(question)}
+            onChange={pick}
+            disabled={busy}
+          />
+        </label>
+      )}
+      <input
+        type="url"
+        className="input"
+        placeholder="Or paste a link (Drive, Dropbox, WeTransfer)"
+        value={link}
+        onChange={(event) => onChange(question.id, event.target.value)}
+      />
+      {error && (
+        <p className="text-xs" style={{ color: "var(--danger)" }}>
+          {error}
+        </p>
+      )}
+    </div>
   );
 }
 
@@ -449,7 +518,7 @@ function QuestionField({ question, value, onChange, error }) {
         )}
 
         {meta.kind === "file" && (
-          <FileLinkField question={question} value={value} onChange={onChange} />
+          <FileField question={question} value={value} onChange={onChange} />
         )}
       </div>
 
@@ -473,6 +542,7 @@ export default function FormRenderer({ form, mode = "fill", onSubmit, submitting
   const sections = form.sections || [];
   const section = sections[sectionIndex];
   const isLastSection = sectionIndex === sections.length - 1;
+  const allQuestions = sections.flatMap((entry) => entry.questions || []);
 
   function updateResponse(id, value) {
     setResponses((previous) => ({ ...previous, [id]: value }));
@@ -486,7 +556,7 @@ export default function FormRenderer({ form, mode = "fill", onSubmit, submitting
   }
 
   function goNext() {
-    const sectionErrors = validateSection(section, responses);
+    const sectionErrors = validateSection(section, responses, allQuestions);
     if (Object.keys(sectionErrors).length > 0) {
       setErrors(sectionErrors);
       return;
@@ -503,7 +573,7 @@ export default function FormRenderer({ form, mode = "fill", onSubmit, submitting
   function handleSubmit() {
     const allErrors = {};
     for (const entry of sections) {
-      Object.assign(allErrors, validateSection(entry, responses));
+      Object.assign(allErrors, validateSection(entry, responses, allQuestions));
     }
     if (Object.keys(allErrors).length > 0) {
       setErrors(allErrors);
@@ -517,7 +587,14 @@ export default function FormRenderer({ form, mode = "fill", onSubmit, submitting
       setPreviewNotice("Preview only. Responses aren't saved.");
       return;
     }
-    onSubmit?.(responses);
+
+    // Answers to questions hidden by a condition are not part of the submission.
+    const visible = {};
+    for (const question of allQuestions) {
+      if (!questionIsVisible(question, responses, allQuestions)) continue;
+      if (responses[question.id] !== undefined) visible[question.id] = responses[question.id];
+    }
+    onSubmit?.(visible);
   }
 
   if (!section) return null;
@@ -550,7 +627,7 @@ export default function FormRenderer({ form, mode = "fill", onSubmit, submitting
 
       <RichText value={section.description} className="muted text-sm" />
 
-      {section.questions.map((question) => (
+      {visibleQuestions(section.questions, responses, allQuestions).map((question) => (
         <QuestionField
           key={question.id}
           question={question}

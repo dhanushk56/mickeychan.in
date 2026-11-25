@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import LogoutButton from "@/components/LogoutButton";
 import NotificationsBell from "@/components/NotificationsBell";
 
@@ -28,6 +28,8 @@ const NAV = [
 
 export default function Navbar({ locked = false }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
   const [groupOpen, setGroupOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -89,6 +91,13 @@ export default function Navbar({ locked = false }) {
       document.body.style.overflow = previousOverflow;
     };
   }, [open]);
+
+  function submitSearch(event) {
+    event.preventDefault();
+    const term = search.trim();
+    setOpen(false);
+    router.push(term ? `/search?q=${encodeURIComponent(term)}` : "/search");
+  }
 
   const isActive = (href) => pathname === href || pathname.startsWith(`${href}/`);
   const drawerBase = NAV.length;
@@ -210,6 +219,42 @@ export default function Navbar({ locked = false }) {
                 </Link>
               )}
             </div>
+            <form className="nav-search" role="search" onSubmit={submitSearch}>
+              <input
+                className="nav-search-input"
+                type="search"
+                name="q"
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder="Search"
+                aria-label="Search the site"
+                autoComplete="off"
+              />
+              <button type="submit" className="nav-search-submit" aria-label="Search">
+                <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+                  <circle cx="7" cy="7" r="4.6" fill="none" stroke="currentColor" strokeWidth="1.5" />
+                  <path
+                    d="M10.4 10.4 14 14"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              </button>
+            </form>
+            <Link href="/search" className="nav-search-button" aria-label="Search the site">
+              <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+                <circle cx="7" cy="7" r="4.6" fill="none" stroke="currentColor" strokeWidth="1.5" />
+                <path
+                  d="M10.4 10.4 14 14"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                />
+              </svg>
+            </Link>
           </div>
 
           <Link href="/" className="nav-brand" aria-label="Mickey Chan home">
@@ -290,6 +335,22 @@ export default function Navbar({ locked = false }) {
         aria-label="Mobile"
         aria-hidden={!open}
       >
+        <form className="mobile-nav-search" role="search" onSubmit={submitSearch}>
+          <input
+            className="input"
+            type="search"
+            name="q"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="Search the site"
+            aria-label="Search the site"
+            autoComplete="off"
+          />
+          <button type="submit" className="btn btn-secondary btn-sm">
+            Search
+          </button>
+        </form>
+
         <div className="mobile-nav-head">
           <Link
             href="/"

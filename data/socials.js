@@ -1,3 +1,5 @@
+export const SOCIAL_ICON_IDS = ["youtube", "instagram", "discord", "gmail"];
+
 export const socials = [
   {
     name: "MickeyChan (YouTube)",

@@ -1,7 +1,9 @@
 import Link from "next/link";
-import { socials } from "@/data/socials";
+import { getSocials } from "@/lib/socials";
 
-export default function Footer() {
+export default async function Footer() {
+  const socials = await getSocials();
+
   return (
     <footer className="site-footer">
       <div className="footer-inner">
@@ -13,9 +15,15 @@ export default function Footer() {
           <Link href="/positions">Open positions</Link>
           <Link href="/contact">Contact</Link>
           <Link href="/sitemap">Sitemap</Link>
-          <a href={socials[0]?.href} target="_blank" rel="noreferrer">
-            {socials[0]?.short || "YouTube"} ↗
-          </a>
+          {socials[0]?.href && (
+            <a
+              href={socials[0].href}
+              target={socials[0].href.startsWith("mailto:") ? undefined : "_blank"}
+              rel={socials[0].href.startsWith("mailto:") ? undefined : "noreferrer"}
+            >
+              {socials[0].short || socials[0].name} ↗
+            </a>
+          )}
         </nav>
       </div>
     </footer>

@@ -6,8 +6,8 @@ import { useConfirm } from "@/components/ConfirmDialog";
 import {
   CATEGORIES,
   LEVELS,
+  announcementState,
   categoryMeta,
-  isCurrent,
   isValidWindowHours,
   levelMeta,
   normalizeAnnouncement,
@@ -24,6 +24,8 @@ const EMPTY_DRAFT = {
   pinned: false,
   image: "",
   windowHours: "",
+  publishAt: "",
+  expiresAt: "",
 };
 
 function formatWhen(iso) {
@@ -34,6 +36,23 @@ function formatWhen(iso) {
     timeStyle: "short",
     hour12: true,
   });
+}
+
+// datetime-local values are local to the person typing them, so they are turned
+// into a full ISO stamp before they leave the browser.
+function toIso(value) {
+  if (!value) return "";
+  const time = new Date(value).getTime();
+  return Number.isNaN(time) ? "" : new Date(time).toISOString();
+}
+
+function toLocalInput(iso) {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "";
+  const pad = (number) => String(number).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(
+    date.getHours()
+  )}:${pad(date.getMinutes())}`;
 }
 
 function hoursLabel(hours) {
@@ -53,6 +72,8 @@ export default function AnnouncementsPanel() {
   const [posting, setPosting] = useState(false);
   const [busyId, setBusyId] = useState("");
   const [now, setNow] = useState(() => Date.now());
+  const [scheduleDrafts, setScheduleDrafts] = useState({});
+  const [busySchedule, setBusySchedule] = useState("");
   const [dialog, askConfirm] = useConfirm();
   const toast = useToast();
 
@@ -94,13 +115,24 @@ export default function AnnouncementsPanel() {
       const response = await fetch("/api/admin/announcements", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(draft),
+        body: JSON.stringify({
+          ...draft,
+          publishAt: toIso(draft.publishAt),
+          expiresAt: toIso(draft.expiresAt),
+        }),
       });
       const result = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(result.error || "Could not post that announcement.");
+      const scheduled = result.announcement?.publishAt
+        ? new Date(result.announcement.publishAt).getTime() > Date.now()
+        : false;
       setDraft(EMPTY_DRAFT);
       toast.push(
-        `Posted. It stays current for ${hoursLabel(Number(draft.windowHours))}, then moves to past on its own.`
+        scheduled
+          ? `Scheduled for ${formatWhen(result.announcement.publishAt)}. It appears on its own when that time comes.`
+          : draft.expiresAt
+            ? `Posted. It ends ${formatWhen(toIso(draft.expiresAt))} and moves to past on its own.`
+            : `Posted. It stays current for ${hoursLabel(Number(draft.windowHours))}, then moves to past on its own.`
       );
       load();
     } catch (err) {
@@ -135,12 +167,64 @@ export default function AnnouncementsPanel() {
     }
   }
 
+  function scheduleOf(announcement) {
+    return (
+      scheduleDrafts[announcement.id] || {
+        publishAt: toLocalInput(announcement.publishAt || announcement.createdAt),
+        expiresAt: announcement.expiresAt ? toLocalInput(announcement.expiresAt) : "",
+      }
+    );
+  }
+
+  function setScheduleField(announcement, field, value) {
+    setScheduleDrafts((current) => {
+      const base = current[announcement.id] || {
+        publishAt: toLocalInput(announcement.publishAt || announcement.createdAt),
+        expiresAt: announcement.expiresAt ? toLocalInput(announcement.expiresAt) : "",
+      };
+      return { ...current, [announcement.id]: { ...base, [field]: value } };
+    });
+  }
+
+  async function saveSchedule(announcement) {
+    const schedule = scheduleOf(announcement);
+    setBusySchedule(announcement.id);
+    setError("");
+    try {
+      const response = await fetch("/api/admin/announcements", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: announcement.id,
+          publishAt: toIso(schedule.publishAt),
+          expiresAt: toIso(schedule.expiresAt),
+        }),
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(result.error || "Could not move that announcement.");
+      setList((current) =>
+        current.map((item) => (item.id === announcement.id ? result.announcement : item))
+      );
+      setScheduleDrafts((current) => {
+        const next = { ...current };
+        delete next[announcement.id];
+        return next;
+      });
+      setNow(Date.now());
+      toast.push("Schedule saved.");
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusySchedule("");
+    }
+  }
+
   const meta = levelMeta(draft.level);
   const canPost =
     !posting &&
     draft.title.trim().length > 0 &&
     !richTextIsEmpty(draft.body) &&
-    isValidWindowHours(draft.windowHours);
+    (Boolean(draft.expiresAt) || isValidWindowHours(draft.windowHours));
 
   return (
     <div className="grid gap-3">
@@ -210,7 +294,7 @@ export default function AnnouncementsPanel() {
           </label>
 
           <label className="field" style={{ minWidth: "11rem" }}>
-            <span className="field-label">Stays current for (hours)</span>
+            <span className="field-label">Runs for (hours, if no end)</span>
             <input
               type="number"
               min="1"
@@ -222,7 +306,30 @@ export default function AnnouncementsPanel() {
               onChange={(event) =>
                 setDraft((current) => ({ ...current, windowHours: event.target.value }))
               }
-              required
+            />
+          </label>
+
+          <label className="field" style={{ minWidth: "13rem" }}>
+            <span className="field-label">Goes live (optional)</span>
+            <input
+              type="datetime-local"
+              className="input"
+              value={draft.publishAt}
+              onChange={(event) =>
+                setDraft((current) => ({ ...current, publishAt: event.target.value }))
+              }
+            />
+          </label>
+
+          <label className="field" style={{ minWidth: "13rem" }}>
+            <span className="field-label">Ends (optional)</span>
+            <input
+              type="datetime-local"
+              className="input"
+              value={draft.expiresAt}
+              onChange={(event) =>
+                setDraft((current) => ({ ...current, expiresAt: event.target.value }))
+              }
             />
           </label>
         </div>
@@ -264,9 +371,9 @@ export default function AnnouncementsPanel() {
         </div>
 
         <p className="faint text-xs leading-relaxed">
-          {meta.note} When the time you set runs out it moves to Past announcements on its own.
-          there is no fixed 24-hour window, and nothing to switch off by hand. 24 is one day, 168
-          is one week.
+          {meta.note} Leave it blank to post now. A start in the future keeps the notice hidden
+          until that time, and an end time moves it to Past when it passes. Without an end time it
+          runs for the number of hours above. 24 is one day, 168 is one week.
         </p>
 
         {draft.title.trim() && (
@@ -306,7 +413,8 @@ export default function AnnouncementsPanel() {
       ) : (
         list.map((announcement) => {
           const level = levelMeta(announcement.level);
-          const current = isCurrent(announcement, now);
+          const state = announcementState(announcement, now);
+          const schedule = scheduleOf(announcement);
           const preview = richTextToPlain(announcement.body, 200);
 
           return (
@@ -322,15 +430,26 @@ export default function AnnouncementsPanel() {
                     <span className={`badge ${level.badge}`}>{level.label}</span>
                     <span className="badge badge-neutral">{categoryMeta(announcement.category).label}</span>
                     {announcement.pinned && <span className="badge badge-accepted">Pinned</span>}
-                    <span className={`badge ${current ? "badge-accepted" : "badge-neutral"}`}>
-                      {current ? "Current" : "Past"}
+                    <span
+                      className={`badge ${
+                        state === "current"
+                          ? "badge-accepted"
+                          : state === "scheduled"
+                            ? "badge-pending"
+                            : "badge-neutral"
+                      }`}
+                    >
+                      {state === "current" ? "Current" : state === "scheduled" ? "Scheduled" : "Past"}
                     </span>
                   </div>
                   <p className="faint text-xs mt-1">
                     Posted {formatWhen(announcement.createdAt)} by {announcement.author || "Admin"}
-                    {Number.isFinite(announcement.windowHours)
-                      ? ` · current for ${hoursLabel(announcement.windowHours)}`
-                      : " · no time limit set"}
+                    {state === "scheduled" && <> · goes live {formatWhen(announcement.publishAt)}</>}
+                    {announcement.expiresAt
+                      ? ` · ends ${formatWhen(announcement.expiresAt)}`
+                      : Number.isFinite(announcement.windowHours)
+                        ? ` · current for ${hoursLabel(announcement.windowHours)}`
+                        : " · no time limit set"}
                   </p>
                 </div>
                 <button
@@ -344,6 +463,39 @@ export default function AnnouncementsPanel() {
                 </button>
               </div>
               {preview && <p className="muted text-sm mt-3">{preview}</p>}
+
+              <div className="flex flex-wrap items-end gap-2 mt-3 pt-3" style={{ borderTop: "1px solid var(--glass-edge)" }}>
+                <label className="field" style={{ minWidth: "13rem" }}>
+                  <span className="field-label">Goes live</span>
+                  <input
+                    type="datetime-local"
+                    className="input"
+                    value={schedule.publishAt}
+                    onChange={(event) =>
+                      setScheduleField(announcement, "publishAt", event.target.value)
+                    }
+                  />
+                </label>
+                <label className="field" style={{ minWidth: "13rem" }}>
+                  <span className="field-label">Ends</span>
+                  <input
+                    type="datetime-local"
+                    className="input"
+                    value={schedule.expiresAt}
+                    onChange={(event) =>
+                      setScheduleField(announcement, "expiresAt", event.target.value)
+                    }
+                  />
+                </label>
+                <button
+                  type="button"
+                  className="btn btn-secondary btn-sm"
+                  disabled={busySchedule === announcement.id}
+                  onClick={() => saveSchedule(announcement)}
+                >
+                  {busySchedule === announcement.id ? "Saving…" : "Save schedule"}
+                </button>
+              </div>
             </article>
           );
         })

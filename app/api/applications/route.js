@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { kvGet } from "@/lib/kv";
-import { validateResponses } from "@/lib/form-builder/schema";
+import { typeMeta, validateResponses } from "@/lib/form-builder/schema";
 import { memberFromCookieStore } from "@/lib/members";
 import {
   STATUS_TEXT,
@@ -25,6 +25,24 @@ function flattenQuestions(form) {
     }
   }
   return list;
+}
+
+// An uploaded answer is only accepted from the member who uploaded it, so nobody
+// can point a submission at somebody else's file.
+async function uploadProblem(form, responses, username) {
+  const fileQuestions = (form.sections || [])
+    .flatMap((section) => section.questions || [])
+    .filter((question) => typeMeta(question.type).kind === "file");
+
+  for (const question of fileQuestions) {
+    const value = responses[question.id];
+    if (!value || typeof value !== "object" || value.kind !== "upload") continue;
+    const record = await kvGet(`formbuilder:upload:${value.id}`, null);
+    if (!record || record.owner !== username) {
+      return "One of your files expired. Attach it again.";
+    }
+  }
+  return "";
 }
 
 export async function POST(request) {
@@ -128,6 +146,11 @@ export async function POST(request) {
       { error: Object.values(errors)[0], errors },
       { status: 400 }
     );
+  }
+
+  const attachmentProblem = await uploadProblem(form, responses, member.username);
+  if (attachmentProblem) {
+    return NextResponse.json({ error: attachmentProblem }, { status: 400 });
   }
 
   await saveSubmission(formId, {

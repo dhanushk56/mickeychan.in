@@ -4,10 +4,13 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import {
   ACCEPT_GROUPS,
+  LOGIC_OPERATORS,
+  MAX_UPLOAD_BYTES,
   QUESTION_TYPES,
   createQuestion,
   createSection,
   defaultRules,
+  questionLogic,
   questionRules,
   typeMeta,
 } from "@/lib/form-builder/schema";
@@ -35,6 +38,44 @@ function moveInArray(arr, index, direction) {
   return next;
 }
 
+// Drag and drop moves a question between sections as well as inside one. The
+// index is the row being dropped onto, so the question lands before it.
+function moveQuestionTo(form, fromSectionId, questionId, toSectionId, targetIndex) {
+  const sections = form.sections.map((section) => ({ ...section, questions: [...section.questions] }));
+  const from = sections.find((section) => section.id === fromSectionId);
+  const to = sections.find((section) => section.id === toSectionId);
+  if (!from || !to) return form;
+  const currentIndex = from.questions.findIndex((question) => question.id === questionId);
+  if (currentIndex === -1) return form;
+
+  const [moved] = from.questions.splice(currentIndex, 1);
+  let insertAt = targetIndex;
+  if (fromSectionId === toSectionId && currentIndex < targetIndex) insertAt -= 1;
+  to.questions.splice(Math.max(0, Math.min(insertAt, to.questions.length)), 0, moved);
+  return { ...form, sections };
+}
+
+function moveSectionTo(form, sectionId, targetIndex) {
+  const from = form.sections.findIndex((section) => section.id === sectionId);
+  if (from === -1) return form;
+  const sections = [...form.sections];
+  const [moved] = sections.splice(from, 1);
+  const at = from < targetIndex ? targetIndex - 1 : targetIndex;
+  sections.splice(Math.max(0, Math.min(at, sections.length)), 0, moved);
+  return { ...form, sections };
+}
+
+function earlierQuestions(form, questionId) {
+  const list = [];
+  for (const section of form.sections) {
+    for (const question of section.questions) {
+      if (question.id === questionId) return list;
+      list.push(question);
+    }
+  }
+  return list;
+}
+
 export default function FormBuilder({ initialForm, publicUrl, currentUser, formId }) {
   const [form, setForm] = useState({ ...initialForm, published: initialForm.published !== false });
   const [tab, setTab] = useState("edit");
@@ -42,6 +83,7 @@ export default function FormBuilder({ initialForm, publicUrl, currentUser, formI
   const [status, setStatus] = useState("");
   const [linkCopied, setLinkCopied] = useState(false);
   const [dirty, setDirty] = useState(false);
+  const [dragging, setDragging] = useState(null);
 
   // Role details live in form.settings.job so older forms keep working with an
   // empty set of fields.
@@ -262,6 +304,33 @@ export default function FormBuilder({ initialForm, publicUrl, currentUser, formI
     );
   }
 
+  function startDrag(event, payload) {
+    setDragging(payload);
+    event.dataTransfer.effectAllowed = "move";
+    try {
+      event.dataTransfer.setData("text/plain", payload.questionId || payload.sectionId || "move");
+    } catch {
+      // Some browsers refuse custom data; the state above still drives the drop.
+    }
+  }
+
+  function dropQuestion(event, sectionId, index) {
+    if (!dragging || dragging.type !== "question") return;
+    event.preventDefault();
+    event.stopPropagation();
+    const source = dragging;
+    setDragging(null);
+    commit((f) => moveQuestionTo(f, source.sectionId, source.questionId, sectionId, index));
+  }
+
+  function dropSection(event, index) {
+    if (!dragging || dragging.type !== "section") return;
+    event.preventDefault();
+    const source = dragging;
+    setDragging(null);
+    commit((f) => moveSectionTo(f, source.sectionId, index));
+  }
+
   function updateRules(sectionId, questionId, patch) {
     commit((f) =>
       withSection(f, sectionId, (s) =>
@@ -404,8 +473,29 @@ export default function FormBuilder({ initialForm, publicUrl, currentUser, formI
             </div>
 
             {form.sections.map((section, sIndex) => (
-              <div key={section.id} className="glass-card p-5 grid gap-4">
+              <div
+                key={section.id}
+                className="glass-card p-5 grid gap-4"
+                data-dragging={dragging?.type === "section" && dragging.sectionId === section.id}
+                onDragOver={(event) => {
+                  if (dragging?.type === "section") event.preventDefault();
+                }}
+                onDrop={(event) => dropSection(event, sIndex)}
+              >
                 <div className="flex items-start gap-3">
+                  <button
+                    type="button"
+                    className="icon-button drag-handle"
+                    title="Drag to reorder this section"
+                    aria-label="Drag to reorder this section"
+                    draggable
+                    onDragStart={(event) =>
+                      startDrag(event, { type: "section", sectionId: section.id })
+                    }
+                    onDragEnd={() => setDragging(null)}
+                  >
+                    ⠿
+                  </button>
                   <div className="flex-1 grid gap-2">
                     <input
                       className="input font-semibold"
@@ -448,8 +538,35 @@ export default function FormBuilder({ initialForm, publicUrl, currentUser, formI
                     const meta = typeMeta(question.type);
                     const rules = questionRules(question);
                     return (
-                      <div key={question.id} className="question-block grid gap-3">
+                      <div
+                        key={question.id}
+                        className="question-block grid gap-3"
+                        data-dragging={
+                          dragging?.type === "question" && dragging.questionId === question.id
+                        }
+                        onDragOver={(event) => {
+                          if (dragging?.type === "question") event.preventDefault();
+                        }}
+                        onDrop={(event) => dropQuestion(event, section.id, qIndex)}
+                      >
                         <div className="flex flex-wrap items-center gap-2">
+                          <button
+                            type="button"
+                            className="icon-button drag-handle"
+                            title="Drag to reorder this question"
+                            aria-label="Drag to reorder this question"
+                            draggable
+                            onDragStart={(event) =>
+                              startDrag(event, {
+                                type: "question",
+                                sectionId: section.id,
+                                questionId: question.id,
+                              })
+                            }
+                            onDragEnd={() => setDragging(null)}
+                          >
+                            ⠿
+                          </button>
                           <input
                             className="input flex-1"
                             style={{ minWidth: "10rem" }}
@@ -770,6 +887,11 @@ export default function FormBuilder({ initialForm, publicUrl, currentUser, formI
                           <div className="grid gap-3">
                             <div className="grid gap-2">
                               <span className="field-label">Accepted formats</span>
+                              <p className="faint text-xs">
+                                People can upload a file straight from the form, up to{" "}
+                                {Math.round(MAX_UPLOAD_BYTES / 1024)} KB each, or paste a link
+                                instead.
+                              </p>
                               <div className="flex flex-wrap gap-x-4 gap-y-2">
                                 {ACCEPT_GROUPS.map((group) => {
                                   const on = rules.accept.includes(group.id);
@@ -795,6 +917,109 @@ export default function FormBuilder({ initialForm, publicUrl, currentUser, formI
                             </div>
                           </div>
                         )}
+
+                        {(() => {
+                          const earlier = earlierQuestions(form, question.id);
+                          const logic = questionLogic(question);
+                          const parent = logic
+                            ? form.sections
+                                .flatMap((entry) => entry.questions)
+                                .find((entry) => entry.id === logic.questionId)
+                            : null;
+                          if (earlier.length === 0) return null;
+
+                          return (
+                            <div className="flex flex-wrap items-end gap-2">
+                              <label className="field" style={{ minWidth: "14rem" }}>
+                                <span className="field-label">Show this question</span>
+                                <select
+                                  className="select"
+                                  value={logic?.questionId || ""}
+                                  onChange={(event) =>
+                                    updateQuestion(section.id, question.id, {
+                                      logic: event.target.value
+                                        ? {
+                                            questionId: event.target.value,
+                                            operator: "is",
+                                            value: "",
+                                          }
+                                        : null,
+                                    })
+                                  }
+                                >
+                                  <option value="">Always</option>
+                                  {earlier.map((entry) => (
+                                    <option key={entry.id} value={entry.id}>
+                                      {entry.title || "Untitled question"}
+                                    </option>
+                                  ))}
+                                </select>
+                              </label>
+
+                              {logic && (
+                                <label className="field" style={{ minWidth: "9rem" }}>
+                                  <span className="field-label">When that answer</span>
+                                  <select
+                                    className="select"
+                                    value={logic.operator}
+                                    onChange={(event) =>
+                                      updateQuestion(section.id, question.id, {
+                                        logic: { ...logic, operator: event.target.value },
+                                      })
+                                    }
+                                  >
+                                    {LOGIC_OPERATORS.map((operator) => (
+                                      <option key={operator.id} value={operator.id}>
+                                        {operator.label}
+                                      </option>
+                                    ))}
+                                  </select>
+                                </label>
+                              )}
+
+                              {logic &&
+                                logic.operator !== "answered" &&
+                                logic.operator !== "empty" &&
+                                ((parent?.options || []).filter((option) => option.label).length > 0 ? (
+                                  <label className="field" style={{ minWidth: "10rem" }}>
+                                    <span className="field-label">Value</span>
+                                    <select
+                                      className="select"
+                                      value={logic.value}
+                                      onChange={(event) =>
+                                        updateQuestion(section.id, question.id, {
+                                          logic: { ...logic, value: event.target.value },
+                                        })
+                                      }
+                                    >
+                                      <option value="">Choose…</option>
+                                      {parent.options
+                                        .filter((option) => option.label)
+                                        .map((option) => (
+                                          <option key={option.id} value={option.label}>
+                                            {option.label}
+                                          </option>
+                                        ))}
+                                    </select>
+                                  </label>
+                                ) : (
+                                  <label className="field" style={{ minWidth: "10rem" }}>
+                                    <span className="field-label">Value</span>
+                                    <input
+                                      className="input"
+                                      value={logic.value}
+                                      placeholder="Answer text"
+                                      onChange={(event) =>
+                                        updateQuestion(section.id, question.id, {
+                                          logic: { ...logic, value: event.target.value },
+                                        })
+                                      }
+                                    />
+                                  </label>
+                                ))}
+                            </div>
+                          );
+                        })()}
 
                         <div
                           className="flex flex-wrap items-center justify-between gap-2 pt-2"
@@ -854,6 +1079,15 @@ export default function FormBuilder({ initialForm, publicUrl, currentUser, formI
                   })}
                   {section.questions.length === 0 && (
                     <p className="faint text-sm text-center py-3">No questions in this section yet.</p>
+                  )}
+                  {dragging?.type === "question" && (
+                    <div
+                      className="question-drop"
+                      onDragOver={(event) => event.preventDefault()}
+                      onDrop={(event) => dropQuestion(event, section.id, section.questions.length)}
+                    >
+                      Drop at the end of this section
+                    </div>
                   )}
                 </div>
 

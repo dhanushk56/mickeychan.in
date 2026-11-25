@@ -1,6 +1,6 @@
 import { unstable_noStore as noStore } from "next/cache";
 import { kvGet } from "@/lib/kv";
-import { ANNOUNCEMENTS_KEY, readAnnouncements } from "@/lib/announcements";
+import { ANNOUNCEMENTS_KEY, publicAnnouncements, readAnnouncements } from "@/lib/announcements";
 import AnnouncementExplorer from "@/components/announcements/AnnouncementExplorer";
 
 export const dynamic = "force-dynamic";
@@ -16,8 +16,9 @@ export const metadata = {
 export default async function AnnouncementsPage() {
   noStore();
 
-  const list = readAnnouncements(await kvGet(ANNOUNCEMENTS_KEY, []));
   const now = Date.now();
+  // Scheduled notices stay out of the page source until their time comes.
+  const list = publicAnnouncements(readAnnouncements(await kvGet(ANNOUNCEMENTS_KEY, [])), now);
 
   return (
     <main className="page">

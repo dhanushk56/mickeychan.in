@@ -6,7 +6,7 @@ import { listEvents, splitEvents } from "@/lib/events";
 import { getHomeConfig, milestoneList, pickFeaturedVideo, tickerItems, videoOfWeek } from "@/lib/home";
 import { listMembers, publicProfile } from "@/lib/members";
 import { readProfileSettings } from "@/lib/profile";
-import { socials } from "@/data/socials";
+import { getSocials } from "@/lib/socials";
 import SocialIcon from "@/components/SocialIcon";
 import HomeMotion from "@/components/HomeMotion";
 import Countdown from "@/components/Countdown";
@@ -45,7 +45,7 @@ function shortName(social) {
   return social.short || social.name.split(" (")[0];
 }
 
-function channelName(channel) {
+function channelName(channel, socials = []) {
   const handle = String(channel.handle || "").toLowerCase();
   const social = socials.find((entry) =>
     String(entry.href || "").toLowerCase().endsWith(`/@${handle}`)
@@ -88,7 +88,7 @@ async function consentedMembers(usernames = []) {
   return found.filter(Boolean);
 }
 
-function Poster({ entry, order }) {
+function Poster({ entry, order, socials }) {
   const { channel, video } = entry;
   return (
     <Link href={`/videos?v=${video.id}`} className="home-poster" data-home-reveal>
@@ -104,7 +104,7 @@ function Poster({ entry, order }) {
         <span className="play-badge" aria-hidden="true">▶</span>
       </div>
       <div className="home-poster-body">
-        <p className="home-poster-channel">{channelName(channel)}</p>
+        <p className="home-poster-channel">{channelName(channel, socials)}</p>
         <p className="home-poster-title">{video.title}</p>
         <p className="home-poster-meta">{videoMeta(video)}</p>
       </div>
@@ -163,6 +163,7 @@ export default async function Home() {
     listEvents(),
   ]);
 
+  const socials = await getSocials();
   const longForm = videos.filter((video) => video.type !== "short");
   const shorts = videos.filter((video) => video.type === "short");
   const latest = videos.slice(0, 3);
@@ -250,13 +251,18 @@ export default async function Home() {
               <div className="home-posters-head">
                 <p className="kicker">Latest uploads</p>
                 <span className="badge badge-neutral">
-                  {heroChannels.size > 1 ? "Both channels" : channelName(featured[0].channel)}
+                  {heroChannels.size > 1 ? "Both channels" : channelName(featured[0].channel, socials)}
                 </span>
               </div>
 
               <div className="home-posters-grid">
                 {featured.map((entry, index) => (
-                  <Poster key={entry.video.id} entry={entry} order={`0${index + 1}`} />
+                  <Poster
+                    key={entry.video.id}
+                    entry={entry}
+                    order={`0${index + 1}`}
+                    socials={socials}
+                  />
                 ))}
               </div>
 
@@ -270,7 +276,7 @@ export default async function Home() {
                   rel="noreferrer"
                   className="home-text-link"
                 >
-                  Open {channelName(featured[0].channel)} ↗
+                  Open {channelName(featured[0].channel, socials)} ↗
                 </a>
               </div>
 

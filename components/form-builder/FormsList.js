@@ -4,20 +4,26 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useConfirm } from "@/components/ConfirmDialog";
+import { FORM_TEMPLATE_OPTIONS } from "@/lib/form-builder/templates";
 
 export default function FormsList({ initialForms, currentUser }) {
   const router = useRouter();
   const [forms, setForms] = useState(initialForms);
   const [creating, setCreating] = useState(false);
+  const [templateId, setTemplateId] = useState("");
   const [error, setError] = useState("");
   const [copiedId, setCopiedId] = useState("");
   const [dialog, askConfirm] = useConfirm();
 
-  async function createForm() {
+  async function createForm({ templateId: template = "", fromFormId = "" } = {}) {
     setCreating(true);
     setError("");
     try {
-      const response = await fetch("/api/form-builder/forms", { method: "POST" });
+      const response = await fetch("/api/form-builder/forms", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(template ? { templateId: template } : fromFormId ? { fromFormId } : {}),
+      });
       if (!response.ok) throw new Error("Could not create a new form.");
       const { id } = await response.json();
       router.push(`/form-builder/${id}`);
@@ -74,12 +80,40 @@ export default function FormsList({ initialForms, currentUser }) {
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-          <button type="button" onClick={createForm} disabled={creating} className="btn btn-primary">
-            {creating ? "Creating…" : "+ Create new form"}
-          </button>
+        <div className="flex flex-wrap items-end justify-between gap-3 mb-4">
+          <div className="flex flex-wrap items-end gap-2">
+            <button
+              type="button"
+              onClick={() => createForm({ templateId })}
+              disabled={creating}
+              className="btn btn-primary"
+            >
+              {creating ? "Creating…" : templateId ? "+ Create from template" : "+ Create new form"}
+            </button>
+            <label className="field" style={{ minWidth: "15rem" }}>
+              <span className="field-label">Start from a template</span>
+              <select
+                className="select"
+                value={templateId}
+                onChange={(event) => setTemplateId(event.target.value)}
+              >
+                <option value="">Blank form</option>
+                {FORM_TEMPLATE_OPTIONS.map((template) => (
+                  <option key={template.id} value={template.id}>
+                    {template.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
           <span className="faint text-xs">{forms.length} forms</span>
         </div>
+
+        {templateId && (
+          <p className="faint text-xs mb-3">
+            {FORM_TEMPLATE_OPTIONS.find((template) => template.id === templateId)?.description}
+          </p>
+        )}
 
         {error && <p className="badge badge-denied mb-4">{error}</p>}
 
@@ -90,7 +124,12 @@ export default function FormsList({ initialForms, currentUser }) {
               Create your first form to start collecting applications. You can add sections,
               questions, and publish it when it&apos;s ready.
             </p>
-            <button type="button" onClick={createForm} className="btn btn-primary btn-sm mt-2" disabled={creating}>
+            <button
+              type="button"
+              onClick={() => createForm({ templateId })}
+              className="btn btn-primary btn-sm mt-2"
+              disabled={creating}
+            >
               + Create your first form
             </button>
           </div>
@@ -117,6 +156,14 @@ export default function FormsList({ initialForms, currentUser }) {
                     <Link href={`/form-builder/${form.id}`} className="btn btn-secondary btn-sm">
                       Edit
                     </Link>
+                    <button
+                      type="button"
+                      className="btn btn-secondary btn-sm"
+                      onClick={() => createForm({ fromFormId: form.id })}
+                      disabled={creating}
+                    >
+                      Duplicate
+                    </button>
                     <button
                       type="button"
                       onClick={() => deleteForm(form.id)}

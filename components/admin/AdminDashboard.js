@@ -12,6 +12,7 @@ import IdeasPanel from "@/components/admin/IdeasPanel";
 import EnquiriesPanel from "@/components/admin/EnquiriesPanel";
 import HomePanel from "@/components/admin/HomePanel";
 import MaintenancePanel from "@/components/admin/MaintenancePanel";
+import SocialsPanel from "@/components/admin/SocialsPanel";
 import { AdminsPanel, RolesPanel } from "@/components/admin/AccessPanels";
 import { useConfirm, usePrompt } from "@/components/ConfirmDialog";
 import { downloadCsv } from "@/lib/csv";
@@ -62,6 +63,7 @@ function formatValue(value) {
   if (Array.isArray(value)) return value.join(", ") || "-";
   if (value && typeof value === "object") {
     if (value.kind === "signature") return "Signature";
+    if (value.kind === "upload") return value.name || "Uploaded file";
     return Object.entries(value).map(([row, pick]) => `${row}: ${pick}`).join("; ") || "-";
   }
   if (value === undefined || value === null || value === "") return "-";
@@ -89,6 +91,18 @@ function ResponseValue({ value }) {
           strokeLinejoin="round"
         />
       </svg>
+    );
+  }
+  if (value && typeof value === "object" && value.kind === "upload") {
+    return (
+      <a
+        href={`/api/form-builder/uploads/${value.id}`}
+        target="_blank"
+        rel="noreferrer"
+        className="hover:underline break-all"
+      >
+        {value.name || "Uploaded file"}
+      </a>
     );
   }
   if (value && typeof value === "object" && !Array.isArray(value)) {
@@ -1028,6 +1042,7 @@ export default function AdminDashboard({ currentUser }) {
               { id: "ideas", label: "Ideas", show: can("ideas.view") },
               { id: "stories", label: "Stories", show: can("content.view") },
               { id: "studio", label: "Studio", show: can("content.view") },
+              { id: "socials", label: "Socials", show: can("content.view") },
               { id: "maintenance", label: "Maintenance", show: can("site.maintenance") },
               { id: "admins", label: "Admins", count: adminState.admins.length, show: can("admins.view") },
               { id: "roles", label: "Roles", show: can("roles.view") },
@@ -1318,6 +1333,8 @@ export default function AdminDashboard({ currentUser }) {
         {tab === "stories" && <StoriesPanel canEdit={can("content.edit")} />}
 
         {tab === "studio" && <StudioPanel canEdit={can("content.edit")} />}
+
+        {tab === "socials" && <SocialsPanel canEdit={can("content.edit")} />}
 
         {tab === "maintenance" && <MaintenancePanel />}
 
