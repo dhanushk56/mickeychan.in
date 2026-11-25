@@ -1,0 +1,28 @@
+name: Apply community
+on:
+  push:
+    paths:
+      - "transfer/go9.txt"
+permissions:
+  contents: write
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply
+        run: |
+          set -euo pipefail
+          cat transfer/nb1.b64 transfer/nb2.b64 transfer/nb3.b64 transfer/nb4.b64 > /tmp/all.b64
+          echo "total bytes: $(wc -c < /tmp/all.b64)"
+          base64 -d /tmp/all.b64 | gunzip > /tmp/b.patch
+          echo "patch sha: $(sha256sum /tmp/b.patch | cut -d' ' -f1)"
+          test "$(sha256sum /tmp/b.patch | cut -d' ' -f1)" = "497590c7bc1e9a18a6c79e4fbc274e567ddb166e3849fd6735278c04d04d64b8"
+          git apply /tmp/b.patch
+          rm -rf transfer
+          git rm -q .github/workflows/apply-community.yml
+          git config user.name "patch-bot"
+          git config user.email "patch-bot@users.noreply.github.com"
+          git add -A
+          git commit -m "Public profiles, notifications bell and member feed"
+          git push
