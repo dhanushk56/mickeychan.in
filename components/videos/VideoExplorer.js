@@ -169,10 +169,29 @@ export default function VideoExplorer({ videos, initialId = "", channelUrl, chan
     };
   }, [active]);
 
-  const years = useMemo(() => {
-    const set = new Set(videos.map(yearOf).filter(Boolean));
-    return Array.from(set).sort((a, b) => Number(b) - Number(a));
-  }, [videos]);
+  // Every year between the oldest video and today is listed, not just the years
+  // that happen to have a date, so the filter can never hide a whole year.
+  const yearCounts = useMemo(() => {
+    const scoped = videos.filter((video) => {
+      if (channel !== "all" && video.channel !== channel) return false;
+      if (type !== "all" && videoType(video) !== type) return false;
+      return true;
+    });
+    const counts = new Map();
+    for (const video of scoped) {
+      const year = yearOf(video);
+      if (!year) continue;
+      counts.set(year, (counts.get(year) || 0) + 1);
+    }
+    const known = Array.from(counts.keys()).map(Number);
+    const years = [];
+    if (known.length > 0) {
+      const newest = Math.max(new Date().getFullYear(), ...known);
+      const oldest = Math.min(...known);
+      for (let year = newest; year >= oldest; year -= 1) years.push(String(year));
+    }
+    return { all: scoped.length, years, counts };
+  }, [channel, type, videos]);
 
   const tags = useMemo(() => {
     const counts = new Map();
@@ -393,7 +412,7 @@ export default function VideoExplorer({ videos, initialId = "", channelUrl, chan
             </select>
           </label>
 
-          {years.length > 0 && (
+          {yearCounts.years.length > 0 && (
             <label className="field" style={{ minWidth: "8rem" }}>
               <span className="field-label">Year</span>
               <select
@@ -402,10 +421,10 @@ export default function VideoExplorer({ videos, initialId = "", channelUrl, chan
                 onChange={(event) => setYear(event.target.value)}
                 aria-label="Filter by year"
               >
-                <option value="all">Any year</option>
-                {years.map((item) => (
+                <option value="all">Any year ({yearCounts.all})</option>
+                {yearCounts.years.map((item) => (
                   <option key={item} value={item}>
-                    {item}
+                    {item} ({yearCounts.counts.get(item) ?? 0})
                   </option>
                 ))}
               </select>
