@@ -6,7 +6,6 @@ const PRIVATE_PATHS = [
   "/admin",
   "/api/",
   "/audit",
-  "/dashboard",
   "/form-builder",
   "/my-account",
   "/login",
