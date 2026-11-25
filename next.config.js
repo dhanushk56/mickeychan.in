@@ -9,7 +9,7 @@ const contentSecurityPolicy = [
   `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "font-src 'self' data: https://fonts.gstatic.com",
-  "img-src 'self' data: blob: https",
+  "img-src 'self' data: blob: https:",
   "media-src 'self'",
   "connect-src 'self'",
   "frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com",
