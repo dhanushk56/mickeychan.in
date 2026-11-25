@@ -1,3 +1,6 @@
+// Saved fallback list, used only when YouTube cannot be reached.
+// It deliberately carries no view counts or dates: those are live facts and
+// presenting saved numbers as current would be misleading.
 export const videos = [
   {
     "id": "aByJNO03mQo",
@@ -5,8 +8,8 @@ export const videos = [
     "url": "https://www.youtube.com/watch?v=aByJNO03mQo",
     "thumbnail": "https://i.ytimg.com/vi/aByJNO03mQo/hqdefault.jpg",
     "type": "video",
-    "published": "16h ago",
-    "views": "23K",
+    "published": "",
+    "views": "",
     "duration": "15:35"
   },
   {
@@ -15,8 +18,8 @@ export const videos = [
     "url": "https://www.youtube.com/watch?v=kp3-DHANjEs",
     "thumbnail": "https://i.ytimg.com/vi/kp3-DHANjEs/hqdefault.jpg",
     "type": "video",
-    "published": "6d ago",
-    "views": "87K",
+    "published": "",
+    "views": "",
     "duration": "16:25"
   },
   {
@@ -25,8 +28,8 @@ export const videos = [
     "url": "https://www.youtube.com/watch?v=sj08z8l2wb4",
     "thumbnail": "https://i.ytimg.com/vi/sj08z8l2wb4/hqdefault.jpg",
     "type": "video",
-    "published": "11d ago",
-    "views": "262K",
+    "published": "",
+    "views": "",
     "duration": "14:04"
   },
   {
@@ -35,8 +38,8 @@ export const videos = [
     "url": "https://www.youtube.com/watch?v=zfOeS-uRN-Q",
     "thumbnail": "https://i.ytimg.com/vi/zfOeS-uRN-Q/hqdefault.jpg",
     "type": "video",
-    "published": "2w ago",
-    "views": "63K",
+    "published": "",
+    "views": "",
     "duration": "30:33"
   },
   {
@@ -45,8 +48,8 @@ export const videos = [
     "url": "https://www.youtube.com/watch?v=yvIX-A_PNsI",
     "thumbnail": "https://i.ytimg.com/vi/yvIX-A_PNsI/hqdefault.jpg",
     "type": "video",
-    "published": "3w ago",
-    "views": "178K",
+    "published": "",
+    "views": "",
     "duration": "23:18"
   },
   {
@@ -55,8 +58,8 @@ export const videos = [
     "url": "https://www.youtube.com/watch?v=SMtnO-BMws4",
     "thumbnail": "https://i.ytimg.com/vi/SMtnO-BMws4/hqdefault.jpg",
     "type": "video",
-    "published": "1mo ago",
-    "views": "58K",
+    "published": "",
+    "views": "",
     "duration": "21:05"
   },
   {
@@ -65,8 +68,8 @@ export const videos = [
     "url": "https://www.youtube.com/watch?v=PxAlT5bngUs",
     "thumbnail": "https://i.ytimg.com/vi/PxAlT5bngUs/hqdefault.jpg",
     "type": "video",
-    "published": "1mo ago",
-    "views": "64K",
+    "published": "",
+    "views": "",
     "duration": "14:51"
   },
   {
@@ -75,8 +78,8 @@ export const videos = [
     "url": "https://www.youtube.com/watch?v=HdiW1jSKpkY",
     "thumbnail": "https://i.ytimg.com/vi/HdiW1jSKpkY/hqdefault.jpg",
     "type": "video",
-    "published": "1mo ago",
-    "views": "59K",
+    "published": "",
+    "views": "",
     "duration": "16:47"
   },
   {
@@ -85,8 +88,8 @@ export const videos = [
     "url": "https://www.youtube.com/watch?v=JJ1455V0zCg",
     "thumbnail": "https://i.ytimg.com/vi/JJ1455V0zCg/hqdefault.jpg",
     "type": "video",
-    "published": "1mo ago",
-    "views": "134K",
+    "published": "",
+    "views": "",
     "duration": "18:59"
   },
   {
@@ -95,8 +98,8 @@ export const videos = [
     "url": "https://www.youtube.com/watch?v=QQe-4QlOy_8",
     "thumbnail": "https://i.ytimg.com/vi/QQe-4QlOy_8/hqdefault.jpg",
     "type": "video",
-    "published": "1mo ago",
-    "views": "146K",
+    "published": "",
+    "views": "",
     "duration": "29:42"
   },
   {
@@ -105,8 +108,8 @@ export const videos = [
     "url": "https://www.youtube.com/watch?v=BuY4ncGaFNA",
     "thumbnail": "https://i.ytimg.com/vi/BuY4ncGaFNA/hqdefault.jpg",
     "type": "video",
-    "published": "1mo ago",
-    "views": "58K",
+    "published": "",
+    "views": "",
     "duration": "21:54"
   },
   {
@@ -115,8 +118,8 @@ export const videos = [
     "url": "https://www.youtube.com/watch?v=7LzGanTXNHE",
     "thumbnail": "https://i.ytimg.com/vi/7LzGanTXNHE/hqdefault.jpg",
     "type": "video",
-    "published": "2mo ago",
-    "views": "35K",
+    "published": "",
+    "views": "",
     "duration": "13:24"
   },
   {
@@ -126,7 +129,7 @@ export const videos = [
     "thumbnail": "https://i.ytimg.com/vi/mg3jPVe6Otw/oar2.jpg",
     "type": "short",
     "published": "",
-    "views": "17K",
+    "views": "",
     "duration": ""
   },
   {
@@ -136,7 +139,7 @@ export const videos = [
     "thumbnail": "https://i.ytimg.com/vi/UCVz2NGqYmg/oar2.jpg",
     "type": "short",
     "published": "",
-    "views": "395K",
+    "views": "",
     "duration": ""
   },
   {
@@ -146,7 +149,7 @@ export const videos = [
     "thumbnail": "https://i.ytimg.com/vi/Kq-Nh0Yindo/oar2.jpg",
     "type": "short",
     "published": "",
-    "views": "74K",
+    "views": "",
     "duration": ""
   },
   {
@@ -156,7 +159,7 @@ export const videos = [
     "thumbnail": "https://i.ytimg.com/vi/f5Bu-LCkV18/oar2.jpg",
     "type": "short",
     "published": "",
-    "views": "230K",
+    "views": "",
     "duration": ""
   },
   {
@@ -166,7 +169,7 @@ export const videos = [
     "thumbnail": "https://i.ytimg.com/vi/12Kopvq_MFo/oar2.jpg",
     "type": "short",
     "published": "",
-    "views": "473K",
+    "views": "",
     "duration": ""
   },
   {
@@ -176,7 +179,7 @@ export const videos = [
     "thumbnail": "https://i.ytimg.com/vi/hKz6YJlZctM/oar2.jpg",
     "type": "short",
     "published": "",
-    "views": "199K",
+    "views": "",
     "duration": ""
   },
   {
@@ -186,7 +189,7 @@ export const videos = [
     "thumbnail": "https://i.ytimg.com/vi/CJtxrkCOM0A/oar2.jpg",
     "type": "short",
     "published": "",
-    "views": "442K",
+    "views": "",
     "duration": ""
   },
   {
@@ -196,7 +199,7 @@ export const videos = [
     "thumbnail": "https://i.ytimg.com/vi/Z6RhO1g8OfE/oar2.jpg",
     "type": "short",
     "published": "",
-    "views": "388K",
+    "views": "",
     "duration": ""
   },
   {
@@ -206,7 +209,7 @@ export const videos = [
     "thumbnail": "https://i.ytimg.com/vi/LUWviwJpYLY/oar2.jpg",
     "type": "short",
     "published": "",
-    "views": "227K",
+    "views": "",
     "duration": ""
   },
   {
@@ -216,7 +219,7 @@ export const videos = [
     "thumbnail": "https://i.ytimg.com/vi/RUoJwuHjnbY/oar2.jpg",
     "type": "short",
     "published": "",
-    "views": "1.2M",
+    "views": "",
     "duration": ""
   },
   {
@@ -226,7 +229,7 @@ export const videos = [
     "thumbnail": "https://i.ytimg.com/vi/10tgSPsdDIM/oar2.jpg",
     "type": "short",
     "published": "",
-    "views": "351K",
+    "views": "",
     "duration": ""
   },
   {
@@ -236,7 +239,7 @@ export const videos = [
     "thumbnail": "https://i.ytimg.com/vi/m-UV4nTvGG0/oar2.jpg",
     "type": "short",
     "published": "",
-    "views": "155K",
+    "views": "",
     "duration": ""
   }
 ];

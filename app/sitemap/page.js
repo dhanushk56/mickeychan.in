@@ -21,7 +21,8 @@ const SECTIONS = [
     description: "Applications and getting in touch.",
     links: [
       { href: "/positions", label: "Open positions", note: "Roles currently open, with application forms" },
-      { href: "/join", label: "Contact", note: "Send a message to the team" },
+      { href: "/contact", label: "Contact", note: "Send a message without creating an account" },
+      { href: "/join", label: "Start a conversation", note: "Message the team from your account" },
     ],
   },
   {

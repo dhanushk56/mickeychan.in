@@ -40,7 +40,11 @@ export default async function JoinPage() {
               </Link>
             </div>
             <p className="faint text-xs mt-2">
-              Prefer email? Business and sponsorship enquiries go to business@mickeychan.in.
+              Don&apos;t want an account?{" "}
+              <Link href="/contact" className="hover:underline" style={{ color: "var(--primary)" }}>
+                Send a message without one
+              </Link>
+              . Business and sponsorship enquiries go to business@mickeychan.in.
             </p>
           </div>
         </div>

@@ -10,7 +10,8 @@ export default function Footer() {
           <Link href="/videos">Videos</Link>
           <Link href="/socials">Socials</Link>
           <Link href="/positions">Open positions</Link>
-          <Link href="/join">Contact</Link>
+          <Link href="/contact">Contact</Link>
+          <Link href="/join">Start a conversation</Link>
           <Link href="/sitemap">Sitemap</Link>
           <a href={socials[0]?.href} target="_blank" rel="noreferrer">
             {socials[0]?.short || "YouTube"} ↗

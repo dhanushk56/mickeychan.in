@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import AnnouncementsPanel from "@/components/admin/AnnouncementsPanel";
+import EnquiriesPanel from "@/components/admin/EnquiriesPanel";
 import { AdminsPanel, RolesPanel } from "@/components/admin/AccessPanels";
 import { useConfirm, usePrompt } from "@/components/ConfirmDialog";
 
@@ -926,6 +927,7 @@ export default function AdminDashboard({ currentUser }) {
             {[
               { id: "applications", label: "Applications", count: counts.total, show: can("applications.view") },
               { id: "messages", label: "Messages", count: counts.messages, show: can("messages.view") },
+              { id: "enquiries", label: "Enquiries", show: can("enquiries.view") || can("messages.view") },
               { id: "forms", label: "Forms", count: data.forms.length, show: can("forms.view") },
               { id: "accounts", label: "Accounts", count: data.accounts.length, show: can("accounts.view") },
               { id: "announcements", label: "Announcements", show: can("announcements.view") },
@@ -1190,6 +1192,13 @@ export default function AdminDashboard({ currentUser }) {
               ))
             )}
           </div>
+        )}
+
+        {tab === "enquiries" && (
+          <EnquiriesPanel
+            canManage={can("enquiries.manage") || can("messages.delete")}
+            canDelete={can("enquiries.delete") || can("messages.delete")}
+          />
         )}
 
         {tab === "announcements" && <AnnouncementsPanel />}

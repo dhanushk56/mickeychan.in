@@ -614,6 +614,21 @@
 
   .video-thumb[data-short="true"] { aspect-ratio: 9 / 16; }
 
+  .video-thumb-button {
+    display: block;
+    width: 100%;
+    padding: 0;
+    border: 0;
+    font: inherit;
+    color: inherit;
+    cursor: pointer;
+  }
+
+  .video-thumb-button:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: -3px;
+  }
+
   .video-thumb::after {
     content: "";
     position: absolute;
