@@ -9,7 +9,7 @@ const contentSecurityPolicy = [
   `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "font-src 'self' data: https://fonts.gstatic.com",
-  "img-src 'self' data: blob: https:",
+  "img-src 'self' data: blob: https",
   "media-src 'self'",
   "connect-src 'self'",
   "frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com",
@@ -19,6 +19,10 @@ const contentSecurityPolicy = [
 const nextConfig = {
   poweredByHeader: false,
   turbopack: { root: __dirname },
+  // The overview page moved to /hub. Member profiles stay under /community.
+  async redirects() {
+    return [{ source: "/community", destination: "/hub", permanent: true }];
+  },
   async headers() {
     return [
       {
