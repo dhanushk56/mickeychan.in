@@ -525,8 +525,30 @@
 
 .mobile-nav-search {
   display: flex;
+  align-items: center;
   gap: .4rem;
   padding: 0 1.1rem 1rem;
 }
 
-.mobile-nav-search .input { flex: 1; }
+.mobile-nav-search .input {
+  flex: 1;
+  min-width: 0;
+}
+
+.mobile-nav-search-submit {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border: 1px solid var(--glass-line);
+  border-radius: 999px;
+  background: var(--glass-soft);
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.mobile-nav-search-submit svg { width: 1rem; height: 1rem; }
+
+.mobile-nav-search-submit:hover { color: var(--primary); }

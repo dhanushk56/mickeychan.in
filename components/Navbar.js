@@ -346,8 +346,17 @@ export default function Navbar({ locked = false }) {
             aria-label="Search the site"
             autoComplete="off"
           />
-          <button type="submit" className="btn btn-secondary btn-sm">
-            Search
+          <button type="submit" className="mobile-nav-search-submit" aria-label="Search">
+            <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+              <circle cx="7" cy="7" r="4.6" fill="none" stroke="currentColor" strokeWidth="1.5" />
+              <path
+                d="M10.4 10.4 14 14"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+              />
+            </svg>
           </button>
         </form>
 
