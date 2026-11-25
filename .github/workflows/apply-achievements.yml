@@ -1,0 +1,27 @@
+name: Apply achievements
+on:
+  push:
+    paths:
+      - "transfer/go10.txt"
+permissions:
+  contents: write
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply
+        run: |
+          set -euo pipefail
+          cat transfer/ac1.b64 transfer/ac2.b64 > /tmp/all.b64
+          base64 -d /tmp/all.b64 | gunzip > /tmp/c.patch
+          echo "patch sha: $(sha256sum /tmp/c.patch | cut -d' ' -f1)"
+          test "$(sha256sum /tmp/c.patch | cut -d' ' -f1)" = "866b3d789ceb78f1b75202e72e5e9c9b06368829b1ec3db1ad7d28d657d329a5"
+          git apply /tmp/c.patch
+          rm -rf transfer
+          git rm -q .github/workflows/apply-achievements.yml
+          git config user.name "patch-bot"
+          git config user.email "patch-bot@users.noreply.github.com"
+          git add -A
+          git commit -m "Member achievements on the dashboard and public profile"
+          git push
