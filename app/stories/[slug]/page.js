@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { unstable_noStore as noStore } from "next/cache";
 import { kvGet } from "@/lib/kv";
+import Breadcrumbs from "@/components/Breadcrumbs";
 import { STORIES_KEY, findStory, isPublic, readStories, sortedBeats, statusMeta } from "@/lib/stories";
 
 export const dynamic = "force-dynamic";
@@ -38,9 +39,7 @@ export default async function StoryPage({ params }) {
   return (
     <main className="page">
       <div className="shell grid gap-6">
-        <Link href="/stories" className="text-sm muted">
-          ← All stories
-        </Link>
+        <Breadcrumbs items={[{ label: "Stories", href: "/stories" }, { label: story.title }]} />
 
         <header className="glass-card p-6 grid gap-3">
           <div className="flex flex-wrap items-center gap-2">
@@ -66,25 +65,6 @@ export default async function StoryPage({ params }) {
                     {beat.at && <span className="muted text-sm">{dayLabel(beat.at)}</span>}
                   </div>
                   {beat.text && <p className="text-sm" style={{ whiteSpace: "pre-line" }}>{beat.text}</p>}
-                </article>
-              ))}
-            </div>
-          )}
-        </section>
-
-        <section className="glass-card p-6 grid gap-4">
-          <h2 className="font-display font-bold text-xl">Clues</h2>
-          {story.clues.length === 0 ? (
-            <p className="muted text-sm">No clues logged for this arc.</p>
-          ) : (
-            <div className="panel-list">
-              {story.clues.map((clue) => (
-                <article key={clue.id} className="panel-item grid gap-1">
-                  <div className="flex flex-wrap items-baseline justify-between gap-2">
-                    <p className="font-display font-bold">{clue.label || "Clue"}</p>
-                    {clue.source && <span className="muted text-sm">From: {clue.source}</span>}
-                  </div>
-                  {clue.text && <p className="text-sm" style={{ whiteSpace: "pre-line" }}>{clue.text}</p>}
                 </article>
               ))}
             </div>

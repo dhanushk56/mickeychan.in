@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { channels, getVideo, getVideos, relatedVideos } from "@/lib/content";
 import { isoDurationFromSeconds } from "@/lib/youtube";
 import VideoShare from "@/components/videos/VideoShare";
+import Breadcrumbs from "@/components/Breadcrumbs";
 
 export const dynamic = "force-dynamic";
 
@@ -77,9 +78,7 @@ export default async function VideoPage({ params }) {
   return (
     <main className="page">
       <div className="shell">
-        <Link href="/videos" className="faint text-xs hover:underline">
-          ← All videos
-        </Link>
+        <Breadcrumbs items={[{ label: "Videos", href: "/videos" }, { label: video.title }]} />
 
         <div className="grid gap-6 mt-4 lg:grid-cols-[minmax(0,1fr)_18rem] items-start">
           <div className="min-w-0 grid gap-4">

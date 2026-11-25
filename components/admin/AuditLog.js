@@ -2,6 +2,9 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import { downloadCsv } from "@/lib/csv";
+
+const PAGE_SIZE = 50;
 import { useRouter } from "next/navigation";
 
 const ACTION_LABEL = {
@@ -110,6 +113,7 @@ export default function AuditLog({ currentUser }) {
   const [who, setWho] = useState("all");
   const [outcome, setOutcome] = useState("all");
   const [range, setRange] = useState("all");
+  const [page, setPage] = useState(1);
   const [syncedAt, setSyncedAt] = useState(null);
   const mounted = useRef(true);
 
@@ -185,6 +189,25 @@ export default function AuditLog({ currentUser }) {
     range !== "all" ||
     search.trim().length > 0;
 
+  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const currentPage = Math.min(page, pageCount);
+  const visible = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+
+  const exportRows = () => {
+    downloadCsv(`audit-log-${new Date().toISOString().slice(0, 10)}`, filtered, [
+      { label: "Time", value: (entry) => new Date(entry.at).toISOString() },
+      { label: "Area", value: (entry) => (entry.area === "admin" ? "Admin console" : "Website") },
+      { label: "Action", value: (entry) => ACTION_LABEL[entry.action] || entry.action },
+      { label: "Account", value: (entry) => entry.username },
+      { label: "Result", value: (entry) => (entry.ok ? "Done" : "Failed") },
+      { label: "Detail", value: (entry) => entry.detail },
+      { label: "IP", value: (entry) => entry.ip || "" },
+      { label: "City", value: (entry) => entry.city || "" },
+      { label: "Country", value: (entry) => entry.country || "" },
+      { label: "Timezone", value: (entry) => entry.timezone || "" },
+    ]);
+  };
+
   const clearFilters = () => {
     setScope("all");
     setAction("all");
@@ -192,6 +215,7 @@ export default function AuditLog({ currentUser }) {
     setOutcome("all");
     setRange("all");
     setSearch("");
+    setPage(1);
   };
 
   return (
@@ -332,6 +356,14 @@ export default function AuditLog({ currentUser }) {
                 ? `${filtered.length} of ${activity.length} match`
                 : "No filters applied, every recorded action is listed"}
             </span>
+            <button
+              type="button"
+              className="btn btn-secondary btn-sm"
+              onClick={exportRows}
+              disabled={filtered.length === 0}
+            >
+              Export CSV
+            </button>
           </div>
         </div>
 
@@ -352,7 +384,7 @@ export default function AuditLog({ currentUser }) {
           </div>
         ) : (
           <div className="grid gap-2">
-            {filtered.map((entry) => (
+            {visible.map((entry) => (
               <article key={entry.id} className="glass-card application-card">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div className="flex flex-wrap items-center gap-2 min-w-0">
@@ -379,6 +411,32 @@ export default function AuditLog({ currentUser }) {
                 )}
               </article>
             ))}
+          </div>
+        )}
+
+        {filtered.length > PAGE_SIZE && (
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="faint text-xs">
+              Page {currentPage} of {pageCount} · {filtered.length} entries
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                className="btn btn-secondary btn-sm"
+                onClick={() => setPage(Math.max(1, currentPage - 1))}
+                disabled={currentPage === 1}
+              >
+                Previous
+              </button>
+              <button
+                type="button"
+                className="btn btn-secondary btn-sm"
+                onClick={() => setPage(Math.min(pageCount, currentPage + 1))}
+                disabled={currentPage === pageCount}
+              >
+                Next
+              </button>
+            </div>
           </div>
         )}
       </div>

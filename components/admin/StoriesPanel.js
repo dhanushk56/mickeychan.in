@@ -3,14 +3,10 @@
 import { useEffect, useState } from "react";
 import { STORY_STATUSES, statusMeta } from "@/lib/stories";
 
-const EMPTY = { id: "", title: "", summary: "", status: "draft", beats: [], clues: [] };
+const EMPTY = { id: "", title: "", summary: "", status: "draft", beats: [] };
 
 function blankBeat() {
   return { id: "", title: "", text: "", at: "" };
-}
-
-function blankClue() {
-  return { id: "", label: "", text: "", source: "" };
 }
 
 export default function StoriesPanel({ canEdit = false }) {
@@ -44,14 +40,13 @@ export default function StoriesPanel({ canEdit = false }) {
       ...EMPTY,
       ...story,
       beats: (story.beats || []).map((beat) => ({ ...beat })),
-      clues: (story.clues || []).map((clue) => ({ ...clue })),
     });
   }
 
   function startNew() {
     setError("");
     setNote("");
-    setDraft({ ...EMPTY, beats: [], clues: [] });
+    setDraft({ ...EMPTY, beats: [] });
   }
 
   function patch(fields) {
@@ -62,13 +57,6 @@ export default function StoriesPanel({ canEdit = false }) {
     setDraft((current) => ({
       ...current,
       beats: current.beats.map((beat, position) => (position === index ? { ...beat, ...fields } : beat)),
-    }));
-  }
-
-  function patchClue(index, fields) {
-    setDraft((current) => ({
-      ...current,
-      clues: current.clues.map((clue, position) => (position === index ? { ...clue, ...fields } : clue)),
     }));
   }
 
@@ -83,7 +71,6 @@ export default function StoriesPanel({ canEdit = false }) {
         summary: draft.summary,
         status: draft.status,
         beats: draft.beats,
-        clues: draft.clues,
       };
       if (draft.id) body.id = draft.id;
       const response = await fetch("/api/admin/stories", {
@@ -136,7 +123,7 @@ export default function StoriesPanel({ canEdit = false }) {
           <div>
             <p className="font-display font-bold text-lg">Story arcs</p>
             <p className="muted text-sm">
-              What happened, in order, plus the clues that turned up along the way.
+              What happened, beat by beat, and how it ended.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -165,8 +152,8 @@ export default function StoriesPanel({ canEdit = false }) {
                 <div>
                   <p className="font-display font-bold">{story.title}</p>
                   <p className="muted text-sm">
-                    {story.beats.length} beat{story.beats.length === 1 ? "" : "s"} · {story.clues.length} clue
-                    {story.clues.length === 1 ? "" : "s"} · {statusMeta(story.status).label}
+                    {story.beats.length} beat{story.beats.length === 1 ? "" : "s"} ·{" "}
+                    {statusMeta(story.status).label}
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -298,70 +285,6 @@ export default function StoriesPanel({ canEdit = false }) {
                     onClick={() => patch({ beats: draft.beats.filter((_, position) => position !== index) })}
                   >
                     Remove beat
-                  </button>
-                )}
-              </div>
-            ))}
-          </div>
-
-          <div className="grid gap-3">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <p className="font-display font-bold">Clues</p>
-              {canEdit && (
-                <button
-                  type="button"
-                  className="btn btn-secondary btn-sm"
-                  onClick={() => patch({ clues: [...draft.clues, blankClue()] })}
-                >
-                  Add clue
-                </button>
-              )}
-            </div>
-            {draft.clues.length === 0 && <p className="muted text-sm">No clues logged yet.</p>}
-            {draft.clues.map((clue, index) => (
-              <div key={index} className="glass-inset p-4 grid gap-3">
-                <div className="flex flex-wrap gap-3">
-                  <label className="field flex-1" style={{ minWidth: "12rem" }}>
-                    <span className="field-label">Clue</span>
-                    <input
-                      className="input"
-                      value={clue.label}
-                      onChange={(event) => patchClue(index, { label: event.target.value })}
-                      maxLength={80}
-                      disabled={!canEdit}
-                      placeholder="Short name for it"
-                    />
-                  </label>
-                  <label className="field flex-1" style={{ minWidth: "12rem" }}>
-                    <span className="field-label">Where it came from</span>
-                    <input
-                      className="input"
-                      value={clue.source}
-                      onChange={(event) => patchClue(index, { source: event.target.value })}
-                      maxLength={120}
-                      disabled={!canEdit}
-                      placeholder="Video, stream, comment"
-                    />
-                  </label>
-                </div>
-                <label className="field">
-                  <span className="field-label">What it said</span>
-                  <textarea
-                    className="input"
-                    rows={2}
-                    value={clue.text}
-                    onChange={(event) => patchClue(index, { text: event.target.value })}
-                    maxLength={600}
-                    disabled={!canEdit}
-                  />
-                </label>
-                {canEdit && (
-                  <button
-                    type="button"
-                    className="btn btn-ghost btn-sm"
-                    onClick={() => patch({ clues: draft.clues.filter((_, position) => position !== index) })}
-                  >
-                    Remove clue
                   </button>
                 )}
               </div>

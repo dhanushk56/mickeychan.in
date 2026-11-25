@@ -25,7 +25,6 @@ function payload(body) {
     summary: body.summary,
     status: body.status,
     beats: body.beats,
-    clues: body.clues,
   };
 }
 

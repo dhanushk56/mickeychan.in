@@ -11,8 +11,10 @@ import EventsPanel from "@/components/admin/EventsPanel";
 import IdeasPanel from "@/components/admin/IdeasPanel";
 import EnquiriesPanel from "@/components/admin/EnquiriesPanel";
 import HomePanel from "@/components/admin/HomePanel";
+import MaintenancePanel from "@/components/admin/MaintenancePanel";
 import { AdminsPanel, RolesPanel } from "@/components/admin/AccessPanels";
 import { useConfirm, usePrompt } from "@/components/ConfirmDialog";
+import { downloadCsv } from "@/lib/csv";
 import ApplicationTimeline from "@/components/applications/ApplicationTimeline";
 import { APPLICATION_STATUSES } from "@/lib/applications";
 
@@ -620,6 +622,24 @@ export default function AdminDashboard({ currentUser }) {
     );
   }, [data.join, search]);
 
+  function exportApplications() {
+    downloadCsv(`applications-${filter}`, filteredApplications, [
+      { label: "Application", value: (entry) => entry.id },
+      { label: "Form", value: (entry) => entry.formTitle || entry.formId || "" },
+      { label: "Applicant", value: (entry) => entry.memberUsername || "" },
+      { label: "Status", value: (entry) => STATUS_META[entry.status]?.label || entry.status || "" },
+      { label: "Submitted", value: (entry) => entry.createdAt || "" },
+      {
+        label: "Answers",
+        value: (entry) =>
+          Object.values(entry.responses || {})
+            .map((answer) => formatValue(answer))
+            .filter(Boolean)
+            .join("; "),
+      },
+    ]);
+  }
+
   async function updateStatus(entry, status) {
     let note = "";
     if (status !== "pending") {
@@ -1008,6 +1028,7 @@ export default function AdminDashboard({ currentUser }) {
               { id: "ideas", label: "Ideas", show: can("ideas.view") },
               { id: "stories", label: "Stories", show: can("content.view") },
               { id: "studio", label: "Studio", show: can("content.view") },
+              { id: "maintenance", label: "Maintenance", show: can("site.maintenance") },
               { id: "admins", label: "Admins", count: adminState.admins.length, show: can("admins.view") },
               { id: "roles", label: "Roles", show: can("roles.view") },
             ]
@@ -1067,15 +1088,25 @@ export default function AdminDashboard({ currentUser }) {
               <p className="faint text-xs">
                 Deleting a submission also lets that person apply again.
               </p>
-              <button
-                type="button"
-                className="btn btn-ghost"
-                style={{ color: "var(--danger)" }}
-                onClick={deleteAllApplications}
-                disabled={clearing || counts.total === 0}
-              >
-                {clearing ? "Deleting…" : "Delete all submissions"}
-              </button>
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  className="btn btn-secondary btn-sm"
+                  onClick={exportApplications}
+                  disabled={filteredApplications.length === 0}
+                >
+                  Export CSV
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-ghost"
+                  style={{ color: "var(--danger)" }}
+                  onClick={deleteAllApplications}
+                  disabled={clearing || counts.total === 0}
+                >
+                  {clearing ? "Deleting…" : "Delete all submissions"}
+                </button>
+              </div>
             </div>
 
             {loading ? (
@@ -1287,6 +1318,8 @@ export default function AdminDashboard({ currentUser }) {
         {tab === "stories" && <StoriesPanel canEdit={can("content.edit")} />}
 
         {tab === "studio" && <StudioPanel canEdit={can("content.edit")} />}
+
+        {tab === "maintenance" && <MaintenancePanel />}
 
         {tab === "polls" && (
           <PollsPanel canCreate={can("polls.create")} canDelete={can("polls.delete")} />

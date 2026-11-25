@@ -6,6 +6,7 @@ import { limitReached, recordHit } from "@/lib/rate-limit";
 import { categoryMeta, createEnquiry, enquiryProblem, isEnquiryCategory } from "@/lib/enquiries";
 import { logActivity } from "@/lib/activity-log";
 import { enquiryConfirmation, isEmailConfigured, sendEmail } from "@/lib/email";
+import { CLOSED_ERROR, submissionsClosed } from "@/lib/maintenance";
 
 export const dynamic = "force-dynamic";
 
@@ -29,6 +30,10 @@ function originAllowed(request) {
 }
 
 export async function POST(request) {
+  if (await submissionsClosed()) {
+    return NextResponse.json({ error: CLOSED_ERROR }, { status: 503 });
+  }
+
   if (!originAllowed(request)) {
     return NextResponse.json({ error: "Invalid origin." }, { status: 403 });
   }

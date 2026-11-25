@@ -7,12 +7,17 @@ import { isCodeSecretConfigured, sendCodeEmail } from "@/lib/email-verification"
 import { limitReached, recordHit } from "@/lib/rate-limit";
 
 import { clientKey } from "@/lib/request-ips";
+import { CLOSED_ERROR, submissionsClosed } from "@/lib/maintenance";
 
 export const dynamic = "force-dynamic";
 
 const LIMIT = { max: 5, windowMs: 60 * 60 * 1000 };
 
 export async function POST(request) {
+  if (await submissionsClosed()) {
+    return NextResponse.json({ error: CLOSED_ERROR }, { status: 503 });
+  }
+
   // A member session and any confirmation code are signed with the session
   // secret. Without it sign-up cannot finish, so say what's missing up front.
   if (!isCodeSecretConfigured()) {

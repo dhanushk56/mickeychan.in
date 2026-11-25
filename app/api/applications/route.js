@@ -13,6 +13,7 @@ import {
 import { logActivity } from "@/lib/activity-log";
 import { EMAIL_VERIFICATION_REQUIRED } from "@/lib/features";
 import { blacklistEntry } from "@/lib/blacklist";
+import { CLOSED_ERROR, submissionsClosed } from "@/lib/maintenance";
 
 export const dynamic = "force-dynamic";
 
@@ -27,6 +28,10 @@ function flattenQuestions(form) {
 }
 
 export async function POST(request) {
+  if (await submissionsClosed()) {
+    return NextResponse.json({ error: CLOSED_ERROR }, { status: 503 });
+  }
+
   const member = await memberFromCookieStore(cookies());
   if (!member) {
     return NextResponse.json({ error: "Please log in to submit an application." }, { status: 401 });

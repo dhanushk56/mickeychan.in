@@ -6,6 +6,7 @@ import { categoryMeta, findThread } from "@/lib/forums";
 import { memberFromCookieStore } from "@/lib/members";
 import { can, resolveAdmin } from "@/lib/roles";
 import LocalTime from "@/components/LocalTime";
+import Breadcrumbs from "@/components/Breadcrumbs";
 import ReplyForm from "@/components/forums/ReplyForm";
 import { ReplyDelete, ThreadTools } from "@/components/forums/ThreadTools";
 
@@ -46,9 +47,7 @@ export default async function ThreadPage({ params }) {
   return (
     <main className="page">
       <div className="shell" style={{ maxWidth: "52rem" }}>
-        <Link href="/forums" className="faint text-xs hover:underline">
-          ← Back to forums
-        </Link>
+        <Breadcrumbs items={[{ label: "Forums", href: "/forums" }, { label: thread.title }]} />
 
         <article className="glass-card p-5 mt-4 grid gap-3">
           <div className="flex flex-wrap items-center gap-2">

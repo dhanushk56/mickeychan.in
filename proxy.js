@@ -31,9 +31,19 @@ function sameOrigin(request) {
 }
 
 export default function proxy(request) {
-  if (!MUTATING.has(request.method)) return NextResponse.next();
-  if (sameOrigin(request)) return NextResponse.next();
-  return NextResponse.json({ error: "Invalid origin." }, { status: 403 });
+  const headers = new Headers(request.headers);
+  // The layout reads this to keep the console and the sign in pages open while
+  // maintenance mode is on. It is always overwritten, so a visitor cannot choose
+  // which path skips the gate.
+  headers.set("x-mc-path", request.nextUrl.pathname);
+
+  if (MUTATING.has(request.method) && !sameOrigin(request)) {
+    return NextResponse.json({ error: "Invalid origin." }, { status: 403 });
+  }
+
+  return NextResponse.next({ request: { headers } });
 }
 
-export const config = { matcher: "/api/:path*" };
+export const config = {
+  matcher: ["/((?!_next/|.*\\..*).*)"],
+};

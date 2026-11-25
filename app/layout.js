@@ -12,6 +12,9 @@ import "./page-wipe.css";
 import "./hover.css";
 import "./auth-mark.css";
 import { Suspense } from "react";
+import { headers } from "next/headers";
+import { maintenanceStatus } from "@/lib/maintenance";
+import MaintenanceScreen from "@/components/MaintenanceScreen";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import PetalField from "@/components/PetalField";
@@ -42,7 +45,23 @@ export const metadata = {
   },
 };
 
-export default function RootLayout({ children }) {
+export default async function RootLayout({ children }) {
+  const pathname = (await headers()).get("x-mc-path") || "";
+  const maintenance = await maintenanceStatus(pathname);
+
+  if (maintenance.closed) {
+    return (
+      <html lang="en">
+        <body>
+          <div className="grid-veil" aria-hidden="true" />
+          <main className="relative z-10">
+            <MaintenanceScreen message={maintenance.message} />
+          </main>
+        </body>
+      </html>
+    );
+  }
+
   return (
     <html lang="en">
       <head>
