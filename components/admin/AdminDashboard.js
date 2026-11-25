@@ -14,6 +14,7 @@ import HomePanel from "@/components/admin/HomePanel";
 import MaintenancePanel from "@/components/admin/MaintenancePanel";
 import SocialsPanel from "@/components/admin/SocialsPanel";
 import { AdminsPanel, RolesPanel } from "@/components/admin/AccessPanels";
+import { CommandPalette, ShortcutSheet } from "@/components/admin/CommandPalette";
 import { useConfirm, usePrompt } from "@/components/ConfirmDialog";
 import { downloadCsv } from "@/lib/csv";
 import ApplicationTimeline from "@/components/applications/ApplicationTimeline";
@@ -509,6 +510,11 @@ export default function AdminDashboard({ currentUser }) {
   const [dialog, askConfirm] = useConfirm();
   const [promptDialog, askPrompt] = usePrompt();
   const [adminState, setAdminState] = useState({ admins: [], roles: [] });
+  const [paletteOpen, setPaletteOpen] = useState(false);
+  const [shortcutSheetOpen, setShortcutSheetOpen] = useState(false);
+  const [modKey, setModKey] = useState("Ctrl");
+  const searchRef = useRef(null);
+  const tabRefs = useRef(new Map());
 
   const load = useCallback(async () => {
     try {
@@ -610,6 +616,319 @@ export default function AdminDashboard({ currentUser }) {
   }, [adminState.admins]);
 
   const canManageAdmins = can("admins.manage");
+
+  // One list drives the tab bar, the palette and the bracket shortcuts, so a
+  // panel can never be missing from one of them.
+  const tabs = useMemo(
+    () =>
+      [
+        { id: "applications", label: "Applications", count: counts.total, show: can("applications.view") },
+        { id: "messages", label: "Messages", count: counts.messages, show: can("messages.view") },
+        { id: "enquiries", label: "Enquiries", show: can("enquiries.view") || can("messages.view") },
+        { id: "forms", label: "Forms", count: data.forms.length, show: can("forms.view") },
+        { id: "accounts", label: "Accounts", count: data.accounts.length, show: can("accounts.view") },
+        { id: "home", label: "Home page", show: can("content.view") },
+        { id: "announcements", label: "Announcements", show: can("announcements.view") },
+        { id: "polls", label: "Polls", show: can("polls.view") },
+        { id: "events", label: "Events", show: can("events.view") },
+        { id: "ideas", label: "Ideas", show: can("ideas.view") },
+        { id: "stories", label: "Stories", show: can("content.view") },
+        { id: "studio", label: "Studio", show: can("content.view") },
+        { id: "socials", label: "Socials", show: can("content.view") },
+        { id: "maintenance", label: "Maintenance", show: can("site.maintenance") },
+        { id: "admins", label: "Admins", count: adminState.admins.length, show: can("admins.view") },
+        { id: "roles", label: "Roles", show: can("roles.view") },
+      ].filter((item) => item.show),
+    [can, counts, data.accounts.length, data.forms.length, adminState.admins.length]
+  );
+
+  const filteredAccounts = useMemo(() => {
+    const term = search.trim().toLowerCase();
+    if (!term) return data.accounts;
+    return data.accounts.filter((account) =>
+      [account.username, account.name, account.email, account.phone]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase()
+        .includes(term)
+    );
+  }, [data.accounts, search]);
+
+  const searchIndex = useMemo(() => {
+    const entries = tabs.map((item) => ({
+      id: `tab-${item.id}`,
+      group: "Go to",
+      label: item.label,
+      hint:
+        typeof item.count === "number" ? (item.count === 0 ? "Empty" : `${item.count} items`) : "Panel",
+      keywords: "open tab panel",
+      run: () => {
+        setTab(item.id);
+        setSearch("");
+      },
+    }));
+
+    entries.push(
+      {
+        id: "action-focus-search",
+        group: "Actions",
+        label: "Jump to this tab's search box",
+        hint: "/",
+        keywords: "find filter search",
+        run: () => focusTabSearch(),
+      },
+      {
+        id: "action-refresh",
+        group: "Actions",
+        label: "Refresh console data",
+        hint: "R",
+        keywords: "reload sync poll",
+        run: () => refreshAll(),
+      },
+      {
+        id: "action-new-form",
+        group: "Actions",
+        label: "Create a new form",
+        hint: "Form builder",
+        keywords: "add build questions",
+        run: () => createForm(),
+      },
+      {
+        id: "action-audit",
+        group: "Actions",
+        label: "Open the audit log",
+        hint: "/audit",
+        keywords: "history activity who changed",
+        run: () => router.push("/audit"),
+      },
+      {
+        id: "action-sitemap",
+        group: "Actions",
+        label: "Open the sitemap",
+        hint: "/sitemap",
+        keywords: "pages links routes",
+        run: () => router.push("/sitemap"),
+      },
+      {
+        id: "action-builders",
+        group: "Actions",
+        label: "Open the form builder",
+        hint: "/form-builder",
+        keywords: "forms create edit",
+        run: () => router.push("/form-builder"),
+      },
+      {
+        id: "action-lock",
+        group: "Actions",
+        label: "Lock the console",
+        hint: "Signs out",
+        keywords: "logout leave",
+        run: () => {
+          window.location.href = "/api/auth/logout";
+        },
+      },
+      {
+        id: "action-shortcuts",
+        group: "Actions",
+        label: "Show every keyboard shortcut",
+        hint: "?",
+        keywords: "keys help",
+        run: () => setShortcutSheetOpen(true),
+      }
+    );
+
+    for (const entry of data.applications) {
+      const who = entry.memberUsername ? `@${entry.memberUsername}` : "Guest";
+      const answers = Object.values(entry.responses || {}).map(formatValue).join(" ");
+      entries.push({
+        id: `application-${entry.id}`,
+        group: "Applications",
+        label: `${who} · ${entry.formTitle || entry.formId || "Application"}`,
+        hint: `${STATUS_META[entry.status]?.label || "Pending"} · ${timeAgo(entry.createdAt)}`,
+        keywords: `${entry.status || ""} ${answers} ${entry.reviewNote || ""}`,
+        run: (term) => {
+          setTab("applications");
+          setFilter("all");
+          setSearch(entry.memberUsername || term);
+        },
+      });
+    }
+
+    for (const entry of data.join) {
+      entries.push({
+        id: `message-${entry.id}`,
+        group: "Messages",
+        label: entry.name || "Message",
+        hint: entry.email || entry.role || "Contact form",
+        keywords: `${entry.message || ""} ${entry.role || ""} ${entry.memberUsername || ""}`,
+        run: (term) => {
+          setTab("messages");
+          setSearch(entry.name || term);
+        },
+      });
+    }
+
+    for (const account of data.accounts) {
+      entries.push({
+        id: `account-${account.username}`,
+        group: "Accounts",
+        label: account.name ? `${account.name} (@${account.username})` : `@${account.username}`,
+        hint: account.email || (account.formBlocked ? "Forms blocked" : "Account"),
+        keywords: `${account.username || ""} ${account.phone || ""} ${account.source || ""} ${
+          account.formBlocked ? "blocked" : ""
+        }`,
+        run: (term) => {
+          setTab("accounts");
+          setSearch(account.username || term);
+        },
+      });
+    }
+
+    for (const form of data.forms) {
+      entries.push({
+        id: `form-${form.id}`,
+        group: "Forms",
+        label: form.title || "Untitled form",
+        hint: `${form.submissions || 0} submissions`,
+        keywords: `${form.id} ${form.published === false ? "draft" : "live"}`,
+        run: () => router.push(`/form-builder/${form.id}`),
+      });
+    }
+
+    return entries;
+  }, [tabs, data, router]);
+
+  const shortcutRows = useMemo(
+    () => [
+      {
+        group: "Everywhere",
+        items: [
+          { label: "Open global search", keys: [modKey, "K"] },
+          { label: "Jump to this tab's search box", keys: ["/"] },
+          { label: "Refresh console data", keys: ["R"] },
+          { label: "Show this list", keys: ["?"] },
+          { label: "Close the search or clear it", keys: ["Esc"] },
+        ],
+      },
+      {
+        group: "Move around",
+        items: [
+          { label: "Next tab", keys: ["]"] },
+          { label: "Previous tab", keys: ["["] },
+          { label: "Walk the tab bar", keys: ["←", "→"] },
+          { label: "First or last tab", keys: ["Home", "End"] },
+        ],
+      },
+      {
+        group: "In global search",
+        items: [
+          { label: "Move through results", keys: ["↑", "↓"] },
+          { label: "Open the highlighted result", keys: ["Enter"] },
+        ],
+      },
+    ],
+    [modKey]
+  );
+
+  useEffect(() => {
+    if (typeof navigator === "undefined") return;
+    if (/Mac|iPhone|iPad/i.test(navigator.platform || navigator.userAgent)) setModKey("⌘");
+  }, []);
+
+  useEffect(() => {
+    const onKey = (event) => {
+      const target = event.target;
+      const typing =
+        target instanceof HTMLElement &&
+        (target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.tagName === "SELECT" ||
+          target.isContentEditable);
+
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
+        event.preventDefault();
+        setPaletteOpen((open) => !open);
+        return;
+      }
+
+      if (event.key === "Escape") {
+        if (paletteOpen) {
+          setPaletteOpen(false);
+          return;
+        }
+        if (shortcutSheetOpen) {
+          setShortcutSheetOpen(false);
+          return;
+        }
+        if (document.querySelector('[aria-modal="true"]')) return;
+        if (!typing && search) setSearch("");
+        return;
+      }
+
+      if (typing || paletteOpen || shortcutSheetOpen) return;
+      if (document.querySelector('[aria-modal="true"]')) return;
+      if (event.altKey || event.ctrlKey || event.metaKey) return;
+
+      if (event.key === "?") {
+        event.preventDefault();
+        setShortcutSheetOpen(true);
+        return;
+      }
+      if (event.key === "/") {
+        event.preventDefault();
+        if (!focusTabSearch()) setPaletteOpen(true);
+        return;
+      }
+      if (event.key === "]") {
+        event.preventDefault();
+        stepTab(1);
+        return;
+      }
+      if (event.key === "[") {
+        event.preventDefault();
+        stepTab(-1);
+        return;
+      }
+      if (event.key.toLowerCase() === "r") {
+        event.preventDefault();
+        refreshAll();
+        setNotice("Console data refreshed.");
+      }
+    };
+
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [paletteOpen, shortcutSheetOpen, search, tabs, refreshAll, focusTabSearch, stepTab]);
+
+  // Functions are declared below so the palette and the key listener can call
+  // them without re-registering on every render.
+  function focusTabSearch() {
+    if (!searchRef.current) return false;
+    searchRef.current.focus();
+    searchRef.current.select();
+    return true;
+  }
+
+  function stepTab(direction) {
+    if (tabs.length === 0) return;
+    const index = tabs.findIndex((item) => item.id === tab);
+    const next = tabs[(index + direction + tabs.length) % tabs.length];
+    setTab(next.id);
+    setSearch("");
+  }
+
+  function onTabKeyDown(event, index) {
+    const last = tabs.length - 1;
+    let next = null;
+    if (event.key === "ArrowRight") next = index === last ? 0 : index + 1;
+    else if (event.key === "ArrowLeft") next = index === 0 ? last : index - 1;
+    else if (event.key === "Home") next = 0;
+    else if (event.key === "End") next = last;
+    if (next === null) return;
+    event.preventDefault();
+    setTab(tabs[next].id);
+    tabRefs.current.get(tabs[next].id)?.focus();
+  }
 
   const filteredApplications = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -979,6 +1298,36 @@ export default function AdminDashboard({ currentUser }) {
             <h1 className="display-lg mt-2">Submissions</h1>
           </div>
           <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              className="btn btn-secondary btn-sm admin-search-trigger"
+              onClick={() => setPaletteOpen(true)}
+              aria-keyshortcuts={modKey === "⌘" ? "Meta+K" : "Control+K"}
+            >
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.2"
+                aria-hidden="true"
+              >
+                <circle cx="11" cy="11" r="7" />
+                <path d="m20 20-3.6-3.6" strokeLinecap="round" />
+              </svg>
+              Search
+              <kbd className="kbd">{modKey} K</kbd>
+            </button>
+            <button
+              type="button"
+              className="btn btn-ghost btn-sm"
+              onClick={() => setShortcutSheetOpen(true)}
+              aria-label="Keyboard shortcuts"
+              title="Keyboard shortcuts"
+            >
+              ?
+            </button>
             <span className="badge badge-neutral">
               <span className="live-dot" data-stale={!live} aria-hidden="true" />
               {live ? "Live" : "Offline"}
@@ -1029,33 +1378,20 @@ export default function AdminDashboard({ currentUser }) {
 
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="tabbar" role="tablist">
-            {[
-              { id: "applications", label: "Applications", count: counts.total, show: can("applications.view") },
-              { id: "messages", label: "Messages", count: counts.messages, show: can("messages.view") },
-              { id: "enquiries", label: "Enquiries", show: can("enquiries.view") || can("messages.view") },
-              { id: "forms", label: "Forms", count: data.forms.length, show: can("forms.view") },
-              { id: "accounts", label: "Accounts", count: data.accounts.length, show: can("accounts.view") },
-              { id: "home", label: "Home page", show: can("content.view") },
-              { id: "announcements", label: "Announcements", show: can("announcements.view") },
-              { id: "polls", label: "Polls", show: can("polls.view") },
-              { id: "events", label: "Events", show: can("events.view") },
-              { id: "ideas", label: "Ideas", show: can("ideas.view") },
-              { id: "stories", label: "Stories", show: can("content.view") },
-              { id: "studio", label: "Studio", show: can("content.view") },
-              { id: "socials", label: "Socials", show: can("content.view") },
-              { id: "maintenance", label: "Maintenance", show: can("site.maintenance") },
-              { id: "admins", label: "Admins", count: adminState.admins.length, show: can("admins.view") },
-              { id: "roles", label: "Roles", show: can("roles.view") },
-            ]
-              .filter((item) => item.show)
-              .map((item) => (
+            {tabs.map((item, index) => (
               <button
                 key={item.id}
+                ref={(node) => {
+                  if (node) tabRefs.current.set(item.id, node);
+                  else tabRefs.current.delete(item.id);
+                }}
                 role="tab"
                 aria-selected={tab === item.id}
+                tabIndex={tab === item.id ? 0 : -1}
                 className="tab"
                 data-active={tab === item.id}
                 onClick={() => setTab(item.id)}
+                onKeyDown={(event) => onTabKeyDown(event, index)}
               >
                 {item.label}
                 {typeof item.count === "number" && <span className="tab-count">{item.count}</span>}
@@ -1063,11 +1399,25 @@ export default function AdminDashboard({ currentUser }) {
             ))}
           </div>
 
-          {["applications", "messages"].includes(tab) && (
+          {["applications", "messages", "accounts"].includes(tab) && (
             <input
+              ref={searchRef}
               className="input"
               style={{ maxWidth: "16rem" }}
-              placeholder={tab === "messages" ? "Search messages…" : "Search answers…"}
+              placeholder={
+                tab === "messages"
+                  ? "Search messages…"
+                  : tab === "accounts"
+                    ? "Search accounts…"
+                    : "Search answers…"
+              }
+              aria-label={
+                tab === "messages"
+                  ? "Search messages"
+                  : tab === "accounts"
+                    ? "Search accounts"
+                    : "Search answers"
+              }
               value={search}
               onChange={(event) => setSearch(event.target.value)}
             />
@@ -1298,8 +1648,15 @@ export default function AdminDashboard({ currentUser }) {
                   Accounts show up here as people register, plus any listed in data/users.json.
                 </p>
               </div>
+            ) : filteredAccounts.length === 0 ? (
+              <div className="empty-state">
+                <p className="font-display font-bold">No accounts match that</p>
+                <p className="muted text-sm max-w-md">
+                  Try a username, a display name or an email.
+                </p>
+              </div>
             ) : (
-              data.accounts.map((account) => (
+              filteredAccounts.map((account) => (
                 <AccountRow
                   key={account.username}
                   account={account}
@@ -1416,6 +1773,19 @@ export default function AdminDashboard({ currentUser }) {
           </div>
         )}
             </div>
+
+      <CommandPalette
+        open={paletteOpen}
+        onClose={() => setPaletteOpen(false)}
+        items={searchIndex}
+        modKey={modKey}
+      />
+      <ShortcutSheet
+        open={shortcutSheetOpen}
+        onClose={() => setShortcutSheetOpen(false)}
+        rows={shortcutRows}
+      />
+
       {dialog}
       {promptDialog}
     </div>
