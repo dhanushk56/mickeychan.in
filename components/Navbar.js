@@ -26,7 +26,7 @@ const NAV = [
   { href: "/positions", label: "Open positions" },
 ];
 
-export default function Navbar() {
+export default function Navbar({ locked = false }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [groupOpen, setGroupOpen] = useState(false);
@@ -98,6 +98,41 @@ export default function Navbar() {
   useEffect(() => {
     if (communityActive) setGroupOpen(true);
   }, [communityActive]);
+
+  // While the site is closed, the bar is shown but every control in it is inert
+  // until someone unlocks the console. Nothing here navigates or opens a menu.
+  if (locked) {
+    return (
+      <header className="site-nav">
+        <div className="nav-shell" data-scrolled={scrolled} data-locked="true">
+          <div className="nav-start">
+            <span className="badge badge-pending">Locked</span>
+          </div>
+
+          <span className="nav-brand" data-locked="true" aria-disabled="true">
+            <span className="nav-wordmark">Mickey Chan</span>
+            <img src="/mickey-logo.png" alt="" className="brand-logo" width={34} height={34} />
+          </span>
+
+          <div className="nav-end">
+            <nav className="nav-links" aria-label="Main">
+              {NAV.map((entry) => (
+                <span
+                  key={entry.label}
+                  className="nav-link"
+                  data-locked="true"
+                  aria-disabled="true"
+                  title="Locked while the site is in maintenance"
+                >
+                  {entry.label}
+                </span>
+              ))}
+            </nav>
+          </div>
+        </div>
+      </header>
+    );
+  }
 
   return (
     <>

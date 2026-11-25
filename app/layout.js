@@ -79,7 +79,7 @@ export default async function RootLayout({ children }) {
         <Suspense fallback={null}>
           <RouteWipe />
         </Suspense>
-        <Navbar />
+        <Navbar locked={maintenance.locked} />
         <BackToTop />
         <main className="relative z-10 pt-24">{children}</main>
         <Footer />

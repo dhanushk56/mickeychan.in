@@ -453,3 +453,17 @@
     font-size: 1.05rem;
     font-weight: 600;
   }
+
+/* Maintenance mode: the bar is visible so the site still looks like itself, but
+   nothing in it responds until the console is unlocked. */
+.nav-shell[data-locked="true"] .nav-link[data-locked="true"],
+.nav-brand[data-locked="true"] {
+  opacity: .45;
+  cursor: not-allowed;
+  pointer-events: none;
+  user-select: none;
+}
+
+.nav-shell[data-locked="true"] .nav-link[data-locked="true"]::after {
+  display: none;
+}
