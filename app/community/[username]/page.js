@@ -58,6 +58,10 @@ export default async function CommunityProfilePage({ params }) {
     playlists = docs.filter((doc) => doc && doc.public);
   }
 
+  const badges = [];
+  if (playlists.length >= 1) badges.push("Shared a playlist");
+  if (playlists.length >= 3) badges.push("Curator");
+
   const videos = playlists.length > 0 ? await getVideos() : [];
   const byId = new Map(videos.map((video) => [video.id, video]));
 
@@ -77,6 +81,15 @@ export default async function CommunityProfilePage({ params }) {
             <h1 className="display-lg">{name}</h1>
             <p className="muted text-sm">@{member.username}</p>
             {joined && <p className="faint text-xs">Member since {joined}</p>}
+            {badges.length > 0 && (
+              <ul className="community-badges">
+                {badges.map((badge) => (
+                  <li key={badge} className="badge badge-accepted">
+                    {badge}
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         </header>
 

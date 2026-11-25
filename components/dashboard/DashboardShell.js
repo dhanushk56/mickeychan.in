@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useConfirm, usePrompt } from "@/components/ConfirmDialog";
 import { useToast } from "@/components/ui/Toast";
 import EmptyState from "@/components/ui/EmptyState";
+import { buildAchievements } from "@/lib/achievements";
 
 const TABS = [
   { id: "overview", label: "Overview" },
@@ -80,6 +81,10 @@ export default function DashboardShell({
       applications: applications.length,
     }),
     [library, applications]
+  );
+  const achievements = useMemo(
+    () => buildAchievements({ library, applications, settings }),
+    [library, applications, settings]
   );
 
   function go(next) {
@@ -244,6 +249,30 @@ export default function DashboardShell({
             <Stat label="Playlists" value={counts.playlists} hint="Your own collections" />
             <Stat label="History" value={counts.history} hint="Recent watches" />
             <Stat label="Applications" value={counts.applications} hint="Roles you applied to" />
+          </div>
+
+          <div className="glass-card dash-card">
+            <div className="dash-card-head">
+              <h2 className="font-display font-bold">Achievements</h2>
+              <span className="badge badge-neutral">
+                {achievements.earned} of {achievements.total}
+              </span>
+            </div>
+            <ul className="ach-grid">
+              {achievements.items.map((entry) => (
+                <li key={entry.id} className="ach" data-earned={entry.earned}>
+                  <span className="ach-label">{entry.label}</span>
+                  <span className="ach-detail">{entry.detail}</span>
+                  <span className="ach-bar" aria-hidden="true">
+                    <span
+                      className="ach-bar-fill"
+                      style={{ width: `${Math.round((entry.have / entry.need) * 100)}%` }}
+                    />
+                  </span>
+                  <span className="faint text-xs">{entry.earned ? "Earned" : `${entry.have} of ${entry.need}`}</span>
+                </li>
+              ))}
+            </ul>
           </div>
 
           <div className="glass-card dash-card">
