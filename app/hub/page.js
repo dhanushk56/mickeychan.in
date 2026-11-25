@@ -68,6 +68,9 @@ export default async function CommunityPage() {
               <Link href="/polls" className="btn btn-secondary btn-sm">
                 Vote in a poll
               </Link>
+              <Link href="/stories" className="btn btn-secondary btn-sm">
+                Read the stories
+              </Link>
             </div>
           </div>
 

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import AnnouncementsPanel from "@/components/admin/AnnouncementsPanel";
+import StoriesPanel from "@/components/admin/StoriesPanel";
 import PollsPanel from "@/components/admin/PollsPanel";
 import EventsPanel from "@/components/admin/EventsPanel";
 import IdeasPanel from "@/components/admin/IdeasPanel";
@@ -1004,6 +1005,7 @@ export default function AdminDashboard({ currentUser }) {
               { id: "polls", label: "Polls", show: can("polls.view") },
               { id: "events", label: "Events", show: can("events.view") },
               { id: "ideas", label: "Ideas", show: can("ideas.view") },
+              { id: "stories", label: "Stories", show: can("content.view") },
               { id: "admins", label: "Admins", count: adminState.admins.length, show: can("admins.view") },
               { id: "roles", label: "Roles", show: can("roles.view") },
             ]
@@ -1279,6 +1281,8 @@ export default function AdminDashboard({ currentUser }) {
         {tab === "home" && <HomePanel canEdit={can("content.edit")} />}
 
         {tab === "announcements" && <AnnouncementsPanel />}
+
+        {tab === "stories" && <StoriesPanel canEdit={can("content.edit")} />}
 
         {tab === "polls" && (
           <PollsPanel canCreate={can("polls.create")} canDelete={can("polls.delete")} />
