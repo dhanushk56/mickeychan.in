@@ -494,6 +494,14 @@
 
 .nav-search-input::placeholder { color: var(--text-faint); }
 
+.nav-search-kbd {
+  flex: none;
+  margin-left: .15rem;
+  opacity: .85;
+}
+
+.nav-search:has(.nav-search-input:focus) .nav-search-kbd { opacity: 0; }
+
 .nav-search-submit,
 .nav-search-button {
   display: none;

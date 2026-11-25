@@ -36,6 +36,8 @@ export default function Navbar({ locked = false }) {
   const [member, setMember] = useState(null);
   const [accountOpen, setAccountOpen] = useState(false);
   const accountRef = useRef(null);
+  const searchRef = useRef(null);
+  const drawerSearchRef = useRef(null);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12);
@@ -91,6 +93,55 @@ export default function Navbar({ locked = false }) {
       document.body.style.overflow = previousOverflow;
     };
   }, [open]);
+
+  // The search page and the console own their own keys, so this only runs
+  // everywhere else.
+  useEffect(() => {
+    if (pathname === "/search" || pathname.startsWith("/admin")) return undefined;
+
+    const onKey = (event) => {
+      const target = event.target;
+      const typing =
+        target instanceof HTMLElement &&
+        (target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.tagName === "SELECT" ||
+          target.isContentEditable);
+      if (typing) return;
+      if (document.querySelector('[aria-modal="true"]')) return;
+
+      const wantsSearch =
+        ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") ||
+        (event.key === "/" && !event.metaKey && !event.ctrlKey && !event.altKey);
+      if (!wantsSearch) return;
+
+      event.preventDefault();
+      if (searchRef.current && searchRef.current.offsetParent !== null) {
+        searchRef.current.focus();
+        searchRef.current.select();
+        return;
+      }
+
+      setOpen(true);
+      window.setTimeout(() => {
+        drawerSearchRef.current?.focus();
+        drawerSearchRef.current?.select();
+      }, 80);
+    };
+
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [pathname]);
+
+  function onSearchKeyDown(event) {
+    if (event.key !== "Escape") return;
+    if (search) {
+      event.preventDefault();
+      setSearch("");
+    } else {
+      event.currentTarget.blur();
+    }
+  }
 
   function submitSearch(event) {
     event.preventDefault();
@@ -221,15 +272,21 @@ export default function Navbar({ locked = false }) {
             </div>
             <form className="nav-search" role="search" onSubmit={submitSearch}>
               <input
+                ref={searchRef}
                 className="nav-search-input"
                 type="search"
                 name="q"
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
+                onKeyDown={onSearchKeyDown}
                 placeholder="Search"
                 aria-label="Search the site"
+                aria-keyshortcuts="Control+K Meta+K"
                 autoComplete="off"
               />
+              <kbd className="kbd nav-search-kbd" aria-hidden="true">
+                /
+              </kbd>
               <button type="submit" className="nav-search-submit" aria-label="Search">
                 <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
                   <circle cx="7" cy="7" r="4.6" fill="none" stroke="currentColor" strokeWidth="1.5" />
@@ -337,13 +394,16 @@ export default function Navbar({ locked = false }) {
       >
         <form className="mobile-nav-search" role="search" onSubmit={submitSearch}>
           <input
+            ref={drawerSearchRef}
             className="input"
             type="search"
             name="q"
             value={search}
             onChange={(event) => setSearch(event.target.value)}
+            onKeyDown={onSearchKeyDown}
             placeholder="Search the site"
             aria-label="Search the site"
+            aria-keyshortcuts="Control+K Meta+K"
             autoComplete="off"
           />
           <button type="submit" className="mobile-nav-search-submit" aria-label="Search">
