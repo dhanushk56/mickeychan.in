@@ -86,8 +86,9 @@ export default function FormBuilder({ initialForm, publicUrl, currentUser, formI
   const [dragging, setDragging] = useState(null);
 
   // Role details live in form.settings.job so older forms keep working with an
-  // empty set of fields.
-  const job = useMemo(() => jobMeta(form), [form]);
+  // empty set of fields. The draft holds exactly what was typed, spaces
+  // included, while the stored copy gets trimmed on read.
+  const [job, setJob] = useState(() => jobMeta(initialForm));
 
   const totals = useMemo(() => {
     const questions = form.sections.flatMap((section) => section.questions);
@@ -105,7 +106,9 @@ export default function FormBuilder({ initialForm, publicUrl, currentUser, formI
   }
 
   function updateJob(field, value) {
-    updateForm({ settings: { ...(form.settings || {}), job: { ...jobMeta(form), [field]: value } } });
+    const next = { ...job, [field]: value };
+    setJob(next);
+    updateForm({ settings: { ...(form.settings || {}), job: next } });
   }
 
   function updateForm(patch) {
