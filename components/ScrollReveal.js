@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
+import { lowPowerMode } from "@/lib/performance";
 
 const CARD_SELECTOR = [
   ".glass-card",
@@ -18,6 +19,7 @@ export default function ScrollReveal() {
   const pathname = usePathname();
 
   useEffect(() => {
+    if (lowPowerMode()) return undefined;
     const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (prefersReduced || typeof IntersectionObserver === "undefined") return undefined;
 

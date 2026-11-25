@@ -229,6 +229,8 @@ function RoleEditor({
   onDeleted,
   onError,
   onNotice,
+  expanded,
+  onToggle,
 }) {
   const [draft, setDraft] = useState({
     name: role.name,
@@ -308,6 +310,16 @@ function RoleEditor({
     >
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            className="icon-button"
+            aria-expanded={expanded}
+            title={expanded ? "Collapse this role" : "Expand this role"}
+            aria-label={expanded ? `Collapse ${role.name}` : `Expand ${role.name}`}
+            onClick={onToggle}
+          >
+            <span aria-hidden="true">{expanded ? "▾" : "▸"}</span>
+          </button>
           {reorderable && <ReorderHandle role={role} onArm={onArm} onMove={onMove} />}
           <h3 className="font-display font-bold">{role.name}</h3>
           {locked && <span className="badge badge-accepted">Locked</span>}
@@ -319,7 +331,7 @@ function RoleEditor({
             {role.members} {role.members === 1 ? "account" : "accounts"}
           </span>
         </div>
-        {canEdit && !locked && (
+        {expanded && canEdit && !locked && (
           <div className="flex flex-wrap items-center gap-2">
             <button type="button" className="btn btn-primary btn-sm" onClick={save} disabled={busy}>
               {busy ? "Saving…" : "Save role"}
@@ -337,6 +349,12 @@ function RoleEditor({
         )}
       </div>
 
+      {!expanded && role.description && (
+        <p className="muted text-xs mt-2">{role.description}</p>
+      )}
+
+      {expanded && (
+        <>
       <div className="flex flex-wrap items-end gap-2 mt-3">
         <label className="field flex-1" style={{ minWidth: "12rem" }}>
           <span className="field-label">Name</span>
@@ -385,6 +403,8 @@ function RoleEditor({
           ))}
         </div>
       )}
+        </>
+      )}
       {dialog}
     </article>
   );
@@ -403,6 +423,9 @@ export function RolesPanel({ canManage, canManageAdmins }) {
   const [draft, setDraft] = useState({ name: "", description: "", permissions: [] });
   const [dragId, setDragId] = useState("");
   const [dropId, setDropId] = useState("");
+  // Roles start folded: the names and permission counts are enough to scan the
+  // hierarchy, and one role can be opened when it needs changing.
+  const [expanded, setExpanded] = useState([]);
   const armed = useRef("");
 
   const load = useCallback(async () => {
@@ -539,6 +562,8 @@ export function RolesPanel({ canManage, canManageAdmins }) {
     endDrag();
   }
 
+  const allExpanded = roles.length > 0 && roles.every((role) => expanded.includes(role.id));
+
   if (loading && roles.length === 0) {
     return <div className="glass-card p-8 muted">Loading roles…</div>;
   }
@@ -551,9 +576,23 @@ export function RolesPanel({ canManage, canManageAdmins }) {
           above lower ones. Drag a role by its handle to move it. An admin can only manage roles and
           admins below their own, never their own role or anyone at or above it.
         </p>
-        <button type="button" className="btn btn-secondary btn-sm" onClick={load}>
-          Refresh
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            className="btn btn-secondary btn-sm"
+            onClick={() =>
+              setExpanded(
+                allExpanded ? [] : roles.map((role) => role.id)
+              )
+            }
+            disabled={roles.length === 0}
+          >
+            {allExpanded ? "Collapse all" : "Expand all"}
+          </button>
+          <button type="button" className="btn btn-secondary btn-sm" onClick={load}>
+            Refresh
+          </button>
+        </div>
       </div>
 
       {error && <p className="badge badge-denied">{error}</p>}
@@ -627,6 +666,14 @@ export function RolesPanel({ canManage, canManageAdmins }) {
           key={role.id}
           role={role}
           index={index}
+          expanded={expanded.includes(role.id)}
+          onToggle={() =>
+            setExpanded((current) =>
+              current.includes(role.id)
+                ? current.filter((id) => id !== role.id)
+                : [...current, role.id]
+            )
+          }
           canManage={canManage}
           reorderable={canManage && !role.locked && role.editable !== false}
           dragging={dragId === role.id}

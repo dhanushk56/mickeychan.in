@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { lowPowerMode } from "@/lib/performance";
 
 const easeOutCubic = (value) => 1 - Math.pow(1 - value, 3);
 
@@ -19,7 +20,10 @@ function parseCount(raw) {
 
 export default function HomeMotion() {
   useEffect(() => {
-    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    // Parallax and the count-up are decoration. In light mode the numbers land
+    // on their final value and the hero does not track the scroll at all.
+    const reduce =
+      lowPowerMode() || window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const hero = document.querySelector(".home-hero");
     const reveals = Array.from(document.querySelectorAll("[data-home-reveal]"));
 

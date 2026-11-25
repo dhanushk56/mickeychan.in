@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
+import { lowPowerMode } from "@/lib/performance";
 
 const SHOW_AT = 0.2;
 
@@ -44,7 +45,8 @@ export default function BackToTop() {
   }, [pathname]);
 
   const toTop = () => {
-    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const reduced =
+      lowPowerMode() || window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     window.scrollTo({ top: 0, left: 0, behavior: reduced ? "auto" : "smooth" });
   };
 

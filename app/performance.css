@@ -1,0 +1,72 @@
+/* Light motion mode for phones, low-core laptops and anyone who asked their
+   system for reduced motion. The inline script in the layout sets data-perf
+   before the first paint, so nothing here flashes the heavy version first.
+
+   The two costs that matter on weak hardware are live backdrop blur (repainted
+   under every scrolling card) and looping animations (woken every frame even
+   when nothing is happening). Both are removed, and every surface gets an
+   opaque background so text still reads without the blur behind it. */
+
+html[data-perf="low"] *,
+html[data-perf="low"] *::before,
+html[data-perf="low"] *::after {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  will-change: auto !important;
+  animation-delay: 0ms !important;
+  animation-duration: 1ms !important;
+  animation-iteration-count: 1 !important;
+  transition-delay: 0ms !important;
+  transition-duration: 120ms !important;
+}
+
+html[data-perf="low"] {
+  scroll-behavior: auto;
+}
+
+html[data-perf="low"] .glass-card,
+html[data-perf="low"] .glass-soft,
+html[data-perf="low"] .glass-strong,
+html[data-perf="low"] .glass-inset,
+html[data-perf="low"] .faq-item,
+html[data-perf="low"] .nav-shell,
+html[data-perf="low"] .nav-shell[data-scrolled="true"],
+html[data-perf="low"] .mobile-nav,
+html[data-perf="low"] .mobile-nav-user,
+html[data-perf="low"] .account-pop,
+html[data-perf="low"] .back-to-top,
+html[data-perf="low"] .builder-toolbar {
+  background: color-mix(in srgb, var(--bg-base) 91%, #ffffff 9%);
+  background-image: none;
+}
+
+/* Looping decorations are worth stopping outright rather than replaying once. */
+html[data-perf="low"] .home-marquee-track,
+html[data-perf="low"] .home-cue-line::after,
+html[data-perf="low"] .home-ping::after,
+html[data-perf="low"] .skeleton,
+html[data-perf="low"] .petal {
+  animation: none !important;
+}
+
+html[data-perf="low"] .home-ping::after {
+  opacity: .5;
+}
+
+/* The runner is a per-frame canvas, so it does not run here at all. */
+html[data-perf="low"] .scroll-runner {
+  display: none;
+}
+
+/* Home sections fade up from a 6px blur. On low hardware they simply start
+   visible, so there is no per-element blur to paint while scrolling. */
+html[data-perf="low"] .home [data-home-reveal] {
+  opacity: 1;
+  transform: none;
+  filter: none;
+  transition: none;
+}
+
+html[data-perf="low"] .site-footer {
+  padding-bottom: 3rem;
+}

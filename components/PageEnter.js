@@ -2,6 +2,7 @@
 
 import { useEffect, useLayoutEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
+import { lowPowerMode } from "@/lib/performance";
 
 const useClientLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect;
 
@@ -29,6 +30,7 @@ export default function PageEnter() {
       main.removeAttribute("data-entering");
       return;
     }
+    if (lowPowerMode()) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
     main.removeAttribute("data-entering");
