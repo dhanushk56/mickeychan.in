@@ -131,6 +131,14 @@ export default function Navbar() {
                         </span>
                       </div>
                       <Link
+                        href="/dashboard"
+                        className="account-pop-item"
+                        onClick={() => setAccountOpen(false)}
+                      >
+                        Dashboard
+                        <span aria-hidden="true">→</span>
+                      </Link>
+                      <Link
                         href="/my-account"
                         className="account-pop-item"
                         onClick={() => setAccountOpen(false)}
@@ -239,9 +247,17 @@ export default function Navbar() {
         {member ? (
           <>
             <Link
-              href="/my-account"
+              href="/dashboard"
               className="btn btn-secondary"
               style={{ "--i": String(drawerBase) }}
+              onClick={() => setOpen(false)}
+            >
+              Dashboard
+            </Link>
+            <Link
+              href="/my-account"
+              className="btn btn-secondary"
+              style={{ "--i": String(drawerBase + 1) }}
               onClick={() => setOpen(false)}
             >
               My account
@@ -249,7 +265,7 @@ export default function Navbar() {
             <LogoutButton
               endpoint="/api/auth/member/logout"
               className="btn btn-primary"
-              style={{ "--i": String(drawerBase + 1) }}
+              style={{ "--i": String(drawerBase + 2) }}
             >
               Log out
             </LogoutButton>

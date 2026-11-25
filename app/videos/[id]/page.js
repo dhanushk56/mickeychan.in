@@ -1,8 +1,12 @@
 import Link from "next/link";
+import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import { channels, getVideo, getVideos, relatedVideos } from "@/lib/content";
 import { isoDurationFromSeconds } from "@/lib/youtube";
 import VideoShare from "@/components/videos/VideoShare";
+import SaveMenu from "@/components/videos/SaveMenu";
+import { memberFromCookieStore } from "@/lib/members";
+import { recordHistory } from "@/lib/library";
 
 export const dynamic = "force-dynamic";
 
@@ -48,6 +52,10 @@ export default async function VideoPage({ params }) {
   const all = await getVideos();
   const video = all.find((entry) => entry.id === id) || (await getVideo(id));
   if (!video) notFound();
+
+  // Opening a video while signed in is what fills the dashboard's history.
+  const session = await memberFromCookieStore(cookies());
+  if (session) await recordHistory(session.username, video.id);
 
   const channel = channelOf(video);
   const related = relatedVideos(all, video, 8);
@@ -113,7 +121,10 @@ export default async function VideoPage({ params }) {
               )}
             </div>
 
-            <VideoShare videoId={video.id} title={video.title} url={video.url} />
+            <div className="video-actions">
+              <VideoShare videoId={video.id} title={video.title} url={video.url} />
+              <SaveMenu videoId={video.id} />
+            </div>
 
             {video.description ? (
               <div className="glass-card p-5">
