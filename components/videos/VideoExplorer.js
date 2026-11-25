@@ -47,15 +47,20 @@ function yearOf(video) {
   return Number.isFinite(year) && year >= 2005 ? String(year) : "";
 }
 
+// YouTube caps Shorts at three minutes, so a short whose duration the scrape
+// could not read is still shorter than every band except "under 5 min".
+const SHORT_MAX_SECONDS = 180;
+
 function matchesDuration(video, band) {
   if (band === "all") return true;
   const seconds = secondsOf(video);
-  if (band === "unknown") return seconds == null;
-  if (seconds == null) return false;
-  if (band === "under-5") return seconds < 300;
-  if (band === "5-15") return seconds >= 300 && seconds < 900;
-  if (band === "15-30") return seconds >= 900 && seconds < 1800;
-  if (band === "over-30") return seconds >= 1800;
+  const known = seconds != null ? seconds : videoType(video) === "short" ? SHORT_MAX_SECONDS : null;
+  if (band === "unknown") return known == null;
+  if (known == null) return false;
+  if (band === "under-5") return known < 300;
+  if (band === "5-15") return known >= 300 && known < 900;
+  if (band === "15-30") return known >= 900 && known < 1800;
+  if (band === "over-30") return known >= 1800;
   return true;
 }
 
@@ -205,6 +210,21 @@ export default function VideoExplorer({ videos, initialId = "", channelUrl, chan
       short: scoped.filter((video) => videoType(video) === "short").length,
     };
   }, [channel, videos]);
+
+  const durationCounts = useMemo(() => {
+    const scoped = videos.filter((video) => {
+      if (channel !== "all" && video.channel !== channel) return false;
+      if (type !== "all" && videoType(video) !== type) return false;
+      if (year !== "all" && yearOf(video) !== year) return false;
+      return true;
+    });
+    const map = { all: scoped.length };
+    for (const band of DURATIONS) {
+      if (band.id === "all") continue;
+      map[band.id] = scoped.filter((video) => matchesDuration(video, band.id)).length;
+    }
+    return map;
+  }, [channel, type, videos, year]);
 
   const visible = useMemo(() => {
     const needle = query.trim().toLowerCase();
@@ -367,7 +387,7 @@ export default function VideoExplorer({ videos, initialId = "", channelUrl, chan
             >
               {DURATIONS.map((item) => (
                 <option key={item.id} value={item.id}>
-                  {item.label}
+                  {item.label} ({durationCounts[item.id] ?? 0})
                 </option>
               ))}
             </select>
