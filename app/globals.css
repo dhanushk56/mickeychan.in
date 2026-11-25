@@ -2664,14 +2664,9 @@ html.is-arriving .home [data-home-reveal] { transition-delay: calc(var(--i, 0) *
 .job-meta-row dt { color: var(--text-faint); }
 .job-meta-row dd { margin: 0; font-weight: 600; text-align: right; }
 
-.role-list {
-  margin: 0;
-  padding-left: 1.1rem;
-  display: grid;
-  gap: .2rem;
+.role-text {
   font-size: .875rem;
   color: var(--text-muted);
-  list-style: disc;
 }
 
 /* --- Craft pass -----------------------------------------------------------

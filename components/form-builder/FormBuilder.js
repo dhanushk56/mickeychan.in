@@ -1213,21 +1213,21 @@ export default function FormBuilder({ initialForm, publicUrl, currentUser, formI
               </p>
               <div className="grid gap-3 md:grid-cols-2 border-t pt-4" style={{ borderColor: "var(--border)" }}>
                 <p className="font-semibold text-sm md:col-span-2">Role details</p>
-                {JOB_FIELDS.map((field) => (
-                  <label
-                    key={field.id}
-                    className={`field${field.multiline ? " md:col-span-2" : ""}`}
-                  >
-                    <span className="field-label">{field.label}</span>
-                    {field.multiline ? (
-                      <textarea
-                        className="textarea"
-                        rows={3}
+                {JOB_FIELDS.map((field) =>
+                  field.rich ? (
+                    <div key={field.id} className="field md:col-span-2">
+                      <span className="field-label">{field.label}</span>
+                      <RichTextEditor
+                        label={field.label}
                         value={job[field.id]}
                         placeholder={field.placeholder}
-                        onChange={(event) => updateJob(field.id, event.target.value)}
+                        minHeight="5.5rem"
+                        onChange={(blocks) => updateJob(field.id, blocks)}
                       />
-                    ) : (
+                    </div>
+                  ) : (
+                    <label key={field.id} className="field">
+                      <span className="field-label">{field.label}</span>
                       <input
                         className="input"
                         type={field.type === "date" ? "date" : "text"}
@@ -1235,12 +1235,13 @@ export default function FormBuilder({ initialForm, publicUrl, currentUser, formI
                         placeholder={field.placeholder}
                         onChange={(event) => updateJob(field.id, event.target.value)}
                       />
-                    )}
-                  </label>
-                ))}
+                    </label>
+                  )
+                )}
                 <p className="faint text-xs md:col-span-2">
                   Shown on the role card and the application page. Responsibilities and requirements
-                  render one item per line; leave anything blank to hide it.
+                  keep every line break and blank line you type, and highlighted text can be bold,
+                  underlined or resized. Leave a field blank to hide it.
                 </p>
               </div>
 
