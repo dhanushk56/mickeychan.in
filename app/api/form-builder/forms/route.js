@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { refreshPublic } from "@/lib/revalidate";
 import { kvGet, kvSet } from "@/lib/kv";
 import { emptyForm } from "@/lib/form-builder/schema";
 import { getSessionFromCookies } from "@/lib/auth";
@@ -31,7 +30,6 @@ export async function POST(request) {
   const index = await kvGet(INDEX_KEY, []);
   index.unshift({ id, title: form.title, published: false, createdAt: now, updatedAt: now });
   await kvSet(INDEX_KEY, index);
-  refreshPublic("forms");
 
   await logActivity({
     area: "admin",

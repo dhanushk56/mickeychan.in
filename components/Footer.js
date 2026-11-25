@@ -8,7 +8,6 @@ export default function Footer() {
         <p>© {new Date().getFullYear()} Mickey Chan. All rights reserved.</p>
         <nav className="footer-links" aria-label="Footer">
           <Link href="/videos">Videos</Link>
-          <Link href="/forums">Forums</Link>
           <Link href="/socials">Socials</Link>
           <Link href="/positions">Open positions</Link>
           <Link href="/contact">Contact</Link>

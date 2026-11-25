@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { refreshPublic } from "@/lib/revalidate";
 import { kvGet, kvSet } from "@/lib/kv";
 import { listJoinMessages } from "@/lib/join-messages";
 import { authorize } from "@/lib/admin-guard";
@@ -27,7 +26,6 @@ export async function PUT(request) {
     return NextResponse.json({ error: "Invalid content payload." }, { status: 400 });
   }
   await Promise.all([kvSet(VIDEOS_KEY, body.videos), kvSet(FORM_KEY, body.form)]);
-  refreshPublic("content");
 
   await logActivity({
     area: "admin",
