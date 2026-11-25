@@ -6,6 +6,8 @@ const BASE = `http://127.0.0.1:${PORT}`;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "smoke-console-password";
 const SESSION_SECRET = process.env.SESSION_SECRET || "smoke-session-secret";
 const MEMBER_PASSWORD = "Sm0ke-Test-Pass!";
+const OWNER_PASSWORD = process.env.SMOKE_OWNER_PASSWORD || "Sm0ke-Owner-Pass!";
+const THROWAWAY = `smoke${Date.now().toString(36).slice(-6)}`;
 const jar = new Map();
 const results = [];
 
@@ -95,9 +97,22 @@ if (!(await ready())) {
   });
   check("common password rejected", weak.status === 400, `${weak.status} ${weak.text.slice(0, 60)}`);
 
-  const registered = await req("POST", "/api/auth/register", {
+  const reserved = await req("POST", "/api/auth/register", {
     username: owner,
     name: "Smoke Owner",
+    email: "",
+    password: MEMBER_PASSWORD,
+    confirmPassword: MEMBER_PASSWORD,
+  });
+  check(
+    "the owner handle cannot be signed up for",
+    reserved.status === 400 || reserved.status === 409,
+    `${reserved.status} ${reserved.text.slice(0, 60)}`
+  );
+
+  const registered = await req("POST", "/api/auth/register", {
+    username: THROWAWAY,
+    name: "Smoke Test",
     email: "",
     password: MEMBER_PASSWORD,
     confirmPassword: MEMBER_PASSWORD,
@@ -105,13 +120,27 @@ if (!(await ready())) {
   check("member registration", registered.status === 200, `${registered.status} ${registered.text.slice(0, 60)}`);
 
   const memberLogin = await req("POST", "/api/auth/member", {
-    username: owner,
+    username: THROWAWAY,
     password: MEMBER_PASSWORD,
   });
   check("member login", memberLogin.status === 200, String(memberLogin.status));
 
   const memberSession = await req("GET", "/api/auth/member");
-  check("member session reads the cookie", memberSession.text.includes(owner), memberSession.text.slice(0, 60));
+  check(
+    "member session reads the cookie",
+    memberSession.text.includes(THROWAWAY),
+    memberSession.text.slice(0, 60)
+  );
+
+  const ownerLogin = await req("POST", "/api/auth/member", {
+    username: owner,
+    password: OWNER_PASSWORD,
+  });
+  check(
+    "owner sign-in uses the seeded account",
+    ownerLogin.status === 200,
+    `${ownerLogin.status} ${ownerLogin.text.slice(0, 60)}`
+  );
 
   const consoleLogin = await req("POST", "/api/auth/login", {
     username: "someone-else",
