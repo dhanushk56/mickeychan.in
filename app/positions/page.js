@@ -5,17 +5,23 @@ import { memberFromCookieStore } from "@/lib/members";
 import {
   STATUS_TEXT,
   applicationGate,
+  jobIsOpen,
+  jobSummary,
   listSubmissions,
   memberSubmission,
+  statusMeta,
 } from "@/lib/applications";
 import Countdown from "@/components/Countdown";
 import LocalTime from "@/components/LocalTime";
+import ApplicationTimeline from "@/components/applications/ApplicationTimeline";
+import JobMeta from "@/components/applications/JobMeta";
 import { isReadyForm } from "@/lib/form-builder/schema";
 import { EMAIL_VERIFICATION_REQUIRED } from "@/lib/features";
 
 export const metadata = {
   title: "Open Positions",
   description: "Current openings to join the Mickey Chan team.",
+  alternates: { canonical: "/positions" },
 };
 
 export const dynamic = "force-dynamic";
@@ -44,55 +50,31 @@ function StatusBlock({ gate, member }) {
     return <p className="muted text-sm">You haven&apos;t applied to this role yet.</p>;
   }
 
-  const submitted = (
-    <p className="faint text-xs">
-      Submitted <LocalTime iso={gate.submission.createdAt} />
-    </p>
-  );
-
-  if (gate.status === "pending") {
-    return (
-      <>
-        <span className="badge badge-pending">Pending review</span>
-        <p className="muted text-sm">{STATUS_TEXT.pending}</p>
-        {submitted}
-      </>
-    );
-  }
-
-  if (gate.status === "accepted") {
-    return (
-      <>
-        <span className="badge badge-accepted">Accepted</span>
-        <p className="muted text-sm whitespace-pre-wrap">
-          {gate.submission.reviewNote || STATUS_TEXT.accepted}
-        </p>
-        {submitted}
-        {gate.submission.reviewedBy && (
-          <p className="faint text-xs">{`Reviewed by @${gate.submission.reviewedBy}`}</p>
-        )}
-      </>
-    );
-  }
+  const submission = gate.submission;
+  const meta = statusMeta(gate.status);
 
   return (
     <>
-      <span className="badge badge-denied">Rejected</span>
+      <span className={`badge ${meta.badge} self-start`}>{meta.label}</span>
       <p className="muted text-sm whitespace-pre-wrap">
-        {gate.submission.reviewNote || STATUS_TEXT.denied}
+        {submission.reviewNote || STATUS_TEXT[gate.status]}
       </p>
-      {gate.canApply ? (
-        <p className="muted text-sm">Your cooldown is over — you can apply again now.</p>
-      ) : (
-        <p className="muted text-sm">
-          You can reapply in{" "}
-          {gate.availableAt ? <Countdown to={gate.availableAt} className="font-semibold" /> : "a moment"}.
-        </p>
-      )}
-      {submitted}
-      {gate.submission.reviewedBy && (
-        <p className="faint text-xs">{`Reviewed by @${gate.submission.reviewedBy}`}</p>
-      )}
+
+      {gate.status === "denied" &&
+        (gate.canApply ? (
+          <p className="muted text-sm">Your cooldown is over — you can apply again now.</p>
+        ) : (
+          <p className="muted text-sm">
+            You can reapply in{" "}
+            {gate.availableAt ? <Countdown to={gate.availableAt} className="font-semibold" /> : "a moment"}.
+          </p>
+        ))}
+
+      <ApplicationTimeline submission={submission} />
+
+      <p className="faint text-xs">
+        Submitted <LocalTime iso={submission.createdAt} />
+      </p>
     </>
   );
 }
@@ -111,7 +93,7 @@ export default async function PositionsPage() {
         return { entry, form, gate: applicationGate(form, submission) };
       })
     )
-  ).filter(({ form }) => isReadyForm(form));
+  ).filter(({ form }) => isReadyForm(form) && jobIsOpen(form));
 
   return (
     <main className="page">
@@ -177,6 +159,8 @@ export default async function PositionsPage() {
                         : "Open now"}
                     </p>
                   </div>
+
+                  <JobMeta form={form} />
 
                   <div className="grid gap-2">
                     <StatusBlock gate={gate} member={member} />

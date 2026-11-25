@@ -4,6 +4,7 @@ import SocialIcon from "@/components/SocialIcon";
 export const metadata = {
   title: "Socials",
   description: "Follow Mickey Chan across social platforms.",
+  alternates: { canonical: "/socials" },
 };
 
 export default function SocialsPage() {

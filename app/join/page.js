@@ -7,7 +7,10 @@ import { blacklistEntry } from "@/lib/blacklist";
 
 export const dynamic = "force-dynamic";
 
-export const metadata = { title: "Start a conversation" };
+export const metadata = {
+  title: "Start a conversation",
+  alternates: { canonical: "/join" },
+};
 
 const nextTarget = "/join";
 

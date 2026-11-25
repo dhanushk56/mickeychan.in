@@ -3,12 +3,22 @@ import { cookies } from "next/headers";
 import { kvGet } from "@/lib/kv";
 import ApplyForm from "@/components/form-builder/ApplyForm";
 import { memberFromCookieStore } from "@/lib/members";
-import { STATUS_TEXT, applicationGate, listSubmissions, memberSubmission } from "@/lib/applications";
+import {
+  STATUS_TEXT,
+  applicationGate,
+  jobDeadline,
+  jobIsOpen,
+  listSubmissions,
+  memberSubmission,
+  statusMeta,
+} from "@/lib/applications";
 import { isReadyForm } from "@/lib/form-builder/schema";
 import Countdown from "@/components/Countdown";
 import LocalTime from "@/components/LocalTime";
 import { EMAIL_VERIFICATION_REQUIRED } from "@/lib/features";
 import { blacklistEntry } from "@/lib/blacklist";
+import ApplicationTimeline from "@/components/applications/ApplicationTimeline";
+import RoleDetails from "@/components/applications/RoleDetails";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -110,25 +120,15 @@ export default async function ApplyPage({ params }) {
   const submissions = await listSubmissions(id);
   const gate = applicationGate(form, memberSubmission(submissions, member.username));
 
-  if (gate.status === "pending") {
+  if (gate.submission && gate.status !== "denied") {
+    const meta = statusMeta(gate.status);
     return (
-      <Card kicker={form.title} title="You've already responded">
-        <span className="badge badge-pending self-start">Pending review</span>
-        <p className="muted text-sm leading-relaxed">{STATUS_TEXT.pending}</p>
-        <p className="faint text-xs">
-          Submitted <LocalTime iso={gate.submission.createdAt} />
-        </p>
-      </Card>
-    );
-  }
-
-  if (gate.status === "accepted") {
-    return (
-      <Card kicker={form.title} title="You've been accepted">
-        <span className="badge badge-accepted self-start">Accepted</span>
+      <Card kicker={form.title} title={meta.title}>
+        <span className={`badge ${meta.badge} self-start`}>{meta.label}</span>
         <p className="muted text-sm leading-relaxed whitespace-pre-wrap">
-          {gate.submission.reviewNote || STATUS_TEXT.accepted}
+          {gate.submission.reviewNote || STATUS_TEXT[gate.status]}
         </p>
+        <ApplicationTimeline submission={gate.submission} />
         <p className="faint text-xs">
           Submitted <LocalTime iso={gate.submission.createdAt} />
           {gate.submission.reviewedBy ? ` · reviewed by @${gate.submission.reviewedBy}` : ""}
@@ -137,22 +137,19 @@ export default async function ApplyPage({ params }) {
     );
   }
 
-  if (gate.status === "denied" && !gate.canApply) {
+  if (!jobIsOpen(form)) {
+    const deadline = jobDeadline(form);
     return (
-      <Card kicker={form.title} title="Your application was rejected">
-        <span className="badge badge-denied self-start">Rejected</span>
-        <p className="muted text-sm leading-relaxed whitespace-pre-wrap">
-          {gate.submission.reviewNote || STATUS_TEXT.denied}
-        </p>
+      <Card kicker={form.title} title="Applications have closed">
         <p className="muted text-sm leading-relaxed">
-          You can apply again in{" "}
-          {gate.availableAt ? <Countdown to={gate.availableAt} className="font-semibold" /> : "a moment"}
-          . This page unlocks on its own — no need to refresh.
-        </p>
-        <p className="faint text-xs">
-          Submitted <LocalTime iso={gate.submission.createdAt} />
-          {gate.submission.reviewedAt ? <> · reviewed <LocalTime iso={gate.submission.reviewedAt} /></> : null}
-          {gate.submission.reviewedBy ? ` · by @${gate.submission.reviewedBy}` : ""}
+          This role stopped taking applications
+          {deadline ? (
+            <>
+              {" "}
+              on <LocalTime iso={deadline.toISOString()} />
+            </>
+          ) : null}
+          . Take a look at the other open positions.
         </p>
       </Card>
     );
@@ -179,7 +176,10 @@ export default async function ApplyPage({ params }) {
             )}
           </div>
         )}
-        <ApplyForm form={form} formId={id} />
+        <div className="grid gap-4">
+          <RoleDetails form={form} />
+          <ApplyForm form={form} formId={id} />
+        </div>
       </div>
     </div>
   );

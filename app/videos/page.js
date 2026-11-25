@@ -8,6 +8,7 @@ export const metadata = {
   title: "Videos",
   description:
     "Every Mickey Chan upload — long-form videos and shorts, searchable, filterable and playable right here.",
+  alternates: { canonical: "/videos" },
 };
 
 export default async function VideosPage({ searchParams }) {

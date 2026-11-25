@@ -1,6 +1,12 @@
 import { NextResponse } from "next/server";
 import { authorize } from "@/lib/admin-guard";
-import { deleteSubmission, listSubmissions, saveSubmission } from "@/lib/applications";
+import {
+  deleteSubmission,
+  isValidStatus,
+  listSubmissions,
+  saveSubmission,
+  withTimelineEvent,
+} from "@/lib/applications";
 import { logActivity } from "@/lib/activity-log";
 
 export const dynamic = "force-dynamic";
@@ -13,7 +19,7 @@ export async function PATCH(request, { params }) {
 
   const body = await request.json().catch(() => ({}));
   const status = typeof body.status === "string" ? body.status : "";
-  if (!["pending", "accepted", "denied"].includes(status)) {
+  if (!isValidStatus(status)) {
     return NextResponse.json({ error: "Invalid status." }, { status: 400 });
   }
 
@@ -25,11 +31,17 @@ export async function PATCH(request, { params }) {
     return NextResponse.json({ error: "Application not found." }, { status: 404 });
   }
 
+  const at = new Date().toISOString();
   submissions[index] = {
-    ...submissions[index],
+    ...withTimelineEvent(submissions[index], {
+      status,
+      note,
+      by: session.user.username,
+      at,
+    }),
     status,
     reviewNote: status === "pending" ? "" : note,
-    reviewedAt: status === "pending" ? null : new Date().toISOString(),
+    reviewedAt: status === "pending" ? null : at,
     reviewedBy: status === "pending" ? null : session.user.username,
   };
   await saveSubmission(formId, submissions[index]);

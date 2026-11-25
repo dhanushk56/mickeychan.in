@@ -43,6 +43,9 @@ export async function POST(request) {
     title: body.title,
     body: body.body,
     level: body.level,
+    category: body.category,
+    pinned: body.pinned,
+    image: body.image,
     windowHours: body.windowHours,
     author: await actor(),
   });

@@ -2378,3 +2378,79 @@ html.is-arriving .home [data-home-reveal] { transition-delay: calc(var(--i, 0) *
   .home-stats { margin-top: 1.7rem; }
 }
 
+
+/* Skeletons, toasts, announcement art, role metadata and application history */
+.skeleton-bar {
+  display: block;
+  border-radius: 999px;
+  background: var(--glass-soft);
+  position: relative;
+  overflow: hidden;
+}
+.skeleton-bar::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .09), transparent);
+  animation: skeleton-sweep 1.5s ease-in-out infinite;
+}
+@keyframes skeleton-sweep { to { transform: translateX(100%); } }
+
+.toast-stack {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 80;
+  display: grid;
+  gap: .4rem;
+  justify-items: end;
+  max-width: min(24rem, calc(100vw - 2rem));
+  pointer-events: none;
+}
+.toast-stack .badge { animation: toast-in .22s ease-out; }
+@keyframes toast-in { from { opacity: 0; transform: translateY(6px); } }
+
+.announcement-image {
+  margin: 0 0 .85rem;
+  border-radius: 14px;
+  overflow: hidden;
+  aspect-ratio: 16 / 9;
+  background: var(--glass-soft);
+}
+.announcement-image img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+.empty-state {
+  display: grid;
+  gap: .4rem;
+  justify-items: start;
+  padding: 2rem;
+  border-radius: 16px;
+  border: 1px dashed var(--glass-edge);
+  background: var(--glass-soft);
+}
+
+.timeline {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 0 .9rem;
+  display: grid;
+  gap: .55rem;
+  border-left: 1px solid var(--glass-edge);
+}
+.timeline-item { display: grid; gap: .12rem; }
+
+.job-meta { display: grid; gap: .35rem; margin: 0; }
+.job-meta-row { display: flex; justify-content: space-between; gap: 1rem; font-size: .8rem; }
+.job-meta-row dt { color: var(--text-faint); }
+.job-meta-row dd { margin: 0; font-weight: 600; text-align: right; }
+
+.role-list {
+  margin: 0;
+  padding-left: 1.1rem;
+  display: grid;
+  gap: .2rem;
+  font-size: .875rem;
+  color: var(--text-muted);
+  list-style: disc;
+}

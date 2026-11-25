@@ -3,6 +3,7 @@ import Link from "next/link";
 export const metadata = {
   title: "Sitemap",
   description: "Every page on mickeychan.in, in one place.",
+  alternates: { canonical: "/sitemap" },
 };
 
 const SECTIONS = [

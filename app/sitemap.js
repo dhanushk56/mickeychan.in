@@ -1,4 +1,8 @@
+import { channels, getVideos } from "@/lib/content";
+
 const BASE_URL = "https://mickeychan.in";
+
+export const revalidate = 3600;
 
 const PAGES = [
   { path: "/", changeFrequency: "weekly", priority: 1 },
@@ -15,13 +19,44 @@ const PAGES = [
   { path: "/sitemap", changeFrequency: "monthly", priority: 0.4 },
 ];
 
-export default function sitemap() {
-  const lastModified = new Date();
+export default async function sitemap() {
+  const now = new Date();
 
-  return PAGES.map(({ path, changeFrequency, priority }) => ({
-    url: `${BASE_URL}${path}`,
-    lastModified,
-    changeFrequency,
-    priority,
+  let videos = [];
+  try {
+    videos = await getVideos();
+  } catch {
+    videos = [];
+  }
+
+  const channelEntries = channels.map((channel) => ({
+    url: `${BASE_URL}/channels/${channel.handle}`,
+    lastModified: now,
+    changeFrequency: "weekly",
+    priority: 0.7,
   }));
+
+  const videoEntries = (videos || [])
+    .filter((video) => video?.id)
+    .slice(0, 500)
+    .map((video) => {
+      const published = video.publishedAt ? new Date(video.publishedAt) : null;
+      return {
+        url: `${BASE_URL}/videos/${video.id}`,
+        lastModified: published && !Number.isNaN(published.getTime()) ? published : now,
+        changeFrequency: "monthly",
+        priority: 0.6,
+      };
+    });
+
+  return [
+    ...PAGES.map(({ path, changeFrequency, priority }) => ({
+      url: `${BASE_URL}${path}`,
+      lastModified: now,
+      changeFrequency,
+      priority,
+    })),
+    ...channelEntries,
+    ...videoEntries,
+  ];
 }

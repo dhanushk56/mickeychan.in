@@ -30,7 +30,7 @@ export default async function ContactPage() {
 
         <div className="grid gap-3 md:grid-cols-2 mb-6">
           <div className="glass-card p-5">
-            <p className="kicker">Business &amp; sponsorship</p>
+            <p className="kicker block">Business &amp; sponsorship</p>
             <a
               href="mailto:business@mickeychan.in"
               className="font-semibold mt-2 inline-block"
@@ -43,7 +43,7 @@ export default async function ContactPage() {
             </p>
           </div>
           <div className="glass-card p-5">
-            <p className="kicker">Joining the team</p>
+            <p className="kicker block">Joining the team</p>
             <Link href="/positions" className="font-semibold mt-2 inline-block" style={{ color: "var(--primary)" }}>
               Open positions ↗
             </Link>

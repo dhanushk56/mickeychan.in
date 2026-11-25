@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { QUESTION_TYPES, createQuestion, createSection, typeMeta } from "@/lib/form-builder/schema";
+import { JOB_FIELDS, jobMeta } from "@/lib/applications";
 import FormRenderer from "@/components/form-builder/FormRenderer";
 import RichTextEditor from "@/components/RichTextEditor";
 
@@ -34,6 +35,10 @@ export default function FormBuilder({ initialForm, publicUrl, currentUser, formI
   const [linkCopied, setLinkCopied] = useState(false);
   const [dirty, setDirty] = useState(false);
 
+  // Role details live in form.settings.job so older forms keep working with an
+  // empty set of fields.
+  const job = useMemo(() => jobMeta(form), [form]);
+
   const totals = useMemo(() => {
     const questions = form.sections.flatMap((section) => section.questions);
     return {
@@ -47,6 +52,10 @@ export default function FormBuilder({ initialForm, publicUrl, currentUser, formI
     setForm((current) => updater(current));
     setDirty(true);
     setStatus("");
+  }
+
+  function updateJob(field, value) {
+    updateForm({ settings: { ...(form.settings || {}), job: { ...jobMeta(form), [field]: value } } });
   }
 
   function updateForm(patch) {
@@ -645,6 +654,39 @@ export default function FormBuilder({ initialForm, publicUrl, currentUser, formI
                 A rejected applicant sees a live countdown and can apply again once it ends. 0 lets
                 them reapply straight away; 24 = one day, 168 = one week.
               </p>
+              <div className="grid gap-3 md:grid-cols-2 border-t pt-4" style={{ borderColor: "var(--border)" }}>
+                <p className="font-semibold text-sm md:col-span-2">Role details</p>
+                {JOB_FIELDS.map((field) => (
+                  <label
+                    key={field.id}
+                    className={`field${field.multiline ? " md:col-span-2" : ""}`}
+                  >
+                    <span className="field-label">{field.label}</span>
+                    {field.multiline ? (
+                      <textarea
+                        className="textarea"
+                        rows={3}
+                        value={job[field.id]}
+                        placeholder={field.placeholder}
+                        onChange={(event) => updateJob(field.id, event.target.value)}
+                      />
+                    ) : (
+                      <input
+                        className="input"
+                        type={field.type === "date" ? "date" : "text"}
+                        value={job[field.id]}
+                        placeholder={field.placeholder}
+                        onChange={(event) => updateJob(field.id, event.target.value)}
+                      />
+                    )}
+                  </label>
+                ))}
+                <p className="faint text-xs md:col-span-2">
+                  Shown on the role card and the application page. Responsibilities and requirements
+                  render one item per line; leave anything blank to hide it.
+                </p>
+              </div>
+
               <p className="faint text-xs">
                 Public link: <span className="font-mono break-all">{publicUrl}</span>
               </p>

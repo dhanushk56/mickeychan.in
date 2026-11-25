@@ -7,14 +7,23 @@ import AnnouncementsPanel from "@/components/admin/AnnouncementsPanel";
 import EnquiriesPanel from "@/components/admin/EnquiriesPanel";
 import { AdminsPanel, RolesPanel } from "@/components/admin/AccessPanels";
 import { useConfirm, usePrompt } from "@/components/ConfirmDialog";
+import ApplicationTimeline from "@/components/applications/ApplicationTimeline";
+import { APPLICATION_STATUSES } from "@/lib/applications";
 
 const POLL_MS = 5000;
 
-const STATUS_META = {
-  pending: { label: "Pending", className: "badge-pending" },
-  accepted: { label: "Accepted", className: "badge-accepted" },
-  denied: { label: "Denied", className: "badge-denied" },
-};
+const STATUS_META = Object.fromEntries(
+  APPLICATION_STATUSES.map((entry) => [entry.id, { label: entry.label, className: entry.badge }])
+);
+
+// Every review action comes from the same status list, so the buttons, the
+// badges and the applicant's timeline can never disagree.
+const STAGE_ACTIONS = [
+  { id: "shortlist", label: "Shortlist", className: "btn btn-secondary btn-sm" },
+  { id: "interview", label: "Interview", className: "btn btn-secondary btn-sm" },
+  { id: "accepted", label: "✓ Accept", className: "btn btn-success btn-sm" },
+  { id: "denied", label: "✕ Reject", className: "btn btn-danger btn-sm" },
+];
 
 function timeAgo(iso) {
   if (!iso) return "—";
@@ -88,26 +97,18 @@ function ApplicationCard({ entry, busy, onStatus, onDelete, canReview, canDelete
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          {canReview && entry.status !== "accepted" && (
-            <button
-              type="button"
-              className="btn btn-success btn-sm"
-              disabled={busy}
-              onClick={() => onStatus(entry, "accepted")}
-            >
-              ✓ Accept
-            </button>
-          )}
-          {canReview && entry.status !== "denied" && (
-            <button
-              type="button"
-              className="btn btn-danger btn-sm"
-              disabled={busy}
-              onClick={() => onStatus(entry, "denied")}
-            >
-              ✕ Reject
-            </button>
-          )}
+          {canReview &&
+            STAGE_ACTIONS.filter((action) => action.id !== entry.status).map((action) => (
+              <button
+                key={action.id}
+                type="button"
+                className={action.className}
+                disabled={busy}
+                onClick={() => onStatus(entry, action.id)}
+              >
+                {action.label}
+              </button>
+            ))}
           {canReview && entry.status !== "pending" && (
             <button
               type="button"
@@ -152,6 +153,13 @@ function ApplicationCard({ entry, busy, onStatus, onDelete, canReview, canDelete
 
       {entry.reviewNote && (
         <p className="muted text-sm mt-2 whitespace-pre-wrap">“{entry.reviewNote}”</p>
+      )}
+
+      {Array.isArray(entry.events) && entry.events.length > 0 && (
+        <div className="grid gap-1 mt-3">
+          <p className="field-label">History</p>
+          <ApplicationTimeline submission={entry} />
+        </div>
       )}
 
       {entry.reviewedAt && (
@@ -505,6 +513,8 @@ export default function AdminDashboard({ currentUser }) {
     return {
       total: applications.length,
       pending: applications.filter((a) => a.status === "pending").length,
+      shortlist: applications.filter((a) => a.status === "shortlist").length,
+      interview: applications.filter((a) => a.status === "interview").length,
       accepted: applications.filter((a) => a.status === "accepted").length,
       denied: applications.filter((a) => a.status === "denied").length,
       messages: data.join.length,
@@ -556,13 +566,13 @@ export default function AdminDashboard({ currentUser }) {
   async function updateStatus(entry, status) {
     let note = "";
     if (status !== "pending") {
+      const meta = STATUS_META[status] ? status : "pending";
       const answer = await askPrompt({
-        title: status === "accepted" ? "Accept this application?" : "Reject this application?",
-        description: `The reason is optional and is shown to @${entry.memberUsername || "the applicant"} on their application status.`,
-        label: "Reason (optional)",
-        placeholder:
-          status === "accepted" ? "e.g. loved the portfolio" : "e.g. not enough work samples",
-        confirmLabel: status === "accepted" ? "Accept" : "Reject",
+        title: `Move this application to ${STATUS_META[meta].label.toLowerCase()}?`,
+        description: `The note is optional and is shown to @${entry.memberUsername || "the applicant"}, and is kept in the application history.`,
+        label: "Note (optional)",
+        placeholder: "e.g. shortlisted for a call next week",
+        confirmLabel: STATUS_META[meta].label,
         tone: status === "denied" ? "danger" : "default",
         maxLength: 500,
         multiline: true,
@@ -586,7 +596,11 @@ export default function AdminDashboard({ currentUser }) {
         body: JSON.stringify({ status, note }),
       });
       if (!response.ok) throw new Error("Could not update that application.");
-      setNotice(status === "pending" ? "Reset to pending." : `Application ${status}.`);
+      setNotice(
+        status === "pending"
+          ? "Reset to pending."
+          : `Application moved to ${STATUS_META[status].label.toLowerCase()}.`
+      );
       load();
     } catch (err) {
       setData((current) => ({ ...current, applications: previous }));
@@ -969,6 +983,8 @@ export default function AdminDashboard({ currentUser }) {
             <div className="flex flex-wrap gap-2">
               {[
                 { id: "pending", label: "Pending", count: counts.pending },
+                { id: "shortlist", label: "Shortlisted", count: counts.shortlist },
+                { id: "interview", label: "Interview", count: counts.interview },
                 { id: "accepted", label: "Accepted", count: counts.accepted },
                 { id: "denied", label: "Rejected", count: counts.denied },
                 { id: "all", label: "All", count: counts.total },

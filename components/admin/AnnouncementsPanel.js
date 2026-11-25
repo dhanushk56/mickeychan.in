@@ -3,13 +3,26 @@
 import { useCallback, useEffect, useState } from "react";
 import RichTextEditor from "@/components/RichTextEditor";
 import { useConfirm } from "@/components/ConfirmDialog";
-import { LEVELS, isCurrent, isValidWindowHours, levelMeta } from "@/lib/announcements";
+import {
+  CATEGORIES,
+  LEVELS,
+  categoryMeta,
+  isCurrent,
+  isValidWindowHours,
+  levelMeta,
+  normalizeAnnouncement,
+} from "@/lib/announcements";
+import AnnouncementCard from "@/components/announcements/AnnouncementCard";
+import { useToast } from "@/components/ui/Toast";
 import { richTextIsEmpty, richTextToPlain } from "@/lib/rich-text";
 
 const EMPTY_DRAFT = {
   title: "",
   body: [],
   level: "normal",
+  category: "general",
+  pinned: false,
+  image: "",
   windowHours: "",
 };
 
@@ -36,12 +49,12 @@ export default function AnnouncementsPanel() {
   const [list, setList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [notice, setNotice] = useState("");
   const [draft, setDraft] = useState(EMPTY_DRAFT);
   const [posting, setPosting] = useState(false);
   const [busyId, setBusyId] = useState("");
   const [now, setNow] = useState(() => Date.now());
   const [dialog, askConfirm] = useConfirm();
+  const toast = useToast();
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -86,8 +99,8 @@ export default function AnnouncementsPanel() {
       const result = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(result.error || "Could not post that announcement.");
       setDraft(EMPTY_DRAFT);
-      setNotice(
-        `Posted — it stays current for ${hoursLabel(Number(draft.windowHours))}, then moves to past on its own.`
+      toast.push(
+        `Posted — stays current for ${hoursLabel(Number(draft.windowHours))}, then moves to past on its own.`
       );
       load();
     } catch (err) {
@@ -113,7 +126,7 @@ export default function AnnouncementsPanel() {
       const result = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(result.error || "Could not delete that announcement.");
       setList((current) => current.filter((item) => item.id !== announcement.id));
-      setNotice("Announcement deleted.");
+      toast.push("Announcement deleted.");
       setError("");
     } catch (err) {
       setError(err.message);
@@ -143,7 +156,7 @@ export default function AnnouncementsPanel() {
       </div>
 
       {error && <p className="badge badge-denied">{error}</p>}
-      {notice && <p className="badge badge-accepted">{notice}</p>}
+      {toast.view}
 
       <form onSubmit={post} className="glass-card application-card grid gap-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
@@ -180,6 +193,23 @@ export default function AnnouncementsPanel() {
           </label>
 
           <label className="field" style={{ minWidth: "11rem" }}>
+            <span className="field-label">Category</span>
+            <select
+              className="select"
+              value={draft.category}
+              onChange={(event) =>
+                setDraft((current) => ({ ...current, category: event.target.value }))
+              }
+            >
+              {CATEGORIES.map((category) => (
+                <option key={category.id} value={category.id}>
+                  {category.label}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="field" style={{ minWidth: "11rem" }}>
             <span className="field-label">Stays current for (hours)</span>
             <input
               type="number"
@@ -194,6 +224,32 @@ export default function AnnouncementsPanel() {
               }
               required
             />
+          </label>
+        </div>
+
+        <div className="flex flex-wrap items-end gap-2">
+          <label className="field flex-1" style={{ minWidth: "16rem" }}>
+            <span className="field-label">Image URL (optional)</span>
+            <input
+              className="input"
+              value={draft.image}
+              onChange={(event) => setDraft((current) => ({ ...current, image: event.target.value }))}
+              placeholder="https://… or /media/…"
+              maxLength={500}
+            />
+          </label>
+
+          <label className="field" style={{ minWidth: "12rem" }}>
+            <span className="field-label">Pin to the top</span>
+            <button
+              type="button"
+              className="chip"
+              data-active={draft.pinned}
+              aria-pressed={draft.pinned}
+              onClick={() => setDraft((current) => ({ ...current, pinned: !current.pinned }))}
+            >
+              {draft.pinned ? "Pinned" : "Not pinned"}
+            </button>
           </label>
         </div>
 
@@ -212,6 +268,16 @@ export default function AnnouncementsPanel() {
           there is no fixed 24-hour window, and nothing to switch off by hand. 24 is one day, 168
           is one week.
         </p>
+
+        {draft.title.trim() && (
+          <div className="grid gap-2">
+            <p className="field-label">Preview</p>
+            <AnnouncementCard
+              announcement={normalizeAnnouncement({ ...draft, createdAt: new Date().toISOString(), author: "Preview" })}
+              now={now}
+            />
+          </div>
+        )}
 
         <div className="flex flex-wrap items-center gap-2">
           <button type="submit" className="btn btn-primary btn-sm" disabled={!canPost}>
@@ -254,6 +320,8 @@ export default function AnnouncementsPanel() {
                   <div className="flex flex-wrap items-center gap-2">
                     <h3 className="font-display font-bold">{announcement.title}</h3>
                     <span className={`badge ${level.badge}`}>{level.label}</span>
+                    <span className="badge badge-neutral">{categoryMeta(announcement.category).label}</span>
+                    {announcement.pinned && <span className="badge badge-accepted">Pinned</span>}
                     <span className={`badge ${current ? "badge-accepted" : "badge-neutral"}`}>
                       {current ? "Current" : "Past"}
                     </span>
