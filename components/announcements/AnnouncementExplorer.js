@@ -132,7 +132,7 @@ export default function AnnouncementExplorer({ announcements = [], now = Date.no
         </div>
 
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="tabbar" role="tablist" aria-label="Show announcements">
+          <div className="tabbar tabbar-fill" role="tablist" aria-label="Show announcements">
             {tabs.map((item) => (
               <button
                 key={item.id}

@@ -192,6 +192,10 @@
     color: var(--primary);
   }
 
+  /* A kicker that owns its line, so a link or address below it starts on a new
+     line on every screen size instead of sitting beside the label. */
+  .kicker-block { display: block; }
+
   .muted { color: var(--text-muted); }
   .faint { color: var(--text-faint); }
 
@@ -376,6 +380,7 @@
   .tabbar {
     display: inline-flex;
     flex-wrap: wrap;
+    justify-content: center;
     gap: .25rem;
     padding: .3rem;
     border-radius: 999px;
@@ -389,6 +394,8 @@
   .tab {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
+    text-align: center;
     gap: .45rem;
     padding: .5rem .9rem;
     border-radius: 999px;
@@ -412,16 +419,19 @@
   }
 
   .tab-count {
-    display: inline-grid;
-    place-items: center;
-    min-width: 1.35rem;
-    height: 1.35rem;
-    padding: 0 .35rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.5rem;
+    height: 1.5rem;
+    padding: 0 .4rem;
     border-radius: 999px;
     background: var(--primary-soft);
     color: var(--primary);
     font-size: .68rem;
     font-weight: 800;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
   }
 
   .chip {
@@ -987,9 +997,13 @@
 
   .tabbar {
     width: 100%;
-    justify-content: flex-start;
+    justify-content: center;
     border-radius: 1rem;
   }
+
+  /* A bar with a handful of tabs splits its width evenly, so the labels sit
+     dead-centre in equal segments instead of bunching to the left. */
+  .tabbar-fill .tab { flex: 1 1 0; }
 
   .application-card { padding: 1rem; }
   .stat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -2419,16 +2433,6 @@ html.is-arriving .home [data-home-reveal] { transition-delay: calc(var(--i, 0) *
   background: var(--glass-soft);
 }
 .announcement-image img { width: 100%; height: 100%; object-fit: cover; display: block; }
-
-.empty-state {
-  display: grid;
-  gap: .4rem;
-  justify-items: start;
-  padding: 2rem;
-  border-radius: 16px;
-  border: 1px dashed var(--glass-edge);
-  background: var(--glass-soft);
-}
 
 .timeline {
   list-style: none;
