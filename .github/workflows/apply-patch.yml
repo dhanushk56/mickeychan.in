@@ -16,12 +16,12 @@ jobs:
           for i in 01 02 03 04 05; do
             test -f "transfer/c$i.b64" || { echo "chunks incomplete, skipping"; exit 0; }
           done
-          if gunzip -t transfer/c01.b64 2>/dev/null; then
-            cat transfer/c01.b64 transfer/c02.b64 transfer/c03.b64 transfer/c04.b64 transfer/c05.b64 > /tmp/patch.gz
+          cat transfer/c01.b64 transfer/c02.b64 transfer/c03.b64 transfer/c04.b64 transfer/c05.b64 > /tmp/raw
+          if gunzip -c /tmp/raw > /tmp/patch.diff 2>/dev/null; then
+            echo "chunks were decoded binary"
           else
-            cat transfer/c01.b64 transfer/c02.b64 transfer/c03.b64 transfer/c04.b64 transfer/c05.b64 | base64 -d > /tmp/patch.gz
+            base64 -d /tmp/raw | gunzip -c > /tmp/patch.diff
           fi
-          gunzip -c /tmp/patch.gz > /tmp/patch.diff
           echo "patch sha: $(sha256sum /tmp/patch.diff)"
           test "$(sha256sum /tmp/patch.diff | cut -d' ' -f1)" = "dc86bcf30650ac7a0065b4b01bdfaf21ea18d325361e13fc4ba56340a3314a13"
           git apply --exclude=app/nav.css /tmp/patch.diff
