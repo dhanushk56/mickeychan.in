@@ -205,6 +205,28 @@ export default function FormBuilder({ initialForm, publicUrl, currentUser, formI
     );
   }
 
+  // One press: in reading order, every question waits for the one before it to
+  // be answered. The first question stays open, or the form would never start.
+  function chainConditions() {
+    commit((f) => {
+      let previousId = "";
+      return {
+        ...f,
+        sections: f.sections.map((section) => ({
+          ...section,
+          questions: section.questions.map((question) => {
+            const logic = previousId
+              ? { questionId: previousId, operator: "answered", value: "" }
+              : null;
+            previousId = question.id;
+            return { ...question, logic };
+          }),
+        })),
+      };
+    });
+    setStatus("Each question now waits for the one before it. Save to keep it.");
+  }
+
   function changeQuestionType(sectionId, questionId, newType) {
     commit((f) =>
       withSection(f, sectionId, (s) =>
@@ -469,6 +491,19 @@ export default function FormBuilder({ initialForm, publicUrl, currentUser, formI
                 <span className="chip" data-active="true">{totals.sections} sections</span>
                 <span className="chip">{totals.questions} questions</span>
                 <span className="chip">{totals.required} required</span>
+              </div>
+              <div className="flex flex-wrap items-center gap-3">
+                <button
+                  type="button"
+                  className="btn btn-secondary btn-sm"
+                  onClick={chainConditions}
+                >
+                  Ask one at a time
+                </button>
+                <span className="faint text-xs">
+                  Each question appears once the one before it has an answer. The first one always
+                  shows.
+                </span>
               </div>
             </div>
 
