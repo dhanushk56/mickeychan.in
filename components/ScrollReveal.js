@@ -56,26 +56,10 @@ export default function ScrollReveal() {
       decorate(element);
     }
 
-    if (typeof MutationObserver === "undefined") {
-      return () => observer.disconnect();
-    }
-
-    const mutations = new MutationObserver((records) => {
-      for (const record of records) {
-        for (const node of record.addedNodes) {
-          if (!(node instanceof Element)) continue;
-          if (node.matches(CARD_SELECTOR)) decorate(node);
-          for (const child of node.querySelectorAll(CARD_SELECTOR)) decorate(child);
-        }
-      }
-    });
-
-    mutations.observe(document.body, { childList: true, subtree: true });
-
-    return () => {
-      mutations.disconnect();
-      observer.disconnect();
-    };
+    // Only the cards already on screen when a section renders are revealed. A
+    // new search, a filter or a load more inserts fresh cards, and fading those
+    // in would animate a page that has not actually changed section.
+    return () => observer.disconnect();
   }, [pathname]);
 
   return null;
