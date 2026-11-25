@@ -1,0 +1,26 @@
+name: Apply mobile fixes
+on:
+  push:
+    paths:
+      - "transfer/go12.txt"
+permissions:
+  contents: write
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply
+        run: |
+          set -euo pipefail
+          base64 -d transfer/m2.b64 | gunzip > /tmp/m2.patch
+          echo "patch sha: $(sha256sum /tmp/m2.patch | cut -d' ' -f1)"
+          test "$(sha256sum /tmp/m2.patch | cut -d' ' -f1)" = "d81e2698ef921102edc48a65cb9a559a84740b193351719b21e590de3f5f3a0e"
+          git apply /tmp/m2.patch
+          rm -rf transfer
+          git rm -q .github/workflows/apply-mobile.yml
+          git config user.name "patch-bot"
+          git config user.email "patch-bot@users.noreply.github.com"
+          git add -A
+          git commit -m "Keep the dashboard tabs, bell and idea filters tidy at phone widths"
+          git push
