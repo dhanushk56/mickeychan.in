@@ -11,7 +11,6 @@ import "./back-to-top.css";
 import "./page-wipe.css";
 import "./hover.css";
 import "./auth-mark.css";
-import "./performance.css";
 import { Suspense } from "react";
 import { headers } from "next/headers";
 import { maintenanceStatus } from "@/lib/maintenance";
@@ -66,22 +65,18 @@ export default async function RootLayout({ children }) {
   return (
     <html lang="en">
       <head>
-        {/* Phones, low-core machines and reduced-motion visitors get the light
-            layer before the first paint, so no effect starts work it will only
-            have to undo. */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html:
-              "try{var h=navigator.hardwareConcurrency||8,m=navigator.deviceMemory||8,r=matchMedia('(prefers-reduced-motion: reduce)').matches,c=matchMedia('(pointer: coarse)').matches;document.documentElement.dataset.perf=(r||h<=4||m<=4||c)?'low':'high'}catch(e){document.documentElement.dataset.perf='low'}",
-          }}
-        />
+        {/* Pull the intro clip with the HTML, before hydration asks for it, so the
+            character is ready by the first navigation. */}
+        <link rel="preload" as="video" type="video/mp4" href="/media/route-intro.mp4" />
       </head>
       <body>
         <div className="grid-veil" aria-hidden="true" />
         <PetalField />
         <PetalCursor />
         <ScrollRunner />
-        <ScrollReveal />
+        <Suspense fallback={null}>
+          <ScrollReveal />
+        </Suspense>
         <PageEnter />
         <Suspense fallback={null}>
           <RouteWipe />

@@ -5,7 +5,6 @@ import { usePathname } from "next/navigation";
 import { LOOP_SECONDS, pose } from "@/lib/runCycle";
 import { faces } from "@/lib/runnerFigure";
 import { readSkin } from "@/lib/skin";
-import { lowPowerMode } from "@/lib/performance";
 
 const SKIN_SRC = "/skins/mickey.png";
 const EDGE = 26;
@@ -26,10 +25,6 @@ export default function ScrollRunner() {
   const pathname = usePathname();
 
   useEffect(() => {
-    // A per-frame voxel canvas is the single most expensive thing in the layout.
-    // Light mode keeps the page and skips the runner entirely.
-    if (lowPowerMode()) return undefined;
-
     const root = rootRef.current;
     const lane = laneRef.current;
     const fill = fillRef.current;
@@ -55,8 +50,6 @@ export default function ScrollRunner() {
     let dpr = 1;
     let viewWidth = 0;
     let viewHeight = 0;
-    let placeFrame = 0;
-    let lastPaint = 0;
 
     const fit = () => {
       const w = Math.max(1, Math.round(canvas.clientWidth));
@@ -64,7 +57,7 @@ export default function ScrollRunner() {
       if (w === viewWidth && h === viewHeight) return;
       viewWidth = w;
       viewHeight = h;
-      dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+      dpr = Math.min(window.devicePixelRatio || 1, 2);
       canvas.width = Math.round(w * dpr);
       canvas.height = Math.round(h * dpr);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -131,14 +124,9 @@ export default function ScrollRunner() {
       fill.style.transform = `scaleX(${clamp((x - EDGE) / span, 0, 1).toFixed(4)})`;
     };
 
-    // Reading scrollHeight forces a layout, so it happens on resize and on the
-    // observer, never once per scroll event. Scrolling only reads scrollY.
-    const measure = () => {
+    const place = () => {
       width = window.innerWidth;
       max = document.documentElement.scrollHeight - window.innerHeight;
-    };
-
-    const place = () => {
       const progress = max > 8 ? clamp(window.scrollY / max, 0, 1) : 0;
       target = EDGE + progress * Math.max(0, width - EDGE * 2);
 
@@ -156,14 +144,6 @@ export default function ScrollRunner() {
       else start();
     };
 
-    const queuePlace = () => {
-      if (placeFrame || reduced) return;
-      placeFrame = window.requestAnimationFrame(() => {
-        placeFrame = 0;
-        place();
-      });
-    };
-
     const tick = (time) => {
       const dt = last ? Math.min(0.05, (time - last) / 1000) : 0.016;
       last = time;
@@ -176,13 +156,7 @@ export default function ScrollRunner() {
       clock += (Math.abs(step) / STRIDE) * LOOP_SECONDS;
 
       slide();
-
-      // Half the frames is invisible at this size and leaves the main thread
-      // free for scrolling.
-      if (time - lastPaint > 32) {
-        lastPaint = time;
-        paint();
-      }
+      paint();
 
       if (Math.abs(target - x) < 0.08) {
         frame = 0;
@@ -207,7 +181,6 @@ export default function ScrollRunner() {
     };
     image.src = SKIN_SRC;
 
-    measure();
     place();
 
     if (reduced) {
@@ -221,39 +194,24 @@ export default function ScrollRunner() {
     start();
 
     const sync = () => {
-      measure();
       place();
       paint();
     };
-
-    const onVisibility = () => {
-      if (document.hidden) {
-        if (frame) window.cancelAnimationFrame(frame);
-        frame = 0;
-        return;
-      }
-      last = 0;
-      start();
-    };
-
-    document.addEventListener("visibilitychange", onVisibility);
 
     const settle = window.setTimeout(sync, 300);
     const observer = new ResizeObserver(sync);
     observer.observe(document.body);
 
-    window.addEventListener("scroll", queuePlace, { passive: true });
+    window.addEventListener("scroll", place, { passive: true });
     window.addEventListener("resize", sync);
 
     return () => {
       alive = false;
       image.onload = null;
       window.cancelAnimationFrame(frame);
-      if (placeFrame) window.cancelAnimationFrame(placeFrame);
       window.clearTimeout(settle);
-      window.removeEventListener("scroll", queuePlace);
+      window.removeEventListener("scroll", place);
       window.removeEventListener("resize", sync);
-      document.removeEventListener("visibilitychange", onVisibility);
       observer.disconnect();
       delete root.dataset.ready;
     };

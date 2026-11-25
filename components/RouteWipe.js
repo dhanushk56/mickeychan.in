@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
-import { lowPowerMode } from "@/lib/performance";
 
 const useClientLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect;
 
@@ -78,17 +77,9 @@ export default function RouteWipe() {
   const timerRef = useRef(0);
   const lastFire = useRef(0);
   const [label, setLabel] = useState("");
-  // The clip is only mounted where it can be decoded cheaply. Phones and weak
-  // machines never download it at all.
-  const [enhanced, setEnhanced] = useState(false);
-
-  useEffect(() => {
-    setEnhanced(!lowPowerMode());
-  }, []);
 
   const fire = useCallback((path) => {
     if (typeof window === "undefined") return;
-    if (lowPowerMode()) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
     // A pathname change and a popstate can describe the same navigation.
@@ -202,8 +193,6 @@ export default function RouteWipe() {
       window.clearTimeout(timerRef.current);
     };
   }, [fire]);
-
-  if (!enhanced) return null;
 
   return (
     <div className="page-wipe" ref={overlayRef} aria-hidden="true">

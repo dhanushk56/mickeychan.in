@@ -1,13 +1,11 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { lowPowerMode } from "@/lib/performance";
 
 export default function PetalCursor() {
   const pointerRef = useRef(null);
 
   useEffect(() => {
-    if (lowPowerMode()) return undefined;
     const fine = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (!fine || reduced) return undefined;
@@ -21,34 +19,26 @@ export default function PetalCursor() {
     let x = window.innerWidth / 2;
     let y = window.innerHeight / 2;
     let scale = 1;
-    let queued = 0;
 
     const apply = () => {
-      queued = 0;
       pointer.style.transform = `translate3d(${x}px, ${y}px, 0) scale(${scale})`;
-    };
-
-    // A mouse can report several hundred moves a second. One write per frame is
-    // all the screen can show, and it keeps the main thread free the rest of the time.
-    const schedule = () => {
-      if (!queued) queued = window.requestAnimationFrame(apply);
     };
 
     const move = (event) => {
       x = event.clientX;
       y = event.clientY;
       pointer.style.opacity = "1";
-      schedule();
+      apply();
     };
 
     const down = () => {
       scale = 0.92;
-      schedule();
+      apply();
     };
 
     const up = () => {
       scale = 1;
-      schedule();
+      apply();
     };
 
     const leave = () => {
@@ -67,7 +57,6 @@ export default function PetalCursor() {
     document.documentElement.addEventListener("mouseleave", leave);
 
     return () => {
-      if (queued) window.cancelAnimationFrame(queued);
       window.removeEventListener("pointermove", move);
       window.removeEventListener("pointerdown", down);
       window.removeEventListener("pointerup", up);
