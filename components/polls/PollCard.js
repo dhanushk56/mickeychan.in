@@ -2,18 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-
-function formatWhen(value) {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "";
-  return date.toLocaleString(undefined, {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
+import LocalTime from "@/components/LocalTime";
 
 export default function PollCard({ poll: initialPoll, signedIn }) {
   const [poll, setPoll] = useState(initialPoll);
@@ -105,7 +94,13 @@ export default function PollCard({ poll: initialPoll, signedIn }) {
         <span className="faint text-xs">
           {poll.tally.total} {poll.tally.total === 1 ? "vote" : "votes"}
           {poll.multiple ? " · pick any" : ""}
-          {poll.closesAt ? ` · closes ${formatWhen(poll.closesAt)}` : ""}
+          {poll.closesAt && (
+            <>
+              {" · "}
+              {poll.open ? "closes " : "closed "}
+              <LocalTime iso={poll.closesAt} />
+            </>
+          )}
         </span>
 
         {poll.open && signedIn && !voted && (

@@ -102,8 +102,8 @@ export default async function PositionsPage() {
           <p className="kicker">Join the team</p>
           <h1 className="display-lg mt-3 mb-4">Open Positions</h1>
           <p className="muted text-lg leading-relaxed">
-            Roles we&apos;re currently looking to fill. Each listing opens a short application form.
-            answers go straight to the review queue.
+            Roles we&apos;re hiring for right now. Each listing opens a short form, and your answers
+            go straight into the review queue.
           </p>
           {!member && (
             <p className="faint text-sm mt-4">

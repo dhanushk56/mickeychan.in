@@ -26,9 +26,9 @@ export default async function AnnouncementsPage() {
           <p className="kicker">Announcements</p>
           <h1 className="display-lg mt-3 mb-4">What&apos;s happening.</h1>
           <p className="muted text-lg leading-relaxed">
-            Everything the team has posted, newest first. Each announcement stays current for the
-            time it was given, then moves to past announcements on its own. Pinned notices sit at the
-            top, and priority and emergency notices are ranked above standard ones while they run.
+            Everything the team has posted, newest first. A notice stays live for as long as it was
+            set to, then moves to past announcements. Pinned ones sit on top, and priority or
+            emergency notices outrank standard ones while they run.
           </p>
         </div>
 

@@ -17,6 +17,7 @@ const AUTH_FACES = new Set(["/login", "/register"]);
 const PAGE_LABELS = {
   "/": "Home",
   "/videos": "Videos",
+  "/hub": "Hub",
   "/announcements": "Announcements",
   "/socials": "Socials",
   "/positions": "Open positions",
@@ -27,6 +28,7 @@ const PAGE_LABELS = {
   "/verify": "Verify email",
   "/admin": "Admin console",
   "/audit": "Audit log",
+  "/forums": "Forums",
   "/sitemap": "Sitemap",
   "/form-builder": "Form builder",
 };
@@ -37,6 +39,8 @@ function titleCase(value) {
 
 function pageLabel(pathname) {
   if (PAGE_LABELS[pathname]) return PAGE_LABELS[pathname];
+  const root = rootSegment(pathname);
+  if (root !== pathname && PAGE_LABELS[root]) return PAGE_LABELS[root];
   if (pathname.startsWith("/form-builder/apply/")) return "Application";
   if (pathname.startsWith("/form-builder/")) return "Form editor";
   if (pathname.startsWith("/admin")) return "Admin console";
@@ -49,12 +53,24 @@ function isAuthFlip(fromPath, toPath) {
   return AUTH_FACES.has(fromPath) && AUTH_FACES.has(toPath);
 }
 
+// The curtain belongs to changing section, not to every click. Moving from
+// /forums to a thread inside it, or from /videos to a single video, keeps the
+// page it is already on, so only the first path segment is compared.
+function rootSegment(pathname) {
+  const [first = ""] = String(pathname || "/").split("/").filter(Boolean);
+  return `/${first}`;
+}
+
+function changesSection(fromPath, toPath) {
+  return rootSegment(fromPath) !== rootSegment(toPath);
+}
+
 export default function RouteWipe() {
   const pathname = usePathname();
 
-  // Only a pathname change counts as a navigation. Query strings drive filters
-  // and sorts that belong to the page already on screen, so rewriting them must
-  // not replay the intro.
+  // Only a jump to another section counts as a navigation. Query strings drive
+  // filters and sorts, and deeper paths stay inside the section they started
+  // in, so neither one replays the curtain.
   const previous = useRef(pathname);
   const overlayRef = useRef(null);
   const videoRef = useRef(null);
@@ -126,6 +142,7 @@ export default function RouteWipe() {
     previous.current = pathname;
     if (fromPath === pathname) return;
     if (isAuthFlip(fromPath, pathname)) return;
+    if (!changesSection(fromPath, pathname)) return;
     fire(pathname);
   }, [pathname, fire]);
 
@@ -139,6 +156,7 @@ export default function RouteWipe() {
       previous.current = toPath;
       if (fromPath === toPath) return;
       if (isAuthFlip(fromPath, toPath)) return;
+      if (!changesSection(fromPath, toPath)) return;
       fire(toPath);
     };
 

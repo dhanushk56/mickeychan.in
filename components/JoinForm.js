@@ -1,21 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-
-const defaults = {
-  title: "Let's make something memorable.",
-  description:
-    "Want to collaborate, join the team, or simply say hello? Send a message and we'll get back to you.",
-  nameLabel: "Name",
-  namePlaceholder: "Your name",
-  emailLabel: "Email",
-  emailPlaceholder: "you@example.com",
-  interestLabel: "I'm interested in",
-  messageLabel: "Message",
-  messagePlaceholder: "Tell us what you have in mind…",
-  submitLabel: "Send message ↗",
-  successMessage: "Thanks, your message has been sent.",
-};
+import { DEFAULT_FORM_CONFIG as defaults } from "@/lib/form-defaults";
 
 export default function JoinForm({ member }) {
   const [config, setConfig] = useState(defaults);

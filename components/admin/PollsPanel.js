@@ -4,21 +4,9 @@ import { useCallback, useEffect, useState } from "react";
 import { useConfirm } from "@/components/ConfirmDialog";
 import { useToast } from "@/components/ui/Toast";
 import EmptyState from "@/components/ui/EmptyState";
+import LocalTime from "@/components/LocalTime";
 
 const EMPTY = { question: "", blurb: "", options: "", multiple: false, closesAt: "" };
-
-function formatWhen(value) {
-  if (!value) return "";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "";
-  return date.toLocaleString(undefined, {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
 
 export default function PollsPanel({ canCreate, canDelete }) {
   const [polls, setPolls] = useState([]);
@@ -83,7 +71,9 @@ export default function PollsPanel({ canCreate, canDelete }) {
           blurb: draft.blurb,
           options,
           multiple: draft.multiple,
-          closesAt: draft.closesAt || null,
+          // The deadline field is a local wall clock with no zone attached, so
+          // it is turned into an exact instant here, in the admin's own zone.
+          closesAt: draft.closesAt ? new Date(draft.closesAt).toISOString() : null,
         }),
       });
       const data = await response.json().catch(() => ({}));
@@ -99,17 +89,24 @@ export default function PollsPanel({ canCreate, canDelete }) {
   }
 
   async function toggleClosed(poll) {
+    const reopen = !poll.open;
+    const staleDeadline =
+      reopen && poll.closesAt && new Date(poll.closesAt).getTime() <= Date.now();
     setBusyId(poll.id);
     try {
       const response = await fetch("/api/admin/polls", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: poll.id, closed: !poll.closed }),
+        body: JSON.stringify({
+          id: poll.id,
+          closed: !reopen,
+          ...(staleDeadline ? { closesAt: null } : {}),
+        }),
       });
       const data = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(data.error || "Could not update the poll.");
       setPolls(Array.isArray(data.polls) ? data.polls : []);
-      toast.push(poll.closed ? "Poll reopened." : "Poll closed.");
+      toast.push(reopen ? "Poll reopened." : "Poll closed.");
     } catch (err) {
       toast.push(err.message, "error");
     } finally {
@@ -120,7 +117,7 @@ export default function PollsPanel({ canCreate, canDelete }) {
   async function remove(poll) {
     const confirmed = await askConfirm({
       title: "Delete this poll?",
-      description: `“${poll.question}” and every vote on it will be removed.`,
+      description: `"${poll.question}" and every vote on it will be removed.`,
       confirmLabel: "Delete poll",
     });
     if (!confirmed) return;
@@ -172,7 +169,7 @@ export default function PollsPanel({ canCreate, canDelete }) {
             </label>
 
             <label className="field" style={{ minWidth: "14rem" }}>
-              <span className="field-label">Closes (optional)</span>
+              <span className="field-label">Closes (optional, your local time)</span>
               <input
                 className="input"
                 type="datetime-local"
@@ -249,8 +246,9 @@ export default function PollsPanel({ canCreate, canDelete }) {
                   <span className="font-semibold">{poll.question}</span>
                   <span className="faint text-xs">
                     {poll.options.length} options
-                    {poll.closed ? " · closed" : " · open"}
-                    {poll.closesAt ? ` · closes ${formatWhen(poll.closesAt)}` : ""}
+                    {poll.open ? " · open" : poll.closed ? " · closed" : " · closed automatically"}
+                    {poll.closesAt && (poll.open ? " · closes " : " · deadline ")}
+                    {poll.closesAt && <LocalTime iso={poll.closesAt} />}
                   </span>
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -260,7 +258,7 @@ export default function PollsPanel({ canCreate, canDelete }) {
                     onClick={() => toggleClosed(poll)}
                     disabled={busyId === poll.id}
                   >
-                    {poll.closed ? "Reopen" : "Close"}
+                    {poll.open ? "Close" : "Reopen"}
                   </button>
                   {canDelete && (
                     <button

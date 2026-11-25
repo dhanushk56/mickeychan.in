@@ -87,8 +87,8 @@ export default async function EventsPage() {
           <div className="glass-card hub-empty">
             <p className="font-display font-bold">Nothing on the calendar</p>
             <p className="muted text-sm">The next stream or meet-up lands here once it is set.</p>
-            <Link href="/community" className="btn btn-secondary btn-sm">
-              Back to community
+            <Link href="/hub" className="btn btn-secondary btn-sm">
+              Back to hub
             </Link>
           </div>
         ) : (

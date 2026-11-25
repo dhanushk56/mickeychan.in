@@ -539,8 +539,8 @@
   gap: .5rem;
 }
 
-/* Same behaviour as the dashboard tabs: one row that scrolls instead of
-   wrapping into a ragged second row on narrow screens. */
+/* One row that scrolls instead of wrapping into a ragged second row on
+   narrow screens. */
 .tabbar-scroll {
   flex-wrap: nowrap;
   overflow-x: auto;

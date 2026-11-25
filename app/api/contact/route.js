@@ -101,7 +101,7 @@ export async function POST(request) {
     area: "website",
     action: "enquiry",
     username: member?.username || name,
-    detail: `Contact enquiry ${enquiry.reference} (${categoryMeta(category).label}): “${subject}”`,
+    detail: `Contact enquiry ${enquiry.reference} (${categoryMeta(category).label}): "${subject}"`,
     request,
   });
 

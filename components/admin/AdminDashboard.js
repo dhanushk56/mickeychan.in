@@ -8,6 +8,7 @@ import PollsPanel from "@/components/admin/PollsPanel";
 import EventsPanel from "@/components/admin/EventsPanel";
 import IdeasPanel from "@/components/admin/IdeasPanel";
 import EnquiriesPanel from "@/components/admin/EnquiriesPanel";
+import HomePanel from "@/components/admin/HomePanel";
 import { AdminsPanel, RolesPanel } from "@/components/admin/AccessPanels";
 import { useConfirm, usePrompt } from "@/components/ConfirmDialog";
 import ApplicationTimeline from "@/components/applications/ApplicationTimeline";
@@ -55,8 +56,57 @@ function formatDateTime(iso) {
 
 function formatValue(value) {
   if (Array.isArray(value)) return value.join(", ") || "-";
+  if (value && typeof value === "object") {
+    if (value.kind === "signature") return "Signature";
+    return Object.entries(value).map(([row, pick]) => `${row}: ${pick}`).join("; ") || "-";
+  }
   if (value === undefined || value === null || value === "") return "-";
   return String(value);
+}
+
+// A file answer is a link, so a reviewer can open it rather than read a URL.
+function ResponseValue({ value }) {
+  if (value && typeof value === "object" && value.kind === "signature") {
+    return (
+      <svg
+        viewBox="0 0 600 200"
+        width="220"
+        height="74"
+        role="img"
+        aria-label="Signature"
+        style={{ display: "block" }}
+      >
+        <path
+          d={value.path}
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    );
+  }
+  if (value && typeof value === "object" && !Array.isArray(value)) {
+    return (
+      <span className="grid gap-0.5">
+        {Object.entries(value).map(([row, pick]) => (
+          <span key={row}>
+            {row}: {pick}
+          </span>
+        ))}
+      </span>
+    );
+  }
+  const link = typeof value === "string" ? value.trim() : "";
+  if (/^https?:\/\//i.test(link)) {
+    return (
+      <a href={link} target="_blank" rel="noreferrer" className="hover:underline break-all">
+        {link}
+      </a>
+    );
+  }
+  return <>{formatValue(value)}</>;
 }
 
 function StatusBadge({ status }) {
@@ -140,7 +190,9 @@ function ApplicationCard({ entry, busy, onStatus, onDelete, canReview, canDelete
         {shown.map((question) => (
           <div key={question.id} className="contents">
             <span className="faint">{question.title}</span>
-            <span className="whitespace-pre-wrap break-words">{formatValue(entry.responses?.[question.id])}</span>
+            <span className="whitespace-pre-wrap break-words">
+              <ResponseValue value={entry.responses?.[question.id]} />
+            </span>
           </div>
         ))}
         {questions.length === 0 && (
@@ -155,7 +207,7 @@ function ApplicationCard({ entry, busy, onStatus, onDelete, canReview, canDelete
       )}
 
       {entry.reviewNote && (
-        <p className="muted text-sm mt-2 whitespace-pre-wrap">“{entry.reviewNote}”</p>
+        <p className="muted text-sm mt-2 whitespace-pre-wrap">"{entry.reviewNote}"</p>
       )}
 
       {Array.isArray(entry.events) && entry.events.length > 0 && (
@@ -947,6 +999,7 @@ export default function AdminDashboard({ currentUser }) {
               { id: "enquiries", label: "Enquiries", show: can("enquiries.view") || can("messages.view") },
               { id: "forms", label: "Forms", count: data.forms.length, show: can("forms.view") },
               { id: "accounts", label: "Accounts", count: data.accounts.length, show: can("accounts.view") },
+              { id: "home", label: "Home page", show: can("content.view") },
               { id: "announcements", label: "Announcements", show: can("announcements.view") },
               { id: "polls", label: "Polls", show: can("polls.view") },
               { id: "events", label: "Events", show: can("events.view") },
@@ -1222,6 +1275,8 @@ export default function AdminDashboard({ currentUser }) {
             canDelete={can("enquiries.delete") || can("messages.delete")}
           />
         )}
+
+        {tab === "home" && <HomePanel canEdit={can("content.edit")} />}
 
         {tab === "announcements" && <AnnouncementsPanel />}
 

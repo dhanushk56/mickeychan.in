@@ -8,9 +8,10 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export const metadata = {
-  title: "Community",
-  description: "Polls, events and the idea board: everything you can take part in on MickeyChan.in.",
-  alternates: { canonical: "/community" },
+  title: "Hub",
+  description:
+    "Polls, the idea board and the calendar on one page. Vote on what gets made next, back a suggestion, or see when the next stream is on.",
+  alternates: { canonical: "/hub" },
 };
 
 function dayParts(value) {
@@ -55,11 +56,10 @@ export default async function CommunityPage() {
       <div className="shell hub-page">
         <header className="glass-card hub-hero">
           <div className="hub-hero-copy">
-            <p className="kicker">Community</p>
+            <p className="kicker">Hub</p>
             <h1 className="display-lg">Take part in what comes next.</h1>
             <p className="muted hub-hero-lead">
-              Vote in a poll, back an idea you want made, or turn up to the next stream. Everything
-              members can take part in lives here.
+              Vote in a poll, back an idea you want made, or check the calendar for the next stream.
             </p>
             <div className="hub-actions">
               <Link href="/ideas" className="btn btn-primary btn-sm">

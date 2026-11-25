@@ -6,17 +6,28 @@ import { usePathname } from "next/navigation";
 import LogoutButton from "@/components/LogoutButton";
 import NotificationsBell from "@/components/NotificationsBell";
 
-const LINKS = [
+// Videos, contact and open positions stand on their own. Everything about taking
+// part in the channel sits behind one menu, which opens on hover.
+const NAV = [
   { href: "/videos", label: "Videos" },
-  { href: "/announcements", label: "Announcements" },
-  { href: "/community", label: "Community" },
-  { href: "/socials", label: "Socials" },
+  {
+    href: "/hub",
+    label: "Community",
+    items: [
+      { href: "/hub", label: "Hub", note: "Polls, ideas and the calendar" },
+      { href: "/announcements", label: "Announcements", note: "What is new on the channel" },
+      { href: "/forums", label: "Forums", note: "Threads and replies" },
+      { href: "/socials", label: "Socials", note: "Everywhere else to follow" },
+    ],
+  },
+  { href: "/contact", label: "Contact" },
   { href: "/positions", label: "Open positions" },
 ];
 
 export default function Navbar() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const [groupOpen, setGroupOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [member, setMember] = useState(null);
   const [accountOpen, setAccountOpen] = useState(false);
@@ -78,7 +89,13 @@ export default function Navbar() {
   }, [open]);
 
   const isActive = (href) => pathname === href || pathname.startsWith(`${href}/`);
-  const drawerBase = LINKS.length;
+  const drawerBase = NAV.length;
+  const communityActive = NAV.find((entry) => entry.items)?.items.some((item) => isActive(item.href));
+
+  // Land in the section that is already open on the page you are reading.
+  useEffect(() => {
+    if (communityActive) setGroupOpen(true);
+  }, [communityActive]);
 
   return (
     <>
@@ -134,14 +151,6 @@ export default function Navbar() {
                         </span>
                       </div>
                       <Link
-                        href="/dashboard"
-                        className="account-pop-item"
-                        onClick={() => setAccountOpen(false)}
-                      >
-                        Dashboard
-                        <span aria-hidden="true">→</span>
-                      </Link>
-                      <Link
                         href="/my-account"
                         className="account-pop-item"
                         onClick={() => setAccountOpen(false)}
@@ -173,16 +182,58 @@ export default function Navbar() {
 
           <div className="nav-end">
             <nav className="nav-links" aria-label="Main">
-              {LINKS.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className="nav-link"
-                  data-active={isActive(link.href)}
-                >
-                  {link.label}
-                </Link>
-              ))}
+              {NAV.map((entry) =>
+                entry.items ? (
+                  <div
+                    key={entry.label}
+                    className="nav-drop"
+                    data-active={entry.items.some((item) => isActive(item.href))}
+                  >
+                    <Link href={entry.href} className="nav-link nav-drop-trigger" aria-haspopup="true">
+                      {entry.label}
+                      <svg
+                        className="nav-drop-caret"
+                        viewBox="0 0 10 6"
+                        aria-hidden="true"
+                        focusable="false"
+                      >
+                        <path
+                          d="M1 1l4 4 4-4"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="1.4"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    </Link>
+                    <div className="nav-drop-panel">
+                      <div className="nav-drop-card">
+                        {entry.items.map((item) => (
+                          <Link
+                            key={item.href}
+                            href={item.href}
+                            className="nav-drop-item"
+                            data-active={isActive(item.href)}
+                          >
+                            <span className="nav-drop-item-label">{item.label}</span>
+                            <span className="nav-drop-item-note">{item.note}</span>
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <Link
+                    key={entry.href}
+                    href={entry.href}
+                    className="nav-link"
+                    data-active={isActive(entry.href)}
+                  >
+                    {entry.label}
+                  </Link>
+                )
+              )}
             </nav>
           </div>
         </div>
@@ -234,33 +285,73 @@ export default function Navbar() {
           </Link>
         )}
 
-        {LINKS.map((link, index) => (
-          <Link
-            key={link.href}
-            href={link.href}
-            className="mobile-nav-link"
-            data-active={isActive(link.href)}
-            style={{ "--i": String(index) }}
-            onClick={() => setOpen(false)}
-          >
-            {link.label}
-          </Link>
-        ))}
+        {NAV.map((entry, index) =>
+          entry.items ? (
+            <div key={entry.label} className="mobile-nav-group" style={{ "--i": String(index) }}>
+              <button
+                type="button"
+                className="mobile-nav-link mobile-nav-toggle"
+                aria-expanded={groupOpen}
+                aria-controls="mobile-nav-community"
+                onClick={() => setGroupOpen(!groupOpen)}
+              >
+                {entry.label}
+                <svg
+                  className="nav-drop-caret"
+                  viewBox="0 0 10 6"
+                  aria-hidden="true"
+                  focusable="false"
+                >
+                  <path
+                    d="M1 1l4 4 4-4"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.4"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </button>
+              <div
+                id="mobile-nav-community"
+                className="mobile-nav-panel"
+                data-open={groupOpen}
+              >
+                <div className="mobile-nav-panel-inner">
+                  {entry.items.map((item) => (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className="mobile-nav-link mobile-nav-sublink"
+                      data-active={isActive(item.href)}
+                      onClick={() => setOpen(false)}
+                    >
+                      {item.label}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <Link
+              key={entry.href}
+              href={entry.href}
+              className="mobile-nav-link"
+              data-active={isActive(entry.href)}
+              style={{ "--i": String(index) }}
+              onClick={() => setOpen(false)}
+            >
+              {entry.label}
+            </Link>
+          )
+        )}
 
         {member ? (
           <>
             <Link
-              href="/dashboard"
-              className="btn btn-secondary"
-              style={{ "--i": String(drawerBase) }}
-              onClick={() => setOpen(false)}
-            >
-              Dashboard
-            </Link>
-            <Link
               href="/my-account"
               className="btn btn-secondary"
-              style={{ "--i": String(drawerBase + 1) }}
+              style={{ "--i": String(drawerBase) }}
               onClick={() => setOpen(false)}
             >
               My account
@@ -268,7 +359,7 @@ export default function Navbar() {
             <LogoutButton
               endpoint="/api/auth/member/logout"
               className="btn btn-primary"
-              style={{ "--i": String(drawerBase + 2) }}
+              style={{ "--i": String(drawerBase + 1) }}
             >
               Log out
             </LogoutButton>

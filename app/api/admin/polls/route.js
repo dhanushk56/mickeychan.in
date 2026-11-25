@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { refreshPublic } from "@/lib/revalidate";
 import { kvDel, kvGet, kvSet } from "@/lib/kv";
 import { getSessionFromCookies } from "@/lib/auth";
 import { authorize } from "@/lib/admin-guard";
@@ -9,6 +10,7 @@ import {
   POLLS_KEY,
   normalizePoll,
   pollVotesKey,
+  pollWithStatus,
   readPolls,
 } from "@/lib/polls";
 
@@ -24,7 +26,7 @@ export async function GET() {
   const gate = await authorize("polls.view");
   if (gate.response) return gate.response;
   return NextResponse.json(
-    { ok: true, polls: readPolls(await kvGet(POLLS_KEY, [])) },
+    { ok: true, polls: readPolls(await kvGet(POLLS_KEY, [])).map((poll) => pollWithStatus(poll)) },
     { headers: NO_STORE }
   );
 }
@@ -59,12 +61,13 @@ export async function POST(request) {
 
   const existing = readPolls(await kvGet(POLLS_KEY, []));
   await kvSet(POLLS_KEY, [poll, ...existing].slice(0, MAX_POLLS));
+  refreshPublic("polls");
 
   await logActivity({
     area: "admin",
     action: "poll",
     username: await actor(),
-    detail: `Opened the poll “${poll.question}” with ${poll.options.length} options`,
+    detail: `Opened the poll "${poll.question}" with ${poll.options.length} options`,
     request,
   });
 
@@ -85,18 +88,27 @@ export async function PATCH(request) {
     return NextResponse.json({ error: "That poll is gone." }, { status: 404, headers: NO_STORE });
   }
 
-  const next = existing.map((poll) => (poll.id === id ? { ...poll, closed } : poll));
+  // A poll that closed by passing its deadline has to lose that deadline to be
+  // reopened, otherwise it would still read as closed the moment it is saved.
+  const clearDeadline = body?.closesAt === null;
+  const next = existing.map((poll) =>
+    poll.id === id ? { ...poll, closed, ...(clearDeadline ? { closesAt: null } : {}) } : poll
+  );
   await kvSet(POLLS_KEY, next);
+  refreshPublic("polls");
 
   await logActivity({
     area: "admin",
     action: "poll-closed",
     username: await actor(),
-    detail: `${closed ? "Closed" : "Reopened"} the poll “${existing[index].question}”`,
+    detail: `${closed ? "Closed" : "Reopened"} the poll "${existing[index].question}"`,
     request,
   });
 
-  return NextResponse.json({ ok: true, polls: next }, { headers: NO_STORE });
+  return NextResponse.json(
+    { ok: true, polls: next.map((poll) => pollWithStatus(poll)) },
+    { headers: NO_STORE }
+  );
 }
 
 export async function DELETE(request) {
@@ -115,13 +127,14 @@ export async function DELETE(request) {
   }
 
   await kvSet(POLLS_KEY, existing.filter((poll) => poll.id !== id));
+  refreshPublic("polls");
   await kvDel(pollVotesKey(id));
 
   await logActivity({
     area: "admin",
     action: "poll-deleted",
     username: await actor(),
-    detail: `Deleted the poll “${target.question}” and its votes`,
+    detail: `Deleted the poll "${target.question}" and its votes`,
     request,
   });
 

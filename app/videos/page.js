@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 export const metadata = {
   title: "Videos",
   description:
-    "Every Mickey Chan upload, long-form videos and shorts, searchable, filterable and playable right here.",
+    "Every Mickey Chan upload in one place: long-form episodes and shorts, searchable and playable without ever leaving the site.",
   alternates: { canonical: "/videos" },
 };
 

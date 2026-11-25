@@ -58,8 +58,8 @@ export default async function CommunityProfilePage({ params }) {
   return (
     <main className="page">
       <div className="shell" style={{ maxWidth: "52rem" }}>
-        <Link href="/community" className="faint text-xs hover:underline">
-          ← Back to community
+        <Link href="/hub" className="faint text-xs hover:underline">
+          ← Back to hub
         </Link>
 
         <header className="glass-card community-head">
@@ -74,19 +74,19 @@ export default async function CommunityProfilePage({ params }) {
           </div>
         </header>
 
-        <div className="dash-stats profile-stats">
-          <div className="dash-stat">
-            <span className="dash-stat-value">{posted.length}</span>
-            <span className="dash-stat-label">Ideas posted</span>
+        <div className="panel-stats profile-stats">
+          <div className="panel-stat">
+            <span className="panel-stat-value">{posted.length}</span>
+            <span className="panel-stat-label">Ideas posted</span>
           </div>
-          <div className="dash-stat">
-            <span className="dash-stat-value">{backed}</span>
-            <span className="dash-stat-label">Ideas backed</span>
+          <div className="panel-stat">
+            <span className="panel-stat-value">{backed}</span>
+            <span className="panel-stat-label">Ideas backed</span>
           </div>
         </div>
 
-        <section className="glass-card dash-card">
-          <div className="dash-card-head">
+        <section className="glass-card panel-card">
+          <div className="panel-card-head">
             <h2 className="font-display font-bold">Ideas from {name}</h2>
             <Link href="/ideas" className="btn btn-secondary btn-sm">
               Idea board
@@ -99,12 +99,12 @@ export default async function CommunityProfilePage({ params }) {
               member has chosen to publish.
             </p>
           ) : (
-            <ul className="dash-apps">
+            <ul className="panel-list">
               {posted.map((idea) => {
                 const meta = ideaStatusMeta(idea.status);
                 return (
-                  <li key={idea.id} className="dash-app">
-                    <div className="dash-app-head">
+                  <li key={idea.id} className="panel-item">
+                    <div className="panel-item-head">
                       <span className="font-semibold">{idea.title}</span>
                       <span className={`badge ${meta.badge}`}>{meta.label}</span>
                     </div>

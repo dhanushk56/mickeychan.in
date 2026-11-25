@@ -19,6 +19,10 @@ const contentSecurityPolicy = [
 const nextConfig = {
   poweredByHeader: false,
   turbopack: { root: __dirname },
+  // The overview page moved to /hub. Member profiles stay under /community.
+  async redirects() {
+    return [{ source: "/community", destination: "/hub", permanent: true }];
+  },
   async headers() {
     return [
       {

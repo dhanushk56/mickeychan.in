@@ -67,7 +67,7 @@ export async function POST(request) {
     area: "website",
     action: "message",
     username: member.username,
-    detail: `Sent a “join us” message (${role})`,
+    detail: `Sent a "join us" message (${role})`,
     request,
   });
 

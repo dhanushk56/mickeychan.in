@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 export const metadata = {
   title: "Contact",
   description:
-    "Get in touch with Mickey Chan: collaborations, sponsorships, business, suggestions or support. No account needed.",
+    "Collaborations, sponsorships and business enquiries go here, and so does anything broken on the site. No account needed.",
   alternates: { canonical: "/contact" },
 };
 

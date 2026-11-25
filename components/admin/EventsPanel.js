@@ -78,7 +78,7 @@ export default function EventsPanel({ canCreate, canDelete }) {
   async function remove(item) {
     const confirmed = await askConfirm({
       title: "Delete this event?",
-      description: `“${item.title}” disappears from /events.`,
+      description: `"${item.title}" disappears from /events.`,
       confirmLabel: "Delete event",
     });
     if (!confirmed) return;

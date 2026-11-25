@@ -1,15 +1,26 @@
 import Link from "next/link";
 import { channels, getChannelSubscribers, getVideos } from "@/lib/content";
 import { kvGet } from "@/lib/kv";
+import { ANNOUNCEMENTS_KEY, readAnnouncements, splitAnnouncements } from "@/lib/announcements";
+import { listEvents, splitEvents } from "@/lib/events";
+import { getHomeConfig, milestoneList, pickFeaturedVideo, tickerItems, videoOfWeek } from "@/lib/home";
+import { listMembers, publicProfile } from "@/lib/members";
+import { readProfileSettings } from "@/lib/profile";
 import { socials } from "@/data/socials";
 import SocialIcon from "@/components/SocialIcon";
 import HomeMotion from "@/components/HomeMotion";
+import Countdown from "@/components/Countdown";
+import LocalTime from "@/components/LocalTime";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 export const fetchCache = "force-no-store";
 
-const MARQUEE = ["Challenges", "Shorts", "ARGs", "Collabs", "Storylines", "Community"];
+const MARQUEE = ["Challenges", "Shorts", "Collabs", "Community"];
+
+// One copy has to be wider than the widest screen for the loop to look endless,
+// so the four words go round a few times before the track repeats them.
+const MARQUEE_RUN = [...MARQUEE, ...MARQUEE, ...MARQUEE, ...MARQUEE];
 
 const QUESTIONS = [
   {
@@ -44,6 +55,37 @@ function channelName(channel) {
 
 function videoMeta(video) {
   return [video.views && `${video.views} views`, video.published].filter(Boolean).join(" · ") || "Watch now";
+}
+
+function dayLabel(value) {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+}
+
+// Members only appear once they have switched their profile on, so the feature
+// can never out someone who chose to stay private.
+async function consentedMembers(usernames = []) {
+  if (usernames.length === 0) return [];
+  const members = await listMembers();
+  const byName = new Map(members.map((member) => [member.username.toLowerCase(), member]));
+  const found = await Promise.all(
+    usernames.map(async (username) => {
+      const member = byName.get(username);
+      if (!member) return null;
+      const settings = await readProfileSettings(member.username);
+      if (!settings.profileVisible) return null;
+      const profile = publicProfile(member);
+      return {
+        username: profile.username,
+        name: profile.name || profile.username,
+        initials: profile.initials || "",
+        avatar: profile.avatar || "",
+      };
+    })
+  );
+  return found.filter(Boolean);
 }
 
 function Poster({ entry, order }) {
@@ -112,10 +154,13 @@ function ShortCard({ video }) {
 }
 
 export default async function Home() {
-  const [videos, forms, channelStats] = await Promise.all([
+  const [videos, forms, channelStats, homeConfig, announcementsRaw, events] = await Promise.all([
     getVideos(),
     kvGet("formbuilder:index", []),
     getChannelSubscribers(),
+    getHomeConfig(),
+    kvGet(ANNOUNCEMENTS_KEY, []),
+    listEvents(),
   ]);
 
   const longForm = videos.filter((video) => video.type !== "short");
@@ -123,7 +168,27 @@ export default async function Home() {
   const latest = videos.slice(0, 3);
   const shortsStrip = shorts.slice(0, 5);
   const openRoles = forms.filter((form) => form.published !== false);
-  const featured = longForm.slice(0, 2).map((video) => ({
+
+  const announcements = splitAnnouncements(readAnnouncements(announcementsRaw)).current;
+  const { upcoming } = splitEvents(events);
+  const pinned = pickFeaturedVideo(homeConfig, longForm);
+  const week = videoOfWeek(homeConfig, videos);
+  const milestones = milestoneList(homeConfig, 3);
+  const ticker = tickerItems({
+    config: homeConfig,
+    announcements,
+    events: upcoming,
+    videos,
+    limit: 3,
+  });
+  const featuredMembers = await consentedMembers(homeConfig.featuredMembers);
+
+  // An editor's pick takes the first hero slot and the newest upload fills the
+  // second, so the layout never depends on a pick existing.
+  const heroVideos = pinned
+    ? [pinned, ...longForm.filter((video) => video.id !== pinned.id)].slice(0, 2)
+    : longForm.slice(0, 2);
+  const featured = heroVideos.map((video) => ({
     channel: channels.find((channel) => channel.id === video.channel) || channels[0],
     video,
   }));
@@ -152,8 +217,7 @@ export default async function Home() {
             </h1>
 
             <p className="home-lede home-in" style={{ "--d": "320ms" }}>
-              Welcome to Mickey Chan&apos;s world of games, streams, and stories. Catch the latest
-              uploads, find every social, and join the community.
+              Minecraft challenges and the shorts cut from them. Both play right here.
             </p>
 
             <div className="home-actions home-in" style={{ "--d": "440ms" }}>
@@ -277,8 +341,8 @@ export default async function Home() {
         <div className="home-marquee-track">
           {[0, 1].map((copy) => (
             <div className="home-marquee-group" key={copy}>
-              {MARQUEE.map((word) => (
-                <span key={`${copy}-${word}`} className="home-marquee-item">
+              {MARQUEE_RUN.map((word, index) => (
+                <span key={`${copy}-${index}`} className="home-marquee-item">
                   {word}
                   <i>✳</i>
                 </span>
@@ -337,11 +401,11 @@ export default async function Home() {
           <div className="home-section-head">
             <div data-home-reveal>
               <p className="kicker">Inside the channel</p>
-              <h2 className="display-lg mt-2">Three kinds of chaos, one channel.</h2>
+              <h2 className="display-lg mt-2">Two kinds of chaos, one channel.</h2>
             </div>
             <p className="muted text-sm max-w-sm leading-relaxed" data-home-reveal>
-              Long-form episodes built around one ridiculous rule, shorts made for a quick scroll,
-              and ARG stories that keep going long after the episode ends.
+              Long-form episodes built around one ridiculous rule, and shorts made for a quick
+              scroll.
             </p>
           </div>
 
@@ -360,13 +424,6 @@ export default async function Home() {
                 meta: [`${shorts.length} clips`, "Under a minute", "New often"],
                 href: "/videos",
                 cta: "Scroll the shorts",
-              },
-              {
-                title: "ARG stories",
-                body: "Hidden codes, cryptic clues and puzzles that spill off the screen: the storylines you piece together with everyone else watching.",
-                meta: ["Hidden clues", "Puzzles", "Story arcs"],
-                href: "/videos",
-                cta: "Follow the story",
               },
             ].map((lane, index) => (
               <div className="home-lane" key={lane.title} data-home-reveal>
@@ -413,6 +470,34 @@ export default async function Home() {
         </section>
       )}
 
+      {week && (
+        <section className="home-section px-6 md:px-16">
+          <div className="shell">
+            <Link
+              href={`/videos/${week.video.id}`}
+              className="glass-card week-card"
+              data-home-reveal
+            >
+              <span
+                className="week-thumb"
+                style={{ backgroundImage: `url(${week.video.thumbnail})` }}
+                aria-hidden="true"
+              >
+                <span className="play-badge" aria-hidden="true">▶</span>
+              </span>
+              <span className="week-body">
+                <span className="kicker">Video of the week</span>
+                <span className="font-display font-bold text-2xl leading-snug">
+                  {week.video.title}
+                </span>
+                {week.blurb && <span className="muted text-sm leading-relaxed">{week.blurb}</span>}
+                <span className="faint text-xs">{videoMeta(week.video)}</span>
+              </span>
+            </Link>
+          </div>
+        </section>
+      )}
+
       {shortsStrip.length > 0 && (
         <section className="home-section px-6 md:px-16">
           <div className="shell">
@@ -445,13 +530,12 @@ export default async function Home() {
               turning one small rule into a whole episode.
             </p>
             <p className="muted leading-relaxed">
-              Around the episodes there is the rest of it: shorts cut from the funniest moments,
-              collabs with friends across the community, and a team made up of editors, builders,
-              and moderators who keep the worlds running. New ideas are always welcome, and the
-              contact form is open.
+              Between episodes there are shorts cut from live streams and collabs with friends.
+              Behind the channel is a small team of editors, builders and moderators keeping the
+              servers alive. If you have an idea of your own, the contact form is open.
             </p>
             <div className="home-tags">
-              {["Minecraft", "Challenges", "ARGs", "Shorts", "Collabs", "Community"].map((tag) => (
+              {["Minecraft", "Challenges", "Shorts", "Collabs", "Community"].map((tag) => (
                 <span key={tag} className="chip">{tag}</span>
               ))}
             </div>
@@ -461,7 +545,7 @@ export default async function Home() {
             <p className="kicker">Fast facts</p>
             <dl className="fact-list">
               {[
-                ["Focus", "Minecraft challenges & ARGs"],
+                ["Focus", "Minecraft challenges & shorts"],
                 ["Formats", "Long-form + shorts"],
                 ["Team", openRoles.length > 0 ? `${openRoles.length} open role${openRoles.length === 1 ? "" : "s"}` : "Open to good people"],
                 ["Business", "business@mickeychan.in"],
@@ -544,8 +628,8 @@ export default async function Home() {
               </div>
             ) : (
               <p className="muted text-sm max-w-xl leading-relaxed">
-                Roles appear here the moment they are published in the form builder. Nothing open
-                today? Send a message anyway and say what you would bring to the channel.
+                Roles show up here as soon as they go live. Nothing open right now? Send a message
+                anyway and tell us what you would want to do.
               </p>
             )}
           </div>
@@ -572,6 +656,144 @@ export default async function Home() {
           </div>
         </div>
       </section>
+
+      {(upcoming.length > 0 || ticker.length > 0) && (
+        <section className="home-section home-section--tight px-6 md:px-16">
+          <div className="shell">
+            <div className="home-section-head">
+              <div data-home-reveal>
+                <p className="kicker">Around the channel</p>
+                <h2 className="display-lg mt-2">What is next.</h2>
+              </div>
+            </div>
+            <div className="editorial-split">
+              {upcoming.length > 0 && (
+                <div className="grid gap-3 content-start">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <h3 className="font-display font-bold">Coming up</h3>
+                    <Link href="/events" className="home-text-link">
+                      Full calendar ↗
+                    </Link>
+                  </div>
+                  <ul className="panel-list">
+                    {upcoming.slice(0, 2).map((event) => (
+                      <li key={event.id} className="glass-card panel-card" data-home-reveal>
+                        <div className="panel-card-head">
+                          <h4 className="font-display font-bold text-lg">{event.title}</h4>
+                          <span className="badge badge-neutral">
+                            in <Countdown to={event.startsAt} />
+                          </span>
+                        </div>
+                        <p className="faint text-xs">
+                          <LocalTime iso={event.startsAt} />
+                          {event.location ? ` · ${event.location}` : ""}
+                        </p>
+                        {event.url && (
+                          <a
+                            href={event.url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="home-text-link"
+                          >
+                            Event page ↗
+                          </a>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {ticker.length > 0 && (
+                <div className="grid gap-3 content-start">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <h3 className="font-display font-bold">Just happened</h3>
+                    <Link href="/announcements" className="home-text-link">
+                      All updates ↗
+                    </Link>
+                  </div>
+                  <ul className="ticker-list">
+                    {ticker.map((item) => (
+                      <li key={`${item.kind}-${item.title}`}>
+                        <Link href={item.href} className="ticker-item" data-home-reveal>
+                          <span className="badge badge-neutral">{item.label}</span>
+                          <span className="ticker-title">{item.title}</span>
+                          {item.at > 0 && <span className="faint text-xs">{dayLabel(item.at)}</span>}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {milestones.length > 0 && (
+        <section className="home-section home-section--tight px-6 md:px-16">
+          <div className="shell">
+            <div className="home-section-head">
+              <div data-home-reveal>
+                <p className="kicker">The channel so far</p>
+                <h2 className="display-lg mt-2">How it got here.</h2>
+              </div>
+            </div>
+            {milestones.length > 0 && (
+              <ul className="milestone-list">
+                {milestones.map((milestone) => (
+                  <li key={milestone.id} className="glass-card milestone-item" data-home-reveal>
+                    <span className="milestone-date">
+                      {milestone.date ? dayLabel(milestone.date) : "Undated"}
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block font-semibold">{milestone.label}</span>
+                      {milestone.detail && (
+                        <span className="block muted text-sm mt-1">{milestone.detail}</span>
+                      )}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </section>
+      )}
+
+      {featuredMembers.length > 0 && (
+        <section className="home-section home-section--tight px-6 md:px-16">
+          <div className="shell">
+            <div className="home-section-head">
+              <div data-home-reveal>
+                <p className="kicker">Featured members</p>
+                <h2 className="display-lg mt-2">People worth knowing.</h2>
+              </div>
+              <Link href="/hub" className="btn btn-secondary btn-sm" data-home-reveal>
+                Meet the community
+              </Link>
+            </div>
+            <ul className="member-grid">
+              {featuredMembers.map((member) => (
+                <li key={member.username}>
+                  <Link
+                    href={`/community/${member.username}`}
+                    className="glass-card member-card"
+                    data-home-reveal
+                  >
+                    <span className="avatar-frame" aria-hidden="true">
+                      {member.avatar ? <img src={member.avatar} alt="" /> : member.initials}
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block font-semibold truncate">{member.name}</span>
+                      <span className="block faint text-xs truncate">@{member.username}</span>
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+      )}
 
       <section className="home-cta px-6 md:px-16" data-home-reveal>
         <div className="home-cta-aura" aria-hidden="true" />

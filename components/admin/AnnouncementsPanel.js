@@ -113,7 +113,7 @@ export default function AnnouncementsPanel() {
   async function remove(announcement) {
     const ok = await askConfirm({
       title: "Delete this announcement?",
-      description: `“${announcement.title}” disappears from the site immediately.`,
+      description: `"${announcement.title}" disappears from the site immediately.`,
       confirmLabel: "Delete announcement",
     });
     if (!ok) return;

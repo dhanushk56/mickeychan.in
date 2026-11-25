@@ -2,7 +2,15 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { QUESTION_TYPES, createQuestion, createSection, typeMeta } from "@/lib/form-builder/schema";
+import {
+  ACCEPT_GROUPS,
+  QUESTION_TYPES,
+  createQuestion,
+  createSection,
+  defaultRules,
+  questionRules,
+  typeMeta,
+} from "@/lib/form-builder/schema";
 import { JOB_FIELDS, jobMeta } from "@/lib/applications";
 import FormRenderer from "@/components/form-builder/FormRenderer";
 import RichTextEditor from "@/components/RichTextEditor";
@@ -168,7 +176,15 @@ export default function FormBuilder({ initialForm, publicUrl, currentUser, formI
                 ? q.options
                 : [{ id: uid("opt"), label: "Option 1" }]
               : [],
-            scale: meta.hasScale ? q.scale || { min: 1, max: 5, minLabel: "", maxLabel: "" } : null,
+            rows:
+              meta.id === "matrix"
+                ? q.rows?.length
+                  ? q.rows
+                  : [{ id: uid("row"), label: "Row 1" }]
+                : [],
+            scale:
+              meta.kind === "scale" ? q.scale || { min: 1, max: 5, minLabel: "", maxLabel: "" } : null,
+            rules: defaultRules(newType),
           };
         })
       )
@@ -197,6 +213,36 @@ export default function FormBuilder({ initialForm, publicUrl, currentUser, formI
     );
   }
 
+  function addRow(sectionId, questionId) {
+    commit((f) =>
+      withSection(f, sectionId, (s) =>
+        withQuestion(s, questionId, (q) => ({
+          ...q,
+          rows: [...(q.rows || []), { id: uid("row"), label: `Row ${(q.rows?.length || 0) + 1}` }],
+        }))
+      )
+    );
+  }
+  function updateRow(sectionId, questionId, rowId, label) {
+    commit((f) =>
+      withSection(f, sectionId, (s) =>
+        withQuestion(s, questionId, (q) => ({
+          ...q,
+          rows: (q.rows || []).map((row) => (row.id === rowId ? { ...row, label } : row)),
+        }))
+      )
+    );
+  }
+  function removeRow(sectionId, questionId, rowId) {
+    commit((f) =>
+      withSection(f, sectionId, (s) =>
+        withQuestion(s, questionId, (q) => ({
+          ...q,
+          rows: (q.rows || []).filter((row) => row.id !== rowId),
+        }))
+      )
+    );
+  }
   function removeOption(sectionId, questionId, optionId) {
     commit((f) =>
       withSection(f, sectionId, (s) =>
@@ -212,6 +258,17 @@ export default function FormBuilder({ initialForm, publicUrl, currentUser, formI
     commit((f) =>
       withSection(f, sectionId, (s) =>
         withQuestion(s, questionId, (q) => ({ ...q, scale: { ...q.scale, ...patch } }))
+      )
+    );
+  }
+
+  function updateRules(sectionId, questionId, patch) {
+    commit((f) =>
+      withSection(f, sectionId, (s) =>
+        withQuestion(s, questionId, (q) => ({
+          ...q,
+          rules: { ...defaultRules(q.type), ...(q.rules || {}), ...patch },
+        }))
       )
     );
   }
@@ -389,6 +446,7 @@ export default function FormBuilder({ initialForm, publicUrl, currentUser, formI
                 <div className="grid gap-3">
                   {section.questions.map((question, qIndex) => {
                     const meta = typeMeta(question.type);
+                    const rules = questionRules(question);
                     return (
                       <div key={question.id} className="question-block grid gap-3">
                         <div className="flex flex-wrap items-center gap-2">
@@ -415,6 +473,9 @@ export default function FormBuilder({ initialForm, publicUrl, currentUser, formI
                                 {type.label}
                               </option>
                             ))}
+                            <option value="payment" disabled>
+                              Payment (needs Stripe, not available)
+                            </option>
                           </select>
                         </div>
 
@@ -430,6 +491,9 @@ export default function FormBuilder({ initialForm, publicUrl, currentUser, formI
 
                         {meta.hasOptions && (
                           <div className="grid gap-2">
+                            {meta.kind === "matrix" && (
+                              <span className="field-label">Columns</span>
+                            )}
                             {question.options.map((option) => (
                               <div key={option.id} className="option-row">
                                 <span className="option-marker">
@@ -459,7 +523,43 @@ export default function FormBuilder({ initialForm, publicUrl, currentUser, formI
                               className="btn btn-ghost self-start"
                               onClick={() => addOption(section.id, question.id)}
                             >
-                              + Add option
+                              + Add {meta.kind === "matrix" ? "column" : "option"}
+                            </button>
+                          </div>
+                        )}
+
+                        {meta.kind === "matrix" && (
+                          <div className="grid gap-2">
+                            <span className="field-label">Rows</span>
+                            {(question.rows || []).map((row) => (
+                              <div key={row.id} className="option-row">
+                                <span className="option-marker">▤</span>
+                                <input
+                                  className="input flex-1"
+                                  value={row.label}
+                                  onChange={(event) =>
+                                    updateRow(section.id, question.id, row.id, event.target.value)
+                                  }
+                                  aria-label="Row label"
+                                />
+                                <button
+                                  type="button"
+                                  className="icon-button"
+                                  onClick={() => removeRow(section.id, question.id, row.id)}
+                                  disabled={(question.rows || []).length <= 1}
+                                  title="Remove row"
+                                  aria-label="Remove row"
+                                >
+                                  ✕
+                                </button>
+                              </div>
+                            ))}
+                            <button
+                              type="button"
+                              className="btn btn-ghost self-start"
+                              onClick={() => addRow(section.id, question.id)}
+                            >
+                              + Add row
                             </button>
                           </div>
                         )}
@@ -508,6 +608,191 @@ export default function FormBuilder({ initialForm, publicUrl, currentUser, formI
                                 }
                               />
                             </label>
+                          </div>
+                        )}
+
+                        {(meta.kind === "text" || meta.kind === "email" || meta.kind === "url") && (
+                          <div className="flex flex-wrap items-end gap-3">
+                            <label className="field" style={{ width: "8rem" }}>
+                              <span className="field-label">Min characters</span>
+                              <input
+                                type="number"
+                                min="0"
+                                className="input"
+                                value={rules.minChars ?? ""}
+                                placeholder="None"
+                                onChange={(event) =>
+                                  updateRules(section.id, question.id, {
+                                    minChars: event.target.value === "" ? null : Number(event.target.value),
+                                  })
+                                }
+                              />
+                            </label>
+                            <label className="field" style={{ width: "8rem" }}>
+                              <span className="field-label">Max characters</span>
+                              <input
+                                type="number"
+                                min="0"
+                                className="input"
+                                value={rules.maxChars ?? ""}
+                                placeholder="None"
+                                onChange={(event) =>
+                                  updateRules(section.id, question.id, {
+                                    maxChars: event.target.value === "" ? null : Number(event.target.value),
+                                  })
+                                }
+                              />
+                            </label>
+                          </div>
+                        )}
+
+                        {meta.kind === "number" && (
+                          <div className="flex flex-wrap items-end gap-3">
+                            <label className="field" style={{ width: "8rem" }}>
+                              <span className="field-label">Lowest</span>
+                              <input
+                                type="number"
+                                className="input"
+                                value={rules.min ?? ""}
+                                placeholder="None"
+                                onChange={(event) =>
+                                  updateRules(section.id, question.id, {
+                                    min: event.target.value === "" ? null : Number(event.target.value),
+                                  })
+                                }
+                              />
+                            </label>
+                            <label className="field" style={{ width: "8rem" }}>
+                              <span className="field-label">Highest</span>
+                              <input
+                                type="number"
+                                className="input"
+                                value={rules.max ?? ""}
+                                placeholder="None"
+                                onChange={(event) =>
+                                  updateRules(section.id, question.id, {
+                                    max: event.target.value === "" ? null : Number(event.target.value),
+                                  })
+                                }
+                              />
+                            </label>
+                          </div>
+                        )}
+
+                        {meta.kind === "choice" &&
+                          question.type !== "multiple_choice" &&
+                          question.type !== "dropdown" && (
+                            <div className="flex flex-wrap items-end gap-3">
+                              <label className="field" style={{ width: "9rem" }}>
+                                <span className="field-label">Choose at least</span>
+                                <input
+                                  type="number"
+                                  min="0"
+                                  className="input"
+                                  value={rules.minSelections ?? ""}
+                                  placeholder="None"
+                                  onChange={(event) =>
+                                    updateRules(section.id, question.id, {
+                                      minSelections:
+                                        event.target.value === "" ? null : Number(event.target.value),
+                                    })
+                                  }
+                                />
+                              </label>
+                              <label className="field" style={{ width: "9rem" }}>
+                                <span className="field-label">Choose at most</span>
+                                <input
+                                  type="number"
+                                  min="1"
+                                  className="input"
+                                  value={rules.maxSelections ?? ""}
+                                  placeholder="None"
+                                  onChange={(event) =>
+                                    updateRules(section.id, question.id, {
+                                      maxSelections:
+                                        event.target.value === "" ? null : Number(event.target.value),
+                                    })
+                                  }
+                                />
+                              </label>
+                            </div>
+                          )}
+
+                        {meta.kind === "date" && (
+                          <div className="flex flex-wrap items-end gap-3">
+                            <label className="field" style={{ width: "10rem" }}>
+                              <span className="field-label">Earliest</span>
+                              <input
+                                type="date"
+                                className="input"
+                                value={rules.minDate || ""}
+                                onChange={(event) =>
+                                  updateRules(section.id, question.id, { minDate: event.target.value })
+                                }
+                              />
+                            </label>
+                            <label className="field" style={{ width: "10rem" }}>
+                              <span className="field-label">Latest</span>
+                              <input
+                                type="date"
+                                className="input"
+                                value={rules.maxDate || ""}
+                                onChange={(event) =>
+                                  updateRules(section.id, question.id, { maxDate: event.target.value })
+                                }
+                              />
+                            </label>
+                          </div>
+                        )}
+
+                        {meta.kind === "rating" && (
+                          <label className="field" style={{ width: "10rem" }}>
+                            <span className="field-label">Stars</span>
+                            <select
+                              className="select"
+                              value={rules.ratingMax}
+                              onChange={(event) =>
+                                updateRules(section.id, question.id, {
+                                  ratingMax: Number(event.target.value),
+                                })
+                              }
+                            >
+                              {[3, 4, 5, 6, 7, 8, 9, 10].map((count) => (
+                                <option key={count} value={count}>
+                                  {count}
+                                </option>
+                              ))}
+                            </select>
+                          </label>
+                        )}
+
+                        {meta.kind === "file" && (
+                          <div className="grid gap-3">
+                            <div className="grid gap-2">
+                              <span className="field-label">Accepted formats</span>
+                              <div className="flex flex-wrap gap-x-4 gap-y-2">
+                                {ACCEPT_GROUPS.map((group) => {
+                                  const on = rules.accept.includes(group.id);
+                                  return (
+                                    <label key={group.id} className="flex items-center gap-2 text-sm muted">
+                                      <input
+                                        type="checkbox"
+                                        className="checkbox"
+                                        checked={on}
+                                        onChange={() =>
+                                          updateRules(section.id, question.id, {
+                                            accept: on
+                                              ? rules.accept.filter((entry) => entry !== group.id)
+                                              : [...rules.accept, group.id],
+                                          })
+                                        }
+                                      />
+                                      {group.label}
+                                    </label>
+                                  );
+                                })}
+                              </div>
+                            </div>
                           </div>
                         )}
 
@@ -591,6 +876,9 @@ export default function FormBuilder({ initialForm, publicUrl, currentUser, formI
                         {type.label}
                       </option>
                     ))}
+                    <option value="payment" disabled>
+                      Payment (needs Stripe, not available)
+                    </option>
                   </select>
                   <button type="button" className="btn btn-ghost" onClick={() => duplicateSection(section.id)}>
                     Duplicate section

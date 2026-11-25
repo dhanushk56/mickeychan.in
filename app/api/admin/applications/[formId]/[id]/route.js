@@ -54,8 +54,8 @@ export async function PATCH(request, { params }) {
     await addNotification(applicant, {
       kind: "application",
       title: `Application: ${meta.label}`,
-      body: `“${submissions[index].formTitle || formId}”: ${meta.applicant}`,
-      href: "/dashboard?tab=applications",
+      body: `"${submissions[index].formTitle || formId}": ${meta.applicant}`,
+      href: "/positions",
     });
   }
   await logActivity({
@@ -63,7 +63,7 @@ export async function PATCH(request, { params }) {
     action: "application-status",
     username: session.user.username,
     detail: `Marked ${applicant ? `@${applicant}'s` : "an applicant's"} application ` +
-      `for “${submissions[index].formTitle || formId}” as ${status}`,
+      `for "${submissions[index].formTitle || formId}" as ${status}`,
     request,
   });
 
@@ -93,7 +93,7 @@ export async function DELETE(request, { params }) {
     action: "application-deleted",
     username: session.user.username,
     detail: `Deleted ${target?.memberUsername ? `@${target.memberUsername}'s` : "an applicant's"} ` +
-      `application for “${target?.formTitle || formId}”`,
+      `application for "${target?.formTitle || formId}"`,
     request,
   });
 

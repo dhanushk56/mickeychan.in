@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { refreshPublic } from "@/lib/revalidate";
 import { kvGet, kvSet } from "@/lib/kv";
 import { getSessionFromCookies } from "@/lib/auth";
 import { authorize } from "@/lib/admin-guard";
@@ -68,13 +69,14 @@ export async function POST(request) {
 
   const existing = readAnnouncements(await kvGet(ANNOUNCEMENTS_KEY, []));
   await kvSet(ANNOUNCEMENTS_KEY, [announcement, ...existing].slice(0, MAX_ANNOUNCEMENTS));
+  refreshPublic("announcements");
 
   const meta = levelMeta(announcement.level);
   await logActivity({
     area: "admin",
     action: "announcement",
     username: await actor(),
-    detail: `Posted the ${meta.label.toLowerCase()} announcement “${announcement.title}” for ${announcement.windowHours} hour${announcement.windowHours === 1 ? "" : "s"}`,
+    detail: `Posted the ${meta.label.toLowerCase()} announcement "${announcement.title}" for ${announcement.windowHours} hour${announcement.windowHours === 1 ? "" : "s"}`,
     request,
   });
 
@@ -102,12 +104,13 @@ export async function DELETE(request) {
     ANNOUNCEMENTS_KEY,
     existing.filter((announcement) => announcement.id !== id)
   );
+  refreshPublic("announcements");
 
   await logActivity({
     area: "admin",
     action: "announcement-deleted",
     username: await actor(),
-    detail: `Deleted the announcement “${target.title}”`,
+    detail: `Deleted the announcement "${target.title}"`,
     request,
   });
 

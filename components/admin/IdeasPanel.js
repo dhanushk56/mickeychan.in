@@ -59,7 +59,7 @@ export default function IdeasPanel({ canEdit, canDelete }) {
   async function remove(idea) {
     const confirmed = await askConfirm({
       title: "Delete this idea?",
-      description: `“${idea.title}” and its backers are removed.`,
+      description: `"${idea.title}" and its backers are removed.`,
       confirmLabel: "Delete idea",
     });
     if (!confirmed) return;

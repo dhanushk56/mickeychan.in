@@ -507,7 +507,7 @@ export default function RichTextEditor({
             </h2>
             <p className="muted text-sm mt-2 leading-relaxed">
               {linkSelection
-                ? `“${linkSelection.slice(0, 80)}” will link to this address.`
+                ? `"${linkSelection.slice(0, 80)}" will link to this address.`
                 : "This address will be shown as the link text."}
             </p>
             <label className="grid gap-1 mt-4">

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { refreshPublic } from "@/lib/revalidate";
 import { kvGet, kvSet } from "@/lib/kv";
 import { getSessionFromCookies } from "@/lib/auth";
 import { authorize } from "@/lib/admin-guard";
@@ -47,12 +48,13 @@ export async function POST(request) {
 
   const existing = readEvents(await kvGet(EVENTS_KEY, []));
   await kvSet(EVENTS_KEY, [event, ...existing].slice(0, MAX_EVENTS));
+  refreshPublic("events");
 
   await logActivity({
     area: "admin",
     action: "event",
     username: await actor(),
-    detail: `Added the event “${event.title}”`,
+    detail: `Added the event "${event.title}"`,
     request,
   });
 
@@ -75,12 +77,13 @@ export async function DELETE(request) {
   }
 
   await kvSet(EVENTS_KEY, existing.filter((event) => event.id !== id));
+  refreshPublic("events");
 
   await logActivity({
     area: "admin",
     action: "event-deleted",
     username: await actor(),
-    detail: `Deleted the event “${target.title}”`,
+    detail: `Deleted the event "${target.title}"`,
     request,
   });
 

@@ -49,8 +49,8 @@ export default async function PollsPage() {
             <p className="muted text-sm">
               Nothing to vote on right now. The next one shows up here as soon as it opens.
             </p>
-            <Link href="/community" className="btn btn-secondary btn-sm">
-              Back to community
+            <Link href="/hub" className="btn btn-secondary btn-sm">
+              Back to hub
             </Link>
           </div>
         ) : (

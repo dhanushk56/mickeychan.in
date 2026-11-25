@@ -1,11 +1,239 @@
 "use client";
 
-import { useState } from "react";
-import { validateResponses } from "@/lib/form-builder/schema";
+import { useEffect, useRef, useState } from "react";
+import {
+  questionHint,
+  questionRules,
+  typeMeta,
+  validateSection,
+} from "@/lib/form-builder/schema";
 import RichText from "@/components/RichText";
+
+function Hint({ question }) {
+  const hint = questionHint(question);
+  if (!hint) return null;
+  return <p className="faint text-xs mt-1">{hint}</p>;
+}
+
+function CharacterCount({ value, max }) {
+  if (!max) return null;
+  const used = [...String(value || "")].length;
+  return (
+    <p className={`faint text-xs mt-1 ${used > max ? "text-[var(--danger)]" : ""}`}>
+      {used} / {max}
+    </p>
+  );
+}
+
+function toggled(list, label) {
+  const array = Array.isArray(list) ? list : [];
+  return array.includes(label) ? array.filter((entry) => entry !== label) : [...array, label];
+}
+
+function RankingField({ question, value, onChange }) {
+  const labels = question.options.map((option) => option.label);
+  const key = labels.join("\u0000");
+  const complete = Array.isArray(value) && value.length === labels.length;
+  const order = complete ? value : labels;
+
+  // A ranking answer is the full list, so the untouched order counts as an answer.
+  useEffect(() => {
+    if (!complete) onChange(question.id, labels);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key]);
+
+  function move(index, delta) {
+    const target = index + delta;
+    if (target < 0 || target >= order.length) return;
+    const next = [...order];
+    [next[index], next[target]] = [next[target], next[index]];
+    onChange(question.id, next);
+  }
+
+  return (
+    <ol className="rank-list">
+      {order.map((label, index) => (
+        <li key={label} className="rank-row glass-inset">
+          <span className="rank-number" aria-hidden="true">
+            {index + 1}
+          </span>
+          <span className="flex-1 text-sm">{label}</span>
+          <button
+            type="button"
+            className="icon-button"
+            onClick={() => move(index, -1)}
+            disabled={index === 0}
+            aria-label={`Move ${label} up`}
+          >
+            ↑
+          </button>
+          <button
+            type="button"
+            className="icon-button"
+            onClick={() => move(index, 1)}
+            disabled={index === order.length - 1}
+            aria-label={`Move ${label} down`}
+          >
+            ↓
+          </button>
+        </li>
+      ))}
+    </ol>
+  );
+}
+
+function MatrixField({ question, value, onChange }) {
+  const columns = question.options.map((option) => option.label);
+  const rows = (question.rows || []).map((row) => row.label);
+  const answers = value && typeof value === "object" ? value : {};
+  const pick = (row, column) => onChange(question.id, { ...answers, [row]: column });
+
+  return (
+    <div className="matrix-wrap">
+      <table className="matrix-grid">
+        <thead>
+          <tr>
+            <th scope="col">
+              <span className="sr-only">Row</span>
+            </th>
+            {columns.map((column) => (
+              <th key={column} scope="col">
+                {column}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row) => (
+            <tr key={row}>
+              <th scope="row">{row}</th>
+              {columns.map((column) => (
+                <td key={column}>
+                  <input
+                    type="radio"
+                    className="checkbox"
+                    name={`${question.id}-${row}`}
+                    checked={answers[row] === column}
+                    onChange={() => pick(row, column)}
+                    aria-label={`${row}: ${column}`}
+                  />
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function SignatureField({ question, value, onChange }) {
+  const canvasRef = useRef(null);
+  const strokes = useRef([]);
+  const drawing = useRef(false);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const context = canvas.getContext("2d");
+    context.clearRect(0, 0, canvas.width, canvas.height);
+  }, []);
+
+  function pointOf(event) {
+    const rect = canvasRef.current.getBoundingClientRect();
+    return [
+      Math.round(((event.clientX - rect.left) / rect.width) * 600),
+      Math.round(((event.clientY - rect.top) / rect.height) * 200),
+    ];
+  }
+
+  function segment(from, to) {
+    const context = canvasRef.current.getContext("2d");
+    context.beginPath();
+    context.moveTo(from[0], from[1]);
+    context.lineTo(to[0], to[1]);
+    context.strokeStyle = "#f4f0ff";
+    context.lineWidth = 2.2;
+    context.lineCap = "round";
+    context.lineJoin = "round";
+    context.stroke();
+  }
+
+  function start(event) {
+    event.preventDefault();
+    canvasRef.current.setPointerCapture(event.pointerId);
+    drawing.current = true;
+    const point = pointOf(event);
+    strokes.current.push([point]);
+    segment(point, [point[0] + 0.1, point[1] + 0.1]);
+  }
+
+  function move(event) {
+    if (!drawing.current) return;
+    const stroke = strokes.current[strokes.current.length - 1];
+    const point = pointOf(event);
+    const last = stroke[stroke.length - 1];
+    stroke.push(point);
+    segment(last, point);
+  }
+
+  function finish() {
+    if (!drawing.current) return;
+    drawing.current = false;
+    const path = strokes.current
+      .map((stroke) => stroke.map(([x, y], i) => `${i === 0 ? "M" : "L"}${x} ${y}`).join(" "))
+      .join(" ");
+    onChange(question.id, path.length >= 12 ? { kind: "signature", path } : "");
+  }
+
+  function clear() {
+    strokes.current = [];
+    const canvas = canvasRef.current;
+    canvas.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
+    onChange(question.id, "");
+  }
+
+  return (
+    <div className="grid gap-2">
+      <canvas
+        ref={canvasRef}
+        width={600}
+        height={200}
+        className="signature-pad"
+        onPointerDown={start}
+        onPointerMove={move}
+        onPointerUp={finish}
+        onPointerLeave={finish}
+        onPointerCancel={finish}
+        aria-label="Signature pad"
+      />
+      <div className="flex items-center justify-between gap-3">
+        <p className="faint text-xs">{value?.path ? "Signature captured." : "Sign above."}</p>
+        <button type="button" className="btn btn-ghost btn-sm" onClick={clear}>
+          Clear
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function FileLinkField({ question, value, onChange }) {
+  return (
+    <input
+      type="url"
+      className="input"
+      placeholder="Paste a link (Drive, Dropbox, WeTransfer, …)"
+      value={value || ""}
+      onChange={(event) => onChange(question.id, event.target.value)}
+    />
+  );
+}
 
 function QuestionField({ question, value, onChange, error }) {
   const setValue = (next) => onChange(question.id, next);
+  const meta = typeMeta(question.type);
+  const rules = questionRules(question);
+  const scale = question.scale || { min: 1, max: 5 };
 
   return (
     <div className="glass-card p-5">
@@ -13,19 +241,71 @@ function QuestionField({ question, value, onChange, error }) {
         {question.title || "Untitled question"}
         {question.required && <span style={{ color: "var(--accent)" }}> *</span>}
       </p>
-      <RichText value={question.description} className="muted text-sm mt-1 mb-3" />
+      <RichText value={question.description} className="muted text-sm mt-1" />
 
       <div className="mt-3">
-        {question.type === "short_answer" && (
-          <input className="input" value={value || ""} onChange={(event) => setValue(event.target.value)} />
+        {meta.kind === "text" && question.type === "short_answer" && (
+          <>
+            <input
+              className="input"
+              value={value || ""}
+              maxLength={rules.maxChars ? rules.maxChars + 50 : undefined}
+              onChange={(event) => setValue(event.target.value)}
+            />
+            <CharacterCount value={value} max={rules.maxChars} />
+          </>
         )}
 
-        {question.type === "paragraph" && (
-          <textarea
-            className="textarea"
-            rows={4}
+        {meta.kind === "text" && question.type === "paragraph" && (
+          <>
+            <textarea
+              className="textarea"
+              rows={5}
+              value={value || ""}
+              onChange={(event) => setValue(event.target.value)}
+            />
+            <CharacterCount value={value} max={rules.maxChars} />
+          </>
+        )}
+
+        {meta.kind === "email" && (
+          <input
+            type="email"
+            className="input"
+            autoComplete="email"
             value={value || ""}
             onChange={(event) => setValue(event.target.value)}
+          />
+        )}
+
+        {meta.kind === "url" && (
+          <input
+            type="url"
+            className="input"
+            placeholder="https://"
+            value={value || ""}
+            onChange={(event) => setValue(event.target.value)}
+          />
+        )}
+
+        {meta.kind === "phone" && (
+          <input
+            type="tel"
+            className="input"
+            autoComplete="tel"
+            value={value || ""}
+            onChange={(event) => setValue(event.target.value)}
+          />
+        )}
+
+        {meta.kind === "number" && (
+          <input
+            type="number"
+            className="input"
+            value={value === undefined || value === null ? "" : value}
+            onChange={(event) =>
+              setValue(event.target.value === "" ? "" : Number(event.target.value))
+            }
           />
         )}
 
@@ -46,20 +326,17 @@ function QuestionField({ question, value, onChange, error }) {
           </div>
         )}
 
-        {question.type === "checkboxes" && (
+        {(question.type === "checkboxes" || question.type === "multi_select") && (
           <div className="grid gap-2">
             {question.options.map((option) => {
-              const array = Array.isArray(value) ? value : [];
-              const checked = array.includes(option.label);
+              const checked = Array.isArray(value) && value.includes(option.label);
               return (
                 <label key={option.id} className="flex items-center gap-3 text-sm">
                   <input
                     type="checkbox"
                     className="checkbox"
                     checked={checked}
-                    onChange={() =>
-                      setValue(checked ? array.filter((v) => v !== option.label) : [...array, option.label])
-                    }
+                    onChange={() => setValue(toggled(value, option.label))}
                   />
                   {option.label}
                 </label>
@@ -69,7 +346,11 @@ function QuestionField({ question, value, onChange, error }) {
         )}
 
         {question.type === "dropdown" && (
-          <select className="select" value={value || ""} onChange={(event) => setValue(event.target.value)}>
+          <select
+            className="select"
+            value={value || ""}
+            onChange={(event) => setValue(event.target.value)}
+          >
             <option value="">Choose…</option>
             {question.options.map((option) => (
               <option key={option.id} value={option.label}>
@@ -79,48 +360,74 @@ function QuestionField({ question, value, onChange, error }) {
           </select>
         )}
 
-        {question.type === "linear_scale" && question.scale && (
+        {meta.kind === "scale" && (
           <div>
-            <div className="flex flex-wrap items-center gap-3">
-              {Array.from(
-                { length: Math.max(0, question.scale.max - question.scale.min + 1) },
-                (_, i) => question.scale.min + i
-              ).map((n) => (
-                <label
-                  key={n}
-                  className="glass-inset flex flex-col items-center gap-1 px-3 py-2 text-xs muted"
-                  style={value === n ? { borderColor: "var(--primary)", color: "var(--primary)" } : undefined}
-                >
-                  <input
-                    type="radio"
-                    className="checkbox"
-                    name={question.id}
-                    checked={value === n}
-                    onChange={() => setValue(n)}
-                  />
-                  {n}
-                </label>
-              ))}
+            <div className="flex flex-wrap items-center gap-2">
+              {Array.from({ length: Math.max(0, scale.max - scale.min + 1) }, (_, i) => scale.min + i).map(
+                (n) => (
+                  <label
+                    key={n}
+                    className="glass-inset flex min-w-[2.75rem] flex-col items-center gap-1 px-3 py-2 text-xs muted"
+                    style={
+                      value === n
+                        ? { borderColor: "var(--primary)", color: "var(--primary)" }
+                        : undefined
+                    }
+                  >
+                    <input
+                      type="radio"
+                      className="checkbox"
+                      name={question.id}
+                      checked={value === n}
+                      onChange={() => setValue(n)}
+                    />
+                    {n}
+                  </label>
+                )
+              )}
             </div>
-            {(question.scale.minLabel || question.scale.maxLabel) && (
+            {(scale.minLabel || scale.maxLabel) && (
               <div className="flex justify-between text-xs faint mt-2">
-                <span>{question.scale.minLabel}</span>
-                <span>{question.scale.maxLabel}</span>
+                <span>{scale.minLabel}</span>
+                <span>{scale.maxLabel}</span>
               </div>
             )}
           </div>
         )}
 
-        {question.type === "date" && (
+        {meta.kind === "rating" && (
+          <div className="flex flex-wrap items-center gap-1" role="group" aria-label="Rating">
+            {Array.from({ length: rules.ratingMax }, (_, i) => i + 1).map((n) => {
+              const active = Number(value) >= n;
+              return (
+                <button
+                  key={n}
+                  type="button"
+                  className="rating-star"
+                  data-active={active}
+                  aria-pressed={Number(value) === n}
+                  aria-label={`${n} of ${rules.ratingMax}`}
+                  onClick={() => setValue(n)}
+                >
+                  ★
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        {meta.kind === "date" && (
           <input
             type="date"
             className="input"
+            min={rules.minDate || undefined}
+            max={rules.maxDate || undefined}
             value={value || ""}
             onChange={(event) => setValue(event.target.value)}
           />
         )}
 
-        {question.type === "time" && (
+        {meta.kind === "time" && (
           <input
             type="time"
             className="input"
@@ -129,16 +436,24 @@ function QuestionField({ question, value, onChange, error }) {
           />
         )}
 
-        {question.type === "file_upload" && (
-          <input
-            type="url"
-            className="input"
-            placeholder="Paste a link to your file (Google Drive, Dropbox, …)"
-            value={value || ""}
-            onChange={(event) => setValue(event.target.value)}
-          />
+        {meta.kind === "ranking" && (
+          <RankingField question={question} value={value} onChange={onChange} />
+        )}
+
+        {meta.kind === "matrix" && (
+          <MatrixField question={question} value={value} onChange={onChange} />
+        )}
+
+        {meta.kind === "signature" && (
+          <SignatureField question={question} value={value} onChange={onChange} />
+        )}
+
+        {meta.kind === "file" && (
+          <FileLinkField question={question} value={value} onChange={onChange} />
         )}
       </div>
+
+      <Hint question={question} />
 
       {error && (
         <p className="text-xs mt-2" style={{ color: "var(--danger)" }}>
@@ -161,17 +476,17 @@ export default function FormRenderer({ form, mode = "fill", onSubmit, submitting
 
   function updateResponse(id, value) {
     setResponses((previous) => ({ ...previous, [id]: value }));
+    // Clear a message as soon as the answer changes, so it never outlives its cause.
+    setErrors((previous) => {
+      if (!previous[id]) return previous;
+      const next = { ...previous };
+      delete next[id];
+      return next;
+    });
   }
 
   function goNext() {
-    const sectionErrors = {};
-    for (const question of section.questions) {
-      if (!question.required) continue;
-      const value = responses[question.id];
-      const empty =
-        value === undefined || value === null || value === "" || (Array.isArray(value) && value.length === 0);
-      if (empty) sectionErrors[question.id] = "This question is required.";
-    }
+    const sectionErrors = validateSection(section, responses);
     if (Object.keys(sectionErrors).length > 0) {
       setErrors(sectionErrors);
       return;
@@ -186,9 +501,16 @@ export default function FormRenderer({ form, mode = "fill", onSubmit, submitting
   }
 
   function handleSubmit() {
-    const allErrors = validateResponses(form, responses);
+    const allErrors = {};
+    for (const entry of sections) {
+      Object.assign(allErrors, validateSection(entry, responses));
+    }
     if (Object.keys(allErrors).length > 0) {
       setErrors(allErrors);
+      const firstSection = sections.findIndex((entry) =>
+        entry.questions?.some((question) => allErrors[question.id])
+      );
+      if (firstSection >= 0) setSectionIndex(firstSection);
       return;
     }
     if (mode === "preview") {

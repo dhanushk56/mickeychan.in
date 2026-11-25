@@ -24,7 +24,7 @@ export async function DELETE(request, { params }) {
     area: "admin",
     action: "message-deleted",
     username: gate.access.username,
-    detail: `Deleted a “join us” message from ${who}`,
+    detail: `Deleted a "join us" message from ${who}`,
     request,
   });
 

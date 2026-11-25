@@ -25,8 +25,8 @@ export default async function JoinPage() {
             <p className="kicker">Start a conversation</p>
             <h1 className="font-display text-2xl font-bold">Log in to send a message</h1>
             <p className="muted text-sm leading-relaxed">
-              Messages are tied to an account so the team always knows who they&apos;re replying to.
-              and so an application&apos;s accept or reject always lands on the right person.
+              Messages are tied to an account, so the team knows who they&apos;re replying to and an
+              accept or reject always reaches the right person.
             </p>
             <div className="flex flex-wrap gap-2 mt-2">
               <Link
@@ -93,7 +93,7 @@ export default async function JoinPage() {
             <h1 className="font-display text-2xl font-bold">You can&apos;t send messages right now</h1>
             <p className="muted text-sm leading-relaxed whitespace-pre-wrap">
               {blocked.reason ||
-                "You've been blocked from submitting applications at this moment. Contact an administrator if you think this is a mistake."}
+                "You can't send messages right now. Ask an administrator if that seems wrong."}
             </p>
             <Link href="/positions" className="btn btn-secondary btn-sm mt-2 self-start">
               See open positions

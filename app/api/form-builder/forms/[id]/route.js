@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { refreshPublic, refreshFormApply } from "@/lib/revalidate";
 import { kvGet, kvSet, kvDel } from "@/lib/kv";
 import { getSessionFromCookies } from "@/lib/auth";
 import { authorize } from "@/lib/admin-guard";
@@ -73,12 +74,14 @@ export async function PUT(request, { params }) {
       ];
 
   await kvSet(INDEX_KEY, updatedIndex);
+  refreshPublic("forms");
+  refreshFormApply(id);
 
   await logActivity({
     area: "admin",
     action: "form-saved",
     username: await actor(),
-    detail: `Edited “${form.title || "Untitled form"}”: ${formChangeSummary(existing, form)}`,
+    detail: `Edited "${form.title || "Untitled form"}": ${formChangeSummary(existing, form)}`,
     request,
   });
 
@@ -94,12 +97,14 @@ export async function DELETE(request, { params }) {
   await kvDel(`formbuilder:form:${id}`);
   const index = await kvGet(INDEX_KEY, []);
   await kvSet(INDEX_KEY, index.filter((entry) => entry.id !== id));
+  refreshPublic("forms");
+  refreshFormApply(id);
 
   await logActivity({
     area: "admin",
     action: "form-deleted",
     username: await actor(),
-    detail: `Deleted the form “${existing?.title || id}”`,
+    detail: `Deleted the form "${existing?.title || id}"`,
     request,
   });
 

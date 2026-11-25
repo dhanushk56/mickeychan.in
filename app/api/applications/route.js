@@ -119,7 +119,10 @@ export async function POST(request) {
 
   const errors = validateResponses(form, responses);
   if (Object.keys(errors).length > 0) {
-    return NextResponse.json({ error: "Please fill in all required questions." }, { status: 400 });
+    return NextResponse.json(
+      { error: Object.values(errors)[0], errors },
+      { status: 400 }
+    );
   }
 
   await saveSubmission(formId, {
@@ -138,7 +141,7 @@ export async function POST(request) {
     area: "website",
     action: "application",
     username: member.username,
-    detail: `Submitted an application for “${form.title || formId}”`,
+    detail: `Submitted an application for "${form.title || formId}"`,
     request,
   });
 

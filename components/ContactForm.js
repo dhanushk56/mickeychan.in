@@ -178,7 +178,7 @@ export default function ContactForm({ defaultName = "", defaultEmail = "", email
           {sending ? "Sending…" : "Send message"}
         </button>
         <p className="faint text-xs leading-relaxed" style={{ maxWidth: "26rem" }}>
-          We only use your details to reply. No newsletters unless you ask.
+          We only use your details to reply. Nothing else is sent to this address.
         </p>
       </div>
     </form>

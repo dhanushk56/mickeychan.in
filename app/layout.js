@@ -1,7 +1,7 @@
 import "./globals.css";
 import "./nav.css";
 import "./account.css";
-import "./dashboard.css";
+import "./panels.css";
 import "./community.css";
 import "./community-hub.css";
 import "./auth-view.css";
@@ -28,7 +28,7 @@ export const metadata = {
     template: "%s | Mickey Chan",
   },
   description:
-    "The official home of Mickey Chan: gamer, streamer and storyteller. Watch the latest videos and shorts, follow the channel, explore open roles, and apply to join the team.",
+    "Minecraft videos from Mickey Chan: long-form challenges and shorts, all playable on the site. See the latest uploads or which roles are open.",
   metadataBase: new URL("https://mickeychan.in"),
   icons: {
     icon: [{ url: "/mickey-logo.png", type: "image/png" }],
@@ -37,7 +37,7 @@ export const metadata = {
   },
   openGraph: {
     title: "Mickey Chan",
-    description: "Gamer, streamer, and storyteller. Videos, shorts, and open roles.",
+    description: "Minecraft challenges and shorts, plus the roles that are open right now.",
     type: "website",
   },
 };

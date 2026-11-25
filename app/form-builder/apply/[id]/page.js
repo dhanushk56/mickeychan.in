@@ -3,6 +3,8 @@ import { cookies } from "next/headers";
 import { kvGet } from "@/lib/kv";
 import ApplyForm from "@/components/form-builder/ApplyForm";
 import { memberFromCookieStore } from "@/lib/members";
+import { getSessionFromCookies } from "@/lib/auth";
+import { can, resolveAdmin } from "@/lib/roles";
 import {
   STATUS_TEXT,
   applicationGate,
@@ -48,11 +50,28 @@ export default async function ApplyPage({ params }) {
 
   const form = await kvGet(`formbuilder:form:${id}`, null);
 
+  // A draft is visible to the people who can edit forms and to nobody else, so
+  // the page and the API agree on whether this form is taking answers.
+  const session = await getSessionFromCookies();
+  const access = session ? await resolveAdmin(session.user.username) : null;
+  const canPreviewDraft = Boolean(access && can(access, "forms.edit"));
+
   if (!form) {
     return (
       <Card kicker="Closed" title="This application is no longer available.">
         <p className="muted text-sm">
           The form may have been removed. Take a look at the other open positions.
+        </p>
+      </Card>
+    );
+  }
+
+  if (form.published === false && !canPreviewDraft) {
+    return (
+      <Card kicker="Closed" title="This form isn't open yet.">
+        <p className="muted text-sm">
+          It is still being put together. Check the open positions page for the ones taking
+          applications now.
         </p>
       </Card>
     );
@@ -111,7 +130,7 @@ export default async function ApplyPage({ params }) {
       <Card kicker="Restricted" title="You can't submit applications right now">
         <p className="muted text-sm leading-relaxed whitespace-pre-wrap">
           {blocked.reason ||
-            "You've been blocked from submitting applications at this moment. Contact an administrator if you think this is a mistake."}
+            "You can't apply right now. Ask an administrator if that seems wrong."}
         </p>
       </Card>
     );
@@ -177,6 +196,11 @@ export default async function ApplyPage({ params }) {
           </div>
         )}
         <div className="grid gap-4">
+          {form.published === false && (
+            <p className="badge badge-pending self-start">
+              Draft preview. Responses are not accepted until this is published.
+            </p>
+          )}
           <RoleDetails form={form} />
           <ApplyForm form={form} formId={id} />
         </div>

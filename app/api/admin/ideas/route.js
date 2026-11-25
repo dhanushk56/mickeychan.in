@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { refreshPublic } from "@/lib/revalidate";
 import { kvGet, kvSet } from "@/lib/kv";
 import { getSessionFromCookies } from "@/lib/auth";
 import { authorize } from "@/lib/admin-guard";
@@ -39,12 +40,13 @@ export async function PATCH(request) {
 
   const next = existing.map((idea) => (idea.id === id ? { ...idea, status } : idea));
   await kvSet(IDEAS_KEY, next);
+  refreshPublic("ideas");
 
   await logActivity({
     area: "admin",
     action: "idea-status",
     username: await actor(),
-    detail: `Marked the idea “${target.title}” as ${ideaStatusMeta(status).label.toLowerCase()}`,
+    detail: `Marked the idea "${target.title}" as ${ideaStatusMeta(status).label.toLowerCase()}`,
     request,
   });
 
@@ -67,12 +69,13 @@ export async function DELETE(request) {
   }
 
   await kvSet(IDEAS_KEY, existing.filter((idea) => idea.id !== id));
+  refreshPublic("ideas");
 
   await logActivity({
     area: "admin",
     action: "idea-deleted",
     username: await actor(),
-    detail: `Deleted the idea “${target.title}”`,
+    detail: `Deleted the idea "${target.title}"`,
     request,
   });
 

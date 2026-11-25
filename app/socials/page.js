@@ -3,7 +3,8 @@ import SocialIcon from "@/components/SocialIcon";
 
 export const metadata = {
   title: "Socials",
-  description: "Follow Mickey Chan across social platforms.",
+  description:
+    "Follow Mickey Chan across YouTube, Instagram and Discord. Every channel and server in one place, with the latest uploads, posts and community links.",
   alternates: { canonical: "/socials" },
 };
 
@@ -15,8 +16,8 @@ export default function SocialsPage() {
           <p className="kicker">Stay connected</p>
           <h1 className="display-lg mt-3 mb-4">Find Mickey Chan online.</h1>
           <p className="muted text-lg leading-relaxed">
-            Follow along for new videos, live streams, updates, and everything happening in the
-            community.
+            Two YouTube channels, Instagram, and two Discord servers. New videos land first on
+            YouTube, and Discord is where most of the talking happens.
           </p>
         </div>
 
