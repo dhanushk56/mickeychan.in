@@ -120,7 +120,7 @@ export default function IdeaBoard({ initialIdeas, signedIn }) {
         </div>
       )}
 
-      <div className="tabbar" role="tablist" aria-label="Filter ideas">
+      <div className="tabbar tabbar-scroll" role="tablist" aria-label="Filter ideas">
         {[{ id: "all", label: "All" }, ...IDEA_STATUSES].map((entry) => (
           <button
             key={entry.id}
