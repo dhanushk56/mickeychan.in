@@ -1,0 +1,25 @@
+name: Apply year fix
+on:
+  push:
+    paths:
+      - "transfer/go.txt"
+permissions:
+  contents: write
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply
+        run: |
+          set -euo pipefail
+          echo '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' | base64 -d | gunzip > /tmp/years.patch
+          echo "patch sha: $(sha256sum /tmp/years.patch)"
+          test "$(sha256sum /tmp/years.patch | cut -d' ' -f1)" = "e210cfc6d08bf23f6c755b1c75641f812ad283201fbbef2c12864c466543a83b"
+          git apply /tmp/years.patch
+          rm -rf transfer .github/workflows/apply-years.yml
+          git config user.name "patch-bot"
+          git config user.email "patch-bot@users.noreply.github.com"
+          git add -A
+          git commit -m "Read publish dates from relative upload ages so the year filter lists every year"
+          git push
