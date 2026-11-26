@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { unstable_noStore as noStore } from "next/cache";
 import { kvGet } from "@/lib/kv";
-import { STUDIO_KEY, initials, readStudio, sortedNotes, sortedUpcoming } from "@/lib/studio";
+import { STUDIO_KEY, readStudio, sortedNotes, sortedUpcoming } from "@/lib/studio";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -9,7 +9,7 @@ export const revalidate = 0;
 export const metadata = {
   title: "Studio",
   description:
-    "Who works on the channel, what is being made next, notes from behind the scenes, and what you need to write about it or work with it.",
+    "What is being made next, notes from behind the scenes, and what you need to write about it or work with it.",
   alternates: { canonical: "/studio" },
 };
 
@@ -32,15 +32,12 @@ export default async function StudioPage() {
       <div className="shell grid gap-8">
         <header className="glass-card p-6 grid gap-4">
           <p className="kicker">Studio</p>
-          <h1 className="display-lg">The people and the work behind it.</h1>
+          <h1 className="display-lg">What is on the way, and how it gets made.</h1>
           <p className="muted" style={{ maxWidth: "44rem" }}>
-            Who works on the channel, what is on the way, notes from the edit, and the short version for anyone
-            writing about the channel or working with it.
+            What is on the way, notes from the edit, and the short version for anyone writing about the
+            channel or working with it.
           </p>
           <nav className="flex flex-wrap gap-2" aria-label="Studio sections">
-            <a href="#team" className="btn btn-secondary btn-sm">
-              Team
-            </a>
             <a href="#upcoming" className="btn btn-secondary btn-sm">
               Coming up
             </a>
@@ -52,35 +49,6 @@ export default async function StudioPage() {
             </a>
           </nav>
         </header>
-
-        <section id="team" className="glass-card p-6 grid gap-4">
-          <h2 className="font-display font-bold text-xl">Team</h2>
-          {studio.team.length === 0 ? (
-            <p className="muted text-sm">
-              No profiles are up yet. When someone joins the channel and wants a page, they land here.
-            </p>
-          ) : (
-            <div className="grid gap-4 story-grid">
-              {studio.team.map((member) => (
-                <article key={member.id} className="glass-inset p-5 grid gap-2">
-                  <div className="flex items-center gap-3">
-                    <span className="badge badge-neutral">{initials(member.name)}</span>
-                    <div>
-                      <p className="font-display font-bold">{member.name}</p>
-                      {member.role && <p className="muted text-sm">{member.role}</p>}
-                    </div>
-                  </div>
-                  {member.bio && <p className="text-sm">{member.bio}</p>}
-                  {member.link && (
-                    <a className="text-sm font-bold" href={member.link} rel="me noopener noreferrer">
-                      Find them elsewhere
-                    </a>
-                  )}
-                </article>
-              ))}
-            </div>
-          )}
-        </section>
 
         <section id="upcoming" className="glass-card p-6 grid gap-4">
           <h2 className="font-display font-bold text-xl">Coming up</h2>

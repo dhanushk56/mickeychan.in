@@ -36,7 +36,7 @@ export async function PUT(request) {
     area: "admin",
     action: "studio",
     username: await actor(),
-    detail: `Saved the studio page (${studio.team.length} team, ${studio.upcoming.length} upcoming, ${studio.notes.length} notes)`,
+    detail: `Saved the studio page (${studio.upcoming.length} upcoming, ${studio.notes.length} notes)`,
     request,
   });
 
