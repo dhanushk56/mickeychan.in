@@ -13,14 +13,14 @@ async function actor() {
 }
 
 export async function GET() {
-  const gate = await authorize("content.view");
+  const gate = await authorize("studio.view");
   if (gate.response) return gate.response;
   const studio = readStudio(await kvGet(STUDIO_KEY, {}));
   return NextResponse.json({ studio }, { headers: { "Cache-Control": "no-store" } });
 }
 
 export async function PUT(request) {
-  const gate = await authorize("content.edit");
+  const gate = await authorize("studio.edit");
   if (gate.response) return gate.response;
 
   const body = await request.json().catch(() => null);

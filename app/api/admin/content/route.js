@@ -9,7 +9,7 @@ const VIDEOS_KEY = "content:videos";
 const FORM_KEY = "content:form";
 
 export async function GET() {
-  const gate = await authorize("content.view");
+  const gate = await authorize("videos.view");
   if (gate.response) return gate.response;
   const [videos, submissions, form] = await Promise.all([
     kvGet(VIDEOS_KEY, []),
@@ -20,7 +20,7 @@ export async function GET() {
 }
 
 export async function PUT(request) {
-  const gate = await authorize("content.edit");
+  const gate = await authorize("videos.edit");
   if (gate.response) return gate.response;
   const body = await request.json();
   if (!Array.isArray(body.videos) || !body.form || typeof body.form !== "object") {

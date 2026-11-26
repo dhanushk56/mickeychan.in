@@ -627,14 +627,14 @@ export default function AdminDashboard({ currentUser }) {
         { id: "enquiries", label: "Enquiries", show: can("enquiries.view") || can("messages.view") },
         { id: "forms", label: "Forms", count: data.forms.length, show: can("forms.view") },
         { id: "accounts", label: "Accounts", count: data.accounts.length, show: can("accounts.view") },
-        { id: "home", label: "Home page", show: can("content.view") },
+        { id: "home", label: "Home page", show: can("home.view") },
         { id: "announcements", label: "Announcements", show: can("announcements.view") },
         { id: "polls", label: "Polls", show: can("polls.view") },
         { id: "events", label: "Events", show: can("events.view") },
         { id: "ideas", label: "Ideas", show: can("ideas.view") },
-        { id: "stories", label: "Stories", show: can("content.view") },
-        { id: "studio", label: "Studio", show: can("content.view") },
-        { id: "socials", label: "Socials", show: can("content.view") },
+        { id: "stories", label: "Stories", show: can("stories.view") },
+        { id: "studio", label: "Studio", show: can("studio.view") },
+        { id: "socials", label: "Socials", show: can("socials.view") },
         { id: "maintenance", label: "Maintenance", show: can("site.maintenance") },
         { id: "admins", label: "Admins", count: adminState.admins.length, show: can("admins.view") },
         { id: "roles", label: "Roles", show: can("roles.view") },
@@ -1683,15 +1683,15 @@ export default function AdminDashboard({ currentUser }) {
           />
         )}
 
-        {tab === "home" && <HomePanel canEdit={can("content.edit")} />}
+        {tab === "home" && <HomePanel canEdit={can("home.edit")} />}
 
         {tab === "announcements" && <AnnouncementsPanel />}
 
-        {tab === "stories" && <StoriesPanel canEdit={can("content.edit")} />}
+        {tab === "stories" && <StoriesPanel canEdit={can("stories.edit")} />}
 
-        {tab === "studio" && <StudioPanel canEdit={can("content.edit")} />}
+        {tab === "studio" && <StudioPanel canEdit={can("studio.edit")} />}
 
-        {tab === "socials" && <SocialsPanel canEdit={can("content.edit")} />}
+        {tab === "socials" && <SocialsPanel canEdit={can("socials.edit")} />}
 
         {tab === "maintenance" && <MaintenancePanel />}
 

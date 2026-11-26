@@ -21,7 +21,7 @@ async function viewer() {
 async function moderator() {
   const session = await getSessionFromCookies();
   const access = session ? await resolveAdmin(session.user.username) : null;
-  return Boolean(access && can(access, "content.edit"));
+  return Boolean(access && can(access, "forums.moderate"));
 }
 
 export async function POST(request, { params }) {
@@ -48,7 +48,7 @@ export async function POST(request, { params }) {
 
 export async function PATCH(request, { params }) {
   const { id } = await params;
-  const gate = await authorize("content.edit");
+  const gate = await authorize("forums.moderate");
   if (gate.response) return gate.response;
 
   const body = await request.json().catch(() => ({}));

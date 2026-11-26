@@ -29,14 +29,14 @@ function payload(body) {
 }
 
 export async function GET() {
-  const gate = await authorize("content.view");
+  const gate = await authorize("stories.view");
   if (gate.response) return gate.response;
   const stories = readStories(await kvGet(STORIES_KEY, []));
   return NextResponse.json({ stories }, { headers: { "Cache-Control": "no-store" } });
 }
 
 export async function POST(request) {
-  const gate = await authorize("content.edit");
+  const gate = await authorize("stories.edit");
   if (gate.response) return gate.response;
 
   const body = await request.json().catch(() => null);
@@ -71,7 +71,7 @@ export async function POST(request) {
 }
 
 export async function PATCH(request) {
-  const gate = await authorize("content.edit");
+  const gate = await authorize("stories.edit");
   if (gate.response) return gate.response;
 
   const body = await request.json().catch(() => null);
@@ -114,7 +114,7 @@ export async function PATCH(request) {
 }
 
 export async function DELETE(request) {
-  const gate = await authorize("content.edit");
+  const gate = await authorize("stories.edit");
   if (gate.response) return gate.response;
 
   const id = new URL(request.url).searchParams.get("id");

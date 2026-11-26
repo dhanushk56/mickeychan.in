@@ -39,7 +39,7 @@ export default async function ThreadPage({ params }) {
   const member = await memberFromCookieStore(await cookies()).catch(() => null);
   const session = await getSessionFromCookies();
   const access = session ? await resolveAdmin(session.user.username) : null;
-  const canModerate = Boolean(access && can(access, "content.edit"));
+  const canModerate = Boolean(access && can(access, "forums.moderate"));
   const meta = categoryMeta(thread.category);
   const isAuthor =
     Boolean(member) && thread.author.toLowerCase() === member.username.toLowerCase();

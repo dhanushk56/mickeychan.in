@@ -7,14 +7,14 @@ import { logActivity } from "@/lib/activity-log";
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  const gate = await authorize("content.view");
+  const gate = await authorize("socials.view");
   if (gate.response) return gate.response;
   const socials = await getSocials();
   return NextResponse.json({ socials }, { headers: { "Cache-Control": "no-store" } });
 }
 
 export async function PUT(request) {
-  const gate = await authorize("content.edit");
+  const gate = await authorize("socials.edit");
   if (gate.response) return gate.response;
 
   const body = await request.json().catch(() => null);

@@ -12,7 +12,7 @@ export const dynamic = "force-dynamic";
 const NO_STORE = { "Cache-Control": "no-store, max-age=0" };
 
 export async function GET() {
-  const gate = await authorize("content.view");
+  const gate = await authorize("home.view");
   if (gate.response) return gate.response;
 
   const [config, videos, members] = await Promise.all([getHomeConfig(), getVideos(), listMembers()]);
@@ -45,7 +45,7 @@ export async function GET() {
 }
 
 export async function POST(request) {
-  const gate = await authorize("content.edit");
+  const gate = await authorize("home.edit");
   if (gate.response) return gate.response;
 
   const body = await request.json().catch(() => null);
