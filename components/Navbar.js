@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import LogoutButton from "@/components/LogoutButton";
 import NotificationsBell from "@/components/NotificationsBell";
+import useBodyScrollLock from "@/lib/useBodyScrollLock";
 
 // Videos, contact and open positions stand on their own. Everything about taking
 // part in the channel sits behind one menu, which opens on hover.
@@ -80,17 +81,16 @@ export default function Navbar({ locked = false }) {
     };
   }, [accountOpen]);
 
+  useBodyScrollLock(open);
+
   useEffect(() => {
     if (!open) return;
     const onKey = (event) => {
       if (event.key === "Escape") setOpen(false);
     };
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
     document.addEventListener("keydown", onKey);
     return () => {
       document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = previousOverflow;
     };
   }, [open]);
 

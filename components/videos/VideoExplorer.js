@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import useBodyScrollLock from "@/lib/useBodyScrollLock";
 
 const TYPES = [
   { id: "all", label: "Everything" },
@@ -155,17 +156,16 @@ export default function VideoExplorer({ videos, initialId = "", channelUrl, chan
     if (match) setActive(match);
   }, [initialId, videos]);
 
+  useBodyScrollLock(active);
+
   useEffect(() => {
     if (!active) return undefined;
     const onKey = (event) => {
       if (event.key === "Escape") setActive(null);
     };
     document.addEventListener("keydown", onKey);
-    const previous = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
     return () => {
       document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = previous;
     };
   }, [active]);
 
