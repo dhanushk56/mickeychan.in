@@ -12,7 +12,9 @@ html[data-viewport="locked"] body {
 html[data-viewport="locked"] main {
   display: flex;
   flex-direction: column;
-  height: 100dvh;
+  /* --keyboard is the part of the screen a phone keyboard covers, so the card
+     gets the room above it instead of the space behind it. */
+  height: calc(100dvh - var(--keyboard, 0px));
   overflow-y: auto;
   overscroll-behavior: contain;
   padding-top: 6.5rem;
@@ -44,4 +46,13 @@ html[data-viewport="locked"] .back-to-top {
     padding-top: 2rem;
     padding-bottom: 2rem;
   }
+}
+
+/* With the keyboard up, a tall register card cannot be centred any more: start it
+   near the top so the field being typed into and its show-password button sit in
+   the visible strip. */
+html[data-viewport="locked"][data-keyboard] main {
+  padding-top: 5rem;
+  padding-bottom: 1rem;
+  scroll-padding-block: 1rem;
 }
