@@ -369,10 +369,13 @@
 
   .select option { background: var(--bg-base); color: var(--text); }
 
-  .checkbox {
+  /* One size for every tick box and radio, however long its label runs. */
+  .checkbox,
+  input[type="checkbox"],
+  input[type="radio"] {
     width: 1.05rem;
     height: 1.05rem;
-    /* A long option label must not squeeze the box in a flex row. */
+    /* A long label must not squeeze the box in a flex row. */
     flex: none;
     accent-color: var(--primary);
     cursor: pointer;
@@ -780,6 +783,10 @@
     background: var(--glass-soft);
   }
   .admin-shell { display: grid; gap: 1.25rem; }
+
+  /* Tick boxes sit on the first line of a permission label, not halfway down a
+     label that wrapped onto three. */
+  .admin-shell input[type="checkbox"] { margin-top: .15rem; }
 
   .admin-header {
     display: flex;

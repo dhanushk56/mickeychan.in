@@ -403,7 +403,7 @@ function RoleEditor({
               <p className="faint text-xs font-bold uppercase tracking-wide">{group.label}</p>
               <div className="grid gap-1.5 sm:grid-cols-2 mt-1.5">
                 {group.permissions.map((permission) => (
-                  <label key={permission.id} className="flex items-center gap-2 text-sm">
+                  <label key={permission.id} className="flex items-start gap-2 text-sm">
                     <input
                       type="checkbox"
                       checked={draft.permissions.includes(permission.id)}
@@ -648,7 +648,7 @@ export function RolesPanel({ canManage, canManageAdmins }) {
                 <p className="faint text-xs font-bold uppercase tracking-wide">{group.label}</p>
                 <div className="grid gap-1.5 sm:grid-cols-2 mt-1.5">
                   {group.permissions.map((permission) => (
-                    <label key={permission.id} className="flex items-center gap-2 text-sm">
+                    <label key={permission.id} className="flex items-start gap-2 text-sm">
                       <input
                         type="checkbox"
                         checked={draft.permissions.includes(permission.id)}
