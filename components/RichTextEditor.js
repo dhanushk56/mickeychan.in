@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import useBodyScrollLock from "@/lib/useBodyScrollLock";
 import {
   RICH_TEXT_FONTS,
   RICH_TEXT_SIZES,
@@ -122,6 +123,7 @@ export default function RichTextEditor({
   const savedRange = useRef(null);
   const linkInputRef = useRef(null);
   const [linkOpen, setLinkOpen] = useState(false);
+  useBodyScrollLock(linkOpen);
   const [linkValue, setLinkValue] = useState("");
   const [linkSelection, setLinkSelection] = useState("");
   const valueKey = JSON.stringify(normalizeRichText(value));

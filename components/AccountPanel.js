@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createPortal } from "react-dom";
 import LogoutButton from "@/components/LogoutButton";
+import useBodyScrollLock from "@/lib/useBodyScrollLock";
 
 const dateFormat = new Intl.DateTimeFormat("en-GB", {
   day: "numeric",
@@ -80,6 +81,8 @@ export default function AccountPanel({ profile, verificationRequired = true }) {
   const [photoMenu, setPhotoMenu] = useState(false);
   const [enlarged, setEnlarged] = useState(false);
   const [mounted, setMounted] = useState(false);
+  useBodyScrollLock(Boolean(mounted && photoMenu && current?.avatar));
+  useBodyScrollLock(Boolean(mounted && enlarged && current?.avatar));
   const [profileVisible, setProfileVisible] = useState(false);
   const [profileBusy, setProfileBusy] = useState(false);
 

@@ -1,9 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import useBodyScrollLock from "@/lib/useBodyScrollLock";
 
 function Dialog({ title, description, confirmLabel, cancelLabel, tone, onConfirm, onCancel }) {
   const danger = tone === "danger";
+  useBodyScrollLock();
 
   useEffect(() => {
     const onKey = (event) => {
@@ -69,6 +71,7 @@ function PromptDialog({
   onCancel,
 }) {
   const danger = tone === "danger";
+  useBodyScrollLock();
   const [value, setValue] = useState("");
 
   useEffect(() => {

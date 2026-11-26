@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import useBodyScrollLock from "@/lib/useBodyScrollLock";
 
 const GROUP_ORDER = ["Go to", "Actions", "Applications", "Messages", "Accounts", "Forms"];
 const MAX_RESULTS = 6;
@@ -44,6 +45,7 @@ export function CommandPalette({ open, onClose, items, modKey = "Ctrl" }) {
   const inputRef = useRef(null);
   const listRef = useRef(null);
   const mounted = useMounted();
+  useBodyScrollLock(open && mounted);
 
   useEffect(() => {
     if (!open) return undefined;
@@ -235,6 +237,7 @@ export function CommandPalette({ open, onClose, items, modKey = "Ctrl" }) {
 
 export function ShortcutSheet({ open, onClose, rows }) {
   const mounted = useMounted();
+  useBodyScrollLock(open && mounted);
   if (!open || !mounted) return null;
 
   return createPortal(
