@@ -516,6 +516,18 @@ export default function AdminDashboard({ currentUser }) {
   const searchRef = useRef(null);
   const tabRefs = useRef(new Map());
 
+  // The tab bar is a swipe strip on a phone, so the tab in use has to be
+  // brought back into view when it changes from the palette or a shortcut.
+  useEffect(() => {
+    const node = tabRefs.current.get(tab);
+    const bar = node?.parentElement;
+    if (!node || !bar || bar.scrollWidth <= bar.clientWidth + 1) return;
+    const start = node.offsetLeft;
+    const end = start + node.offsetWidth;
+    if (start < bar.scrollLeft) bar.scrollLeft = Math.max(0, start - 12);
+    else if (end > bar.scrollLeft + bar.clientWidth) bar.scrollLeft = end - bar.clientWidth + 12;
+  }, [tab]);
+
   const load = useCallback(async () => {
     try {
       const response = await fetch("/api/admin/submissions", { cache: "no-store" });

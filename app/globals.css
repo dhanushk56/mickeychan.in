@@ -1252,11 +1252,55 @@
 
   .fact-row dd { text-align: left; }
 
+  /* One swipeable row of tabs. Wrapping them turned the bar into a tall stack
+     that pushed the console content off the first screen. */
   .tabbar {
     width: 100%;
-    justify-content: center;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
     border-radius: 1rem;
+    padding: .3rem .45rem;
+    -webkit-overflow-scrolling: touch;
   }
+
+  .tabbar::-webkit-scrollbar { display: none; }
+
+  .tabbar .tab {
+    flex: 0 0 auto;
+    padding: .45rem .75rem;
+    font-size: .78rem;
+  }
+
+  .tab { scroll-margin-inline: .75rem; }
+
+  /* Header actions follow the same rule: one line to swipe, not three rows. */
+  .admin-header { gap: .9rem; }
+
+  .admin-header > div:last-child {
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    width: 100%;
+    padding-bottom: .2rem;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .admin-header > div:last-child::-webkit-scrollbar { display: none; }
+  .admin-header > div:last-child > * { flex: 0 0 auto; }
+
+  /* The live badge already says the console is connected, so the timestamp is
+     the first thing to drop when the row runs out of room. */
+  .admin-header > div:last-child > .faint { display: none; }
+
+  /* Form builder is the action people come here for, so it leads the row. */
+  .admin-header > div:last-child > a:last-child { order: -1; }
+
+  .admin-header .admin-search-trigger { flex: 0 0 auto; }
 
   /* A bar with a handful of tabs splits its width evenly, so the labels sit
      dead-centre in equal segments instead of bunching to the left. */
