@@ -247,6 +247,7 @@ function ApplicationCard({ entry, busy, onStatus, onDelete, canReview, canDelete
 
 function AccountRow({
   account,
+  duplicates,
   onDelete,
   onEdit,
   onBlacklist,
@@ -318,6 +319,16 @@ function AccountRow({
             <span className="badge badge-neutral">
               {account.createdBy === "admin" ? `${methodLabel} · added by admin` : methodLabel}
             </span>
+            {duplicates?.emails?.length > 0 && (
+              <span className="badge badge-denied">
+                Email also on {duplicates.emails.map((name) => `@${name}`).join(", ")}
+              </span>
+            )}
+            {duplicates?.usernames?.length > 0 && (
+              <span className="badge badge-pending">
+                Username also on {duplicates.usernames.map((name) => `@${name}`).join(", ")}
+              </span>
+            )}
             {account.formBlocked && <span className="badge badge-denied">Forms blocked</span>}
             {adminEntry && (
               <span className={`badge ${adminEntry.owner ? "badge-accepted" : "badge-pending"}`}>
@@ -506,6 +517,7 @@ export default function AdminDashboard({ currentUser }) {
     password: "",
   });
   const [creatingAccount, setCreatingAccount] = useState(false);
+  const [duplicatesOnly, setDuplicatesOnly] = useState(false);
   const mounted = useRef(true);
   const [dialog, askConfirm] = useConfirm();
   const [promptDialog, askPrompt] = usePrompt();
@@ -656,17 +668,54 @@ export default function AdminDashboard({ currentUser }) {
 
   const activeTab = tabs.find((item) => item.id === tab);
 
+  // New sign-ups are refused when a username or email is already in use, so a
+  // clash here means two records were written before that check existed, or one
+  // of them comes from data/users.json. Both rows get a badge naming the other.
+  const duplicateAccounts = useMemo(() => {
+    const byHandle = new Map();
+    const byEmail = new Map();
+    for (const account of data.accounts) {
+      const handle = String(account.username || "").trim().toLowerCase();
+      const email = String(account.email || "").trim().toLowerCase();
+      if (handle) byHandle.set(handle, [...(byHandle.get(handle) || []), account]);
+      if (email) byEmail.set(email, [...(byEmail.get(email) || []), account]);
+    }
+
+    const found = new Map();
+    const mark = (account, field, others) => {
+      const entry = found.get(account) || { usernames: [], emails: [] };
+      entry[field] = others.map((other) => other.username);
+      found.set(account, entry);
+    };
+
+    for (const group of byHandle.values()) {
+      if (group.length < 2) continue;
+      for (const account of group) {
+        mark(account, "usernames", group.filter((other) => other !== account));
+      }
+    }
+    for (const group of byEmail.values()) {
+      if (group.length < 2) continue;
+      for (const account of group) {
+        mark(account, "emails", group.filter((other) => other !== account));
+      }
+    }
+
+    return found;
+  }, [data.accounts]);
+
   const filteredAccounts = useMemo(() => {
     const term = search.trim().toLowerCase();
-    if (!term) return data.accounts;
-    return data.accounts.filter((account) =>
-      [account.username, account.name, account.email, account.phone]
+    return data.accounts.filter((account) => {
+      if (duplicatesOnly && !duplicateAccounts.has(account)) return false;
+      if (!term) return true;
+      return [account.username, account.name, account.email, account.phone]
         .filter(Boolean)
         .join(" ")
         .toLowerCase()
-        .includes(term)
-    );
-  }, [data.accounts, search]);
+        .includes(term);
+    });
+  }, [data.accounts, duplicateAccounts, duplicatesOnly, search]);
 
   const searchIndex = useMemo(() => {
     const entries = tabs.map((item) => ({
@@ -1561,10 +1610,24 @@ export default function AdminDashboard({ currentUser }) {
               <p className="muted text-sm max-w-xl">
                 Everyone who can log in to the site. Setting a new password signs them out on every
                 device; deleting an account leaves their past applications and messages in place.
+                Accounts that share a username or an email are flagged, so you can delete or rename
+                the extra copy.
               </p>
-              <button type="button" className="btn btn-secondary btn-sm" onClick={load}>
-                Refresh
-              </button>
+              <div className="flex flex-wrap items-center gap-2">
+                {duplicateAccounts.size > 0 && (
+                  <button
+                    type="button"
+                    className="chip"
+                    data-active={duplicatesOnly}
+                    onClick={() => setDuplicatesOnly((current) => !current)}
+                  >
+                    Duplicates <span className="opacity-60">{duplicateAccounts.size}</span>
+                  </button>
+                )}
+                <button type="button" className="btn btn-secondary btn-sm" onClick={load}>
+                  Refresh
+                </button>
+              </div>
             </div>
 
             <form onSubmit={createAccount} className="glass-card application-card">
@@ -1664,16 +1727,21 @@ export default function AdminDashboard({ currentUser }) {
               </div>
             ) : filteredAccounts.length === 0 ? (
               <div className="empty-state">
-                <p className="font-display font-bold">No accounts match that</p>
+                <p className="font-display font-bold">
+                  {duplicatesOnly ? "No duplicates left" : "No accounts match that"}
+                </p>
                 <p className="muted text-sm max-w-md">
-                  Try a username, a display name or an email.
+                  {duplicatesOnly
+                    ? "Every account has its own username and email."
+                    : "Try a username, a display name or an email."}
                 </p>
               </div>
             ) : (
               filteredAccounts.map((account) => (
                 <AccountRow
-                  key={account.username}
+                  key={`${account.source}-${account.username}`}
                   account={account}
+                  duplicates={duplicateAccounts.get(account)}
                   onDelete={deleteAccount}
                   onBlacklist={toggleBlacklist}
                   adminEntry={adminByUsername.get(String(account.username).toLowerCase())}

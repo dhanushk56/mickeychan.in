@@ -30,6 +30,12 @@ export async function GET(request) {
     return response;
   };
   const fail = (code) => finish(NextResponse.redirect(`${origin}/login?error=${code}`));
+  // The login page names the method holding a taken address, so pass along
+  // whichever one the existing account actually uses.
+  const ownerOf = (member) =>
+    member?.provider === "google" || member?.provider === "discord" ? member.provider : "password";
+  const failEmailTaken = (owner) =>
+    finish(NextResponse.redirect(`${origin}/login?error=email_taken${owner ? `&owner=${owner}` : ""}`));
 
   if (!isGoogleConfigured()) return fail("google_unavailable");
   if (url.searchParams.get("error")) return fail("google_denied");
@@ -54,7 +60,7 @@ export async function GET(request) {
   if (!member) {
     const byEmail = await findMemberByEmail(profile.email);
     if (byEmail) {
-      if (byEmail.provider !== "google") return fail("email_taken");
+      if (byEmail.provider !== "google") return failEmailTaken(ownerOf(byEmail));
       member = byEmail;
     }
   }
@@ -73,7 +79,10 @@ export async function GET(request) {
     });
     if (result.error) {
       if (result.code === "ip_limit") return fail("ip_limit");
-      if (result.code === "email_taken") return fail("email_taken");
+      if (result.code === "email_taken") {
+        const owner = await findMemberByEmail(profile.email);
+        return failEmailTaken(owner ? ownerOf(owner) : "");
+      }
       return fail("google_failed");
     }
     member = result.member;
