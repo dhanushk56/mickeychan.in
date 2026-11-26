@@ -310,16 +310,6 @@ function RoleEditor({
     >
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            className="icon-button"
-            aria-expanded={expanded}
-            title={expanded ? "Collapse this role" : "Expand this role"}
-            aria-label={expanded ? `Collapse ${role.name}` : `Expand ${role.name}`}
-            onClick={onToggle}
-          >
-            <span aria-hidden="true">{expanded ? "▾" : "▸"}</span>
-          </button>
           {reorderable && <ReorderHandle role={role} onArm={onArm} onMove={onMove} />}
           <h3 className="font-display font-bold">{role.name}</h3>
           {locked && <span className="badge badge-accepted">Locked</span>}
@@ -331,30 +321,55 @@ function RoleEditor({
             {role.members} {role.members === 1 ? "account" : "accounts"}
           </span>
         </div>
-        {expanded && canEdit && !locked && (
-          <div className="flex flex-wrap items-center gap-2">
-            <button type="button" className="btn btn-primary btn-sm" onClick={save} disabled={busy}>
-              {busy ? "Saving…" : "Save role"}
-            </button>
-            <button
-              type="button"
-              className="btn btn-ghost"
-              style={{ color: "var(--danger)" }}
-              onClick={remove}
-              disabled={busy}
-            >
-              Delete
-            </button>
-          </div>
-        )}
+        <div className="ml-auto flex flex-wrap items-center gap-2">
+          {expanded && canEdit && !locked && (
+            <>
+              <button type="button" className="btn btn-primary btn-sm" onClick={save} disabled={busy}>
+                {busy ? "Saving…" : "Save role"}
+              </button>
+              <button
+                type="button"
+                className="btn btn-ghost"
+                style={{ color: "var(--danger)" }}
+                onClick={remove}
+                disabled={busy}
+              >
+                Delete
+              </button>
+            </>
+          )}
+          <button
+            type="button"
+            className="role-toggle"
+            aria-expanded={expanded}
+            aria-controls={`role-${role.id}`}
+            title={expanded ? "Collapse this role" : "Expand this role"}
+            aria-label={expanded ? `Collapse ${role.name}` : `Expand ${role.name}`}
+            onClick={onToggle}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path
+                d="M6 9l6 6 6-6"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </button>
+        </div>
       </div>
 
       {!expanded && role.description && (
         <p className="muted text-xs mt-2">{role.description}</p>
       )}
 
-      {expanded && (
-        <>
+      <div
+        className="role-details"
+        id={`role-${role.id}`}
+        data-open={expanded ? "true" : "false"}
+      >
+        <div className="role-details-inner" inert={!expanded}>
       <div className="flex flex-wrap items-end gap-2 mt-3">
         <label className="field flex-1" style={{ minWidth: "12rem" }}>
           <span className="field-label">Name</span>
@@ -403,8 +418,8 @@ function RoleEditor({
           ))}
         </div>
       )}
-        </>
-      )}
+        </div>
+      </div>
       {dialog}
     </article>
   );

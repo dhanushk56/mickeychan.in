@@ -985,6 +985,50 @@
 
   .application-card { padding: 1.15rem 1.25rem; border-radius: 1.35rem; }
 
+  /* Role details slide open instead of appearing all at once. */
+  .role-details {
+    display: grid;
+    grid-template-rows: 0fr;
+    opacity: 0;
+    transition: grid-template-rows 320ms cubic-bezier(.2, .7, .3, 1), opacity 200ms ease;
+  }
+
+  .role-details[data-open="true"] {
+    grid-template-rows: 1fr;
+    opacity: 1;
+  }
+
+  .role-details-inner { min-height: 0; overflow: hidden; }
+
+  .role-toggle {
+    display: inline-grid;
+    place-items: center;
+    width: 2rem;
+    height: 2rem;
+    padding: 0;
+    border: 0;
+    background: none;
+    border-radius: 999px;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: color 160ms ease;
+  }
+
+  .role-toggle:hover,
+  .role-toggle:focus-visible { color: var(--text); }
+
+  .role-toggle svg {
+    transform: rotate(-90deg);
+    transition: transform 260ms cubic-bezier(.3, .7, .3, 1);
+  }
+
+  .role-toggle[aria-expanded="true"] svg { transform: rotate(0deg); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .role-details { transition: none; }
+    .role-toggle svg { transition: none; }
+  }
+
   .application-grid {
     display: grid;
     gap: .35rem 1rem;
