@@ -654,6 +654,8 @@ export default function AdminDashboard({ currentUser }) {
     [can, counts, data.accounts.length, data.forms.length, adminState.admins.length]
   );
 
+  const activeTab = tabs.find((item) => item.id === tab);
+
   const filteredAccounts = useMemo(() => {
     const term = search.trim().toLowerCase();
     if (!term) return data.accounts;
@@ -1307,7 +1309,7 @@ export default function AdminDashboard({ currentUser }) {
         <header className="admin-header">
           <div>
             <p className="kicker">Admin console</p>
-            <h1 className="display-lg mt-2">Submissions</h1>
+            <h1 className="display-lg mt-2">{activeTab ? activeTab.label : "Console"}</h1>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <button
