@@ -1,5 +1,6 @@
 import { channels, getVideos } from "@/lib/content";
 import { listThreads } from "@/lib/forums";
+import { listStorylines } from "@/lib/arg";
 import { kvGet } from "@/lib/kv";
 import { STORIES_KEY, isPublic, readStories } from "@/lib/stories";
 
@@ -13,6 +14,7 @@ const PAGES = [
   { path: "/", changeFrequency: "weekly", priority: 1 },
   { path: "/videos", changeFrequency: "weekly", priority: 0.9 },
   { path: "/forums", changeFrequency: "daily", priority: 0.7 },
+  { path: "/arg", changeFrequency: "weekly", priority: 0.8 },
   { path: "/announcements", changeFrequency: "daily", priority: 0.85 },
   { path: "/stories", changeFrequency: "weekly", priority: 0.8 },
   { path: "/studio", changeFrequency: "weekly", priority: 0.7 },
@@ -50,6 +52,13 @@ export default async function sitemap() {
     threads = [];
   }
 
+  let mysteries = [];
+  try {
+    mysteries = await listStorylines();
+  } catch {
+    mysteries = [];
+  }
+
   const storyEntries = stories.slice(0, 60).map((story) => ({
     url: `${BASE_URL}/stories/${story.slug}`,
     lastModified: story.updatedAt ? new Date(story.updatedAt) : now,
@@ -63,6 +72,16 @@ export default async function sitemap() {
     changeFrequency: "weekly",
     priority: 0.5,
   }));
+
+  const mysteryEntries = mysteries
+    .filter((entry) => entry.status !== "upcoming")
+    .slice(0, 40)
+    .map((entry) => ({
+      url: `${BASE_URL}/arg/${entry.slug}`,
+      lastModified: entry.endedAt ? new Date(entry.endedAt) : now,
+      changeFrequency: "weekly",
+      priority: 0.7,
+    }));
 
   const channelEntries = channels.map((channel) => ({
     url: `${BASE_URL}/channels/${channel.handle}`,
@@ -95,5 +114,6 @@ export default async function sitemap() {
     ...videoEntries,
     ...storyEntries,
     ...threadEntries,
+    ...mysteryEntries,
   ];
 }

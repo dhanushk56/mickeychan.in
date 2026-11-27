@@ -1,0 +1,201 @@
+/* ARG portal: dark, quiet, and readable. The mystery is in the writing, not in
+   effects that get in the way of reading a clue. */
+
+.arg-head {
+  max-width: 44rem;
+  margin-bottom: 2rem;
+}
+
+.arg-head h1 {
+  text-wrap: balance;
+}
+
+.arg-status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.1rem 1.3rem;
+  margin-bottom: 2rem;
+  border-left: 3px solid var(--accent);
+}
+
+.arg-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.arg-section {
+  margin-bottom: 2.6rem;
+}
+
+.arg-section-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.9rem;
+}
+
+.arg-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+}
+
+.arg-card,
+.arg-puzzle {
+  padding: 1.2rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.arg-admin-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  padding-top: 0.7rem;
+  border-top: 1px solid var(--glass-line);
+}
+
+.arg-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.arg-card .btn {
+  align-self: flex-start;
+}
+
+.arg-progress {
+  height: 6px;
+  margin-top: 0.9rem;
+  border-radius: 999px;
+  background: var(--glass-line);
+  overflow: hidden;
+}
+
+.arg-progress > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--accent);
+  transition: width 280ms ease;
+}
+
+.arg-clue-list {
+  display: grid;
+  gap: 0.75rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.arg-clue {
+  padding: 1rem 1.15rem;
+}
+
+.arg-clue[data-locked="true"] {
+  opacity: 0.78;
+  border-style: dashed;
+}
+
+.arg-locked {
+  letter-spacing: 0.01em;
+}
+
+.arg-puzzle[data-solved="true"] {
+  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+}
+
+.arg-choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-top: 0.9rem;
+}
+
+.arg-choices .btn[data-picked="true"] {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.arg-answer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.5rem;
+  margin-top: 0.9rem;
+}
+
+.arg-open {
+  margin-top: 0.9rem;
+  padding: 0.7rem 0.85rem;
+  border-radius: 0.7rem;
+  background: var(--glass-soft);
+}
+
+.arg-detail-head {
+  margin-bottom: 2rem;
+}
+
+.arg-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  margin: 1.3rem 0 0;
+}
+
+.arg-meta div {
+  min-width: 8rem;
+}
+
+.arg-meta dt {
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  opacity: 0.55;
+}
+
+.arg-meta dd {
+  margin: 0.15rem 0 0;
+  font-size: 0.9rem;
+}
+
+.arg-theories {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.2rem 1.3rem;
+}
+
+@media (max-width: 640px) {
+  .arg-status,
+  .arg-theories {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .arg-answer {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .arg-progress > span {
+    transition: none;
+  }
+}

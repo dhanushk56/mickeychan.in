@@ -17,6 +17,7 @@ const NAV = [
     label: "Community",
     items: [
       { href: "/hub", label: "Hub", note: "Polls, ideas and the calendar" },
+      { href: "/arg", label: "ARG", note: "Mysteries, clues and locked pages" },
       { href: "/announcements", label: "Announcements", note: "What is new on the channel" },
       { href: "/forums", label: "Forums", note: "Threads and replies" },
       { href: "/stories", label: "Stories", note: "Arcs, beat by beat" },

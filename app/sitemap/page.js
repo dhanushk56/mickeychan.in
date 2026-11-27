@@ -14,6 +14,7 @@ const SECTIONS = [
       { href: "/", label: "Home", note: "Landing page, latest videos and announcements" },
       { href: "/videos", label: "Videos", note: "The full video library, searchable by tag" },
       { href: "/announcements", label: "Announcements", note: "Current and past notices" },
+      { href: "/arg", label: "The ARG", note: "Mysteries, clues and the locks that open them" },
       { href: "/socials", label: "Socials", note: "Everywhere else to find Mickey" },
     ],
   },

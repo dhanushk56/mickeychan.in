@@ -9,6 +9,7 @@ import StudioPanel from "@/components/admin/StudioPanel";
 import PollsPanel from "@/components/admin/PollsPanel";
 import EventsPanel from "@/components/admin/EventsPanel";
 import IdeasPanel from "@/components/admin/IdeasPanel";
+import ArgPanel from "@/components/admin/ArgPanel";
 import ReportsPanel from "@/components/admin/ReportsPanel";
 import EnquiriesPanel from "@/components/admin/EnquiriesPanel";
 import HomePanel from "@/components/admin/HomePanel";
@@ -652,6 +653,7 @@ export default function AdminDashboard({ currentUser }) {
         { id: "polls", label: "Polls", show: can("polls.view") },
         { id: "events", label: "Events", show: can("events.view") },
         { id: "ideas", label: "Ideas", show: can("ideas.view") },
+        { id: "arg", label: "ARG", show: can("arg.view") },
         { id: "reports", label: "Reports", show: can("forums.moderate") },
         { id: "stories", label: "Stories", show: can("stories.view") },
         { id: "studio", label: "Studio", show: can("studio.view") },
@@ -1785,6 +1787,8 @@ export default function AdminDashboard({ currentUser }) {
         {tab === "ideas" && (
           <IdeasPanel canEdit={can("ideas.moderate")} canDelete={can("ideas.delete")} />
         )}
+
+        {tab === "arg" && <ArgPanel canManage={can("arg.manage")} />}
 
         {tab === "reports" && <ReportsPanel />}
 
