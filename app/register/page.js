@@ -7,7 +7,10 @@ import { isDiscordConfigured } from "@/lib/discord";
 
 export const dynamic = "force-dynamic";
 
-export const metadata = { title: "Register" };
+export const metadata = {
+  title: "Register",
+  robots: { index: false, follow: false },
+};
 
 function safeNext(value) {
   if (typeof value !== "string" || !value.startsWith("/") || value.startsWith("//")) return "/positions";

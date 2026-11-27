@@ -306,6 +306,7 @@ export default function AccountPanel({ profile, verificationRequired = true }) {
               <img
                 src={current.avatar}
                 alt={`${current.name || current.username}'s profile picture`}
+                decoding="async"
               />
             </button>
           ) : (

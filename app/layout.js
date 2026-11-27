@@ -68,6 +68,10 @@ export default async function RootLayout({ children }) {
         {/* Pull the intro clip with the HTML, before hydration asks for it, so the
             character is ready by the first navigation. */}
         <link rel="preload" as="video" type="video/mp4" href="/media/route-intro.mp4" />
+        {/* The stylesheet imports the three families from Google Fonts, so where
+            those files come from is known before the import is fetched. */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </head>
       <body>
         <div className="grid-veil" aria-hidden="true" />

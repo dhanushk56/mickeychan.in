@@ -6,7 +6,10 @@ import { EMAIL_VERIFICATION_REQUIRED } from "@/lib/features";
 
 export const dynamic = "force-dynamic";
 
-export const metadata = { title: "My account" };
+export const metadata = {
+  title: "My account",
+  robots: { index: false, follow: false },
+};
 
 export default async function MyAccountPage() {
   const session = await memberFromCookieStore(cookies());

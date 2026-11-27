@@ -64,7 +64,7 @@ export default async function CommunityProfilePage({ params }) {
 
         <header className="glass-card community-head">
           <span className="avatar-frame" aria-hidden="true">
-            {member.avatar ? <img src={member.avatar} alt="" /> : member.initials || name.slice(0, 2)}
+            {member.avatar ? <img src={member.avatar} alt="" loading="lazy" decoding="async" /> : member.initials || name.slice(0, 2)}
           </span>
           <div className="community-id">
             <p className="kicker">Member</p>

@@ -7,7 +7,10 @@ import { EMAIL_VERIFICATION_REQUIRED } from "@/lib/features";
 
 export const dynamic = "force-dynamic";
 
-export const metadata = { title: "Verify your account" };
+export const metadata = {
+  title: "Verify your account",
+  robots: { index: false, follow: false },
+};
 
 function safeNext(value) {
   if (typeof value !== "string" || !value.startsWith("/") || value.startsWith("//")) return "/positions";

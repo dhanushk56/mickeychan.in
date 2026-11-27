@@ -4,6 +4,8 @@ const BASE_URL = "https://mickeychan.in";
 
 export const revalidate = 3600;
 
+// Only pages a visitor can read without an account. The sign in, account and
+// console pages carry noindex and would be a contradiction in here.
 const PAGES = [
   { path: "/", changeFrequency: "weekly", priority: 1 },
   { path: "/videos", changeFrequency: "weekly", priority: 0.9 },
@@ -12,13 +14,13 @@ const PAGES = [
   { path: "/stories", changeFrequency: "weekly", priority: 0.8 },
   { path: "/studio", changeFrequency: "weekly", priority: 0.7 },
   { path: "/positions", changeFrequency: "daily", priority: 0.9 },
+  { path: "/hub", changeFrequency: "daily", priority: 0.7 },
+  { path: "/polls", changeFrequency: "weekly", priority: 0.6 },
+  { path: "/events", changeFrequency: "weekly", priority: 0.6 },
+  { path: "/ideas", changeFrequency: "weekly", priority: 0.6 },
   { path: "/socials", changeFrequency: "monthly", priority: 0.7 },
   { path: "/contact", changeFrequency: "monthly", priority: 0.6 },
   { path: "/join", changeFrequency: "monthly", priority: 0.5 },
-  { path: "/my-account", changeFrequency: "monthly", priority: 0.4 },
-  { path: "/login", changeFrequency: "monthly", priority: 0.5 },
-  { path: "/register", changeFrequency: "monthly", priority: 0.5 },
-  { path: "/forgot-password", changeFrequency: "monthly", priority: 0.3 },
   { path: "/sitemap", changeFrequency: "monthly", priority: 0.4 },
 ];
 

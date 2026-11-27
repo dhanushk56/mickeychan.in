@@ -33,7 +33,7 @@ export default function AnnouncementCard({ announcement, past = false, now = Dat
     <article className="glass-card announcement-card" data-level={announcement.level}>
       {announcement.image && (
         <div className="announcement-image">
-          <img src={announcement.image} alt="" loading="lazy" />
+          <img src={announcement.image} alt="" loading="lazy" decoding="async" />
         </div>
       )}
 

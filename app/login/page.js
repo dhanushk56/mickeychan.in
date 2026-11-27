@@ -7,7 +7,10 @@ import { isDiscordConfigured } from "@/lib/discord";
 
 export const dynamic = "force-dynamic";
 
-export const metadata = { title: "Log in" };
+export const metadata = {
+  title: "Log in",
+  robots: { index: false, follow: false },
+};
 
 const ERRORS = {
   google_unavailable: "Google sign-in isn't set up on this site yet.",

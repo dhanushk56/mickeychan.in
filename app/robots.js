@@ -12,6 +12,8 @@ const PRIVATE_PATHS = [
   "/register",
   "/verify",
   "/forgot-password",
+  "/search",
+  "/maintenance",
 ];
 
 export default function robots() {

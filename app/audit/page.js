@@ -4,7 +4,10 @@ import AuditLog from "@/components/admin/AuditLog";
 
 export const dynamic = "force-dynamic";
 
-export const metadata = { title: "Audit log" };
+export const metadata = {
+  title: "Audit log",
+  robots: { index: false, follow: false },
+};
 
 export default async function AuditPage() {
   const session = await getSession();

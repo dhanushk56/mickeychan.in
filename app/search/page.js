@@ -10,6 +10,8 @@ export const metadata = {
   description:
     "Search videos, announcements, stories, events and forum threads across mickeychan.in.",
   alternates: { canonical: "/search" },
+  // Query strings produce endless duplicate pages, so results stay out of the index.
+  robots: { index: false, follow: true },
   robots: { index: false, follow: true },
 };
 

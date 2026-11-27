@@ -787,7 +787,7 @@ export default async function Home() {
                     data-home-reveal
                   >
                     <span className="avatar-frame" aria-hidden="true">
-                      {member.avatar ? <img src={member.avatar} alt="" /> : member.initials}
+                      {member.avatar ? <img src={member.avatar} alt="" loading="lazy" decoding="async" /> : member.initials}
                     </span>
                     <span className="min-w-0">
                       <span className="block font-semibold truncate">{member.name}</span>

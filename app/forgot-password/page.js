@@ -5,7 +5,10 @@ import { memberFromCookieStore } from "@/lib/members";
 
 export const dynamic = "force-dynamic";
 
-export const metadata = { title: "Reset your password" };
+export const metadata = {
+  title: "Reset your password",
+  robots: { index: false, follow: false },
+};
 
 export default async function ForgotPasswordPage() {
   const member = await memberFromCookieStore(cookies());

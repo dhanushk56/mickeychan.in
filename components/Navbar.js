@@ -230,7 +230,7 @@ export default function Navbar({ locked = false }) {
                     onClick={() => setAccountOpen(!accountOpen)}
                   >
                     {member.avatar ? (
-                      <img src={member.avatar} alt="" />
+                      <img src={member.avatar} alt="" loading="lazy" decoding="async" />
                     ) : (
                       <span aria-hidden="true">{member.initials}</span>
                     )}
@@ -240,7 +240,7 @@ export default function Navbar({ locked = false }) {
                     <div className="account-pop" id="nav-account-menu">
                       <div className="account-pop-head">
                         <span className="avatar-frame" aria-hidden="true">
-                          {member.avatar ? <img src={member.avatar} alt="" /> : member.initials}
+                          {member.avatar ? <img src={member.avatar} alt="" loading="lazy" decoding="async" /> : member.initials}
                         </span>
                         <span className="account-pop-id">
                           <span className="account-pop-name">{member.name || member.username}</span>
@@ -443,7 +443,7 @@ export default function Navbar({ locked = false }) {
         {member && (
           <Link href="/my-account" className="mobile-nav-user" onClick={() => setOpen(false)}>
             <span className="avatar-frame" aria-hidden="true">
-              {member.avatar ? <img src={member.avatar} alt="" /> : member.initials}
+              {member.avatar ? <img src={member.avatar} alt="" loading="lazy" decoding="async" /> : member.initials}
             </span>
             <span className="mobile-nav-user-name">
               {member.name || member.username}
