@@ -174,7 +174,7 @@ export default function AuditLog({ currentUser }) {
     if (rangeMs != null && now - entry.at > rangeMs) return false;
     const term = search.trim().toLowerCase();
     if (!term) return true;
-    return [entry.username, entry.detail, entry.action, entry.ip, entry.city, entry.country]
+    return [entry.username, entry.detail, entry.action]
       .filter(Boolean)
       .join(" ")
       .toLowerCase()
@@ -201,10 +201,6 @@ export default function AuditLog({ currentUser }) {
       { label: "Account", value: (entry) => entry.username },
       { label: "Result", value: (entry) => (entry.ok ? "Done" : "Failed") },
       { label: "Detail", value: (entry) => entry.detail },
-      { label: "IP", value: (entry) => entry.ip || "" },
-      { label: "City", value: (entry) => entry.city || "" },
-      { label: "Country", value: (entry) => entry.country || "" },
-      { label: "Timezone", value: (entry) => entry.timezone || "" },
     ]);
   };
 
@@ -404,11 +400,6 @@ export default function AuditLog({ currentUser }) {
                   </span>
                 </div>
                 <p className="text-sm mt-2 whitespace-pre-wrap break-words">{entry.detail || "-"}</p>
-                {(entry.ip || entry.city || entry.country) && (
-                  <p className="faint text-xs mt-1">
-                    {[entry.ip, entry.city, entry.country, entry.timezone].filter(Boolean).join(" · ")}
-                  </p>
-                )}
               </article>
             ))}
           </div>
