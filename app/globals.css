@@ -478,6 +478,9 @@
   .badge-denied { color: var(--danger); background: var(--danger-soft); border-color: color-mix(in srgb, var(--danger) 28%, transparent); }
   .badge-neutral { color: var(--text-muted); background: var(--glass-soft); border-color: var(--glass-edge); }
 
+  /* Usernames keep the exact case they are stored and copied with. */
+  .badge-username { text-transform: none; }
+
   .live-dot {
     width: .5rem;
     height: .5rem;

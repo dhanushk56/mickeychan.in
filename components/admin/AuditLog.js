@@ -389,7 +389,7 @@ export default function AuditLog({ currentUser }) {
                     >
                       {entry.area === "admin" ? "Admin console" : "Website"}
                     </span>
-                    <span className="badge badge-neutral">@{entry.username}</span>
+                    <span className="badge badge-neutral badge-username">@{entry.username}</span>
                     <span className="faint text-xs">
                       {ACTION_LABEL[entry.action] || entry.action}
                     </span>

@@ -155,7 +155,7 @@ function ApplicationCard({ entry, busy, onStatus, onDelete, canReview, canDelete
             <h3 className="font-display font-bold text-base">{entry.formTitle || "Application"}</h3>
             <StatusBadge status={entry.status} />
             {entry.memberUsername && (
-              <span className="badge badge-neutral">@{entry.memberUsername}</span>
+              <span className="badge badge-neutral badge-username">@{entry.memberUsername}</span>
             )}
           </div>
           <p className="faint text-xs mt-1">
@@ -308,7 +308,7 @@ function AccountRow({
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             <h3 className="font-display font-bold">{account.name || account.username}</h3>
-            <span className="badge badge-neutral">@{account.username}</span>
+            <span className="badge badge-neutral badge-username">@{account.username}</span>
             <span
               className={`badge ${account.source === "registered" ? "badge-pending" : "badge-accepted"}`}
             >
@@ -319,12 +319,12 @@ function AccountRow({
               {account.createdBy === "admin" ? `${methodLabel} · added by admin` : methodLabel}
             </span>
             {duplicates?.emails?.length > 0 && (
-              <span className="badge badge-denied">
+              <span className="badge badge-denied badge-username">
                 Email also on {duplicates.emails.map((name) => `@${name}`).join(", ")}
               </span>
             )}
             {duplicates?.usernames?.length > 0 && (
-              <span className="badge badge-pending">
+              <span className="badge badge-pending badge-username">
                 Username also on {duplicates.usernames.map((name) => `@${name}`).join(", ")}
               </span>
             )}
@@ -1575,7 +1575,7 @@ export default function AdminDashboard({ currentUser }) {
                     <h3 className="font-display font-bold">{entry.name}</h3>
                     <span className="badge badge-neutral">{entry.role}</span>
                     {entry.memberUsername && (
-                      <span className="badge badge-neutral">@{entry.memberUsername}</span>
+                      <span className="badge badge-neutral badge-username">@{entry.memberUsername}</span>
                     )}
                   </div>
                   <span className="faint text-xs">{formatDateTime(entry.createdAt)}</span>

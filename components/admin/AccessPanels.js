@@ -721,7 +721,7 @@ export function RolesPanel({ canManage, canManageAdmins }) {
             return (
               <div key={entry.username} className="flex flex-wrap items-center justify-between gap-2">
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="badge badge-neutral">@{entry.username}</span>
+                  <span className="badge badge-neutral badge-username">@{entry.username}</span>
                   <RoleBadge entry={entry} />
                   {entry.manageable === false && (
                     <span className="badge badge-neutral">Above your role</span>
