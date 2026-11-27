@@ -33,6 +33,9 @@ export default function Navbar({ locked = false }) {
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
   const [groupOpen, setGroupOpen] = useState(false);
+  // Desktop dropdowns open on hover, so a clicked option needs to be told to
+  // shut the panel even though the pointer is still over it.
+  const [dropClosed, setDropClosed] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [member, setMember] = useState(null);
   const [accountOpen, setAccountOpen] = useState(false);
@@ -50,6 +53,7 @@ export default function Navbar({ locked = false }) {
   useEffect(() => {
     setOpen(false);
     setAccountOpen(false);
+    setDropClosed(false);
   }, [pathname]);
 
   useEffect(() => {
@@ -158,6 +162,13 @@ export default function Navbar({ locked = false }) {
   useEffect(() => {
     if (communityActive) setGroupOpen(true);
   }, [communityActive]);
+
+  // A drawer that is reopened starts from the top, with the section collapsed
+  // unless the page being read sits inside it.
+  useEffect(() => {
+    if (open) return;
+    setGroupOpen(Boolean(communityActive));
+  }, [open, communityActive]);
 
   // While the site is closed, the bar is shown but every control in it is inert
   // until someone unlocks the console. Nothing here navigates or opens a menu.
@@ -327,6 +338,8 @@ export default function Navbar({ locked = false }) {
                     key={entry.label}
                     className="nav-drop"
                     data-active={entry.items.some((item) => isActive(item.href))}
+                    data-closed={dropClosed ? "true" : undefined}
+                    onMouseLeave={() => setDropClosed(false)}
                   >
                     <Link href={entry.href} className="nav-link nav-drop-trigger" aria-haspopup="true">
                       {entry.label}
@@ -355,6 +368,10 @@ export default function Navbar({ locked = false }) {
                             className="nav-drop-item"
                             data-active={isActive(item.href)}
                             aria-current={isActive(item.href) ? "page" : undefined}
+                            onClick={(event) => {
+                              setDropClosed(true);
+                              event.currentTarget.blur();
+                            }}
                           >
                             <span className="nav-drop-item-label">{item.label}</span>
                             <span className="nav-drop-item-note">{item.note}</span>

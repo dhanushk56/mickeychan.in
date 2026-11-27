@@ -382,6 +382,18 @@
     transition: opacity .22s ease, transform .34s cubic-bezier(.2, .7, .2, 1), visibility 0s;
   }
 
+  /* An option was just chosen, so the panel shuts until the pointer leaves and
+     comes back. Declared after the hover rules so it wins at equal weight. */
+  .nav-drop[data-closed="true"] .nav-drop-panel {
+    opacity: 0;
+    visibility: hidden;
+    transform: translate(-50%, -.45rem);
+    transition: opacity .2s ease, transform .3s cubic-bezier(.2, .7, .2, 1),
+      visibility 0s linear .2s;
+  }
+
+  .nav-drop[data-closed="true"] .nav-drop-caret { transform: none; }
+
   .nav-drop-item {
     display: grid;
     gap: .1rem;
