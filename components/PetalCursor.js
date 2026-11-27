@@ -45,8 +45,24 @@ export default function PetalCursor() {
       pointer.style.opacity = "0";
     };
 
+    // A cross-origin frame (a YouTube embed) sends no pointer events to this
+    // page and fires a null mouseout as the pointer crosses into it, so the
+    // mouse leaving the window and the mouse entering a player look alike.
+    // Ask what is under the pointer before hiding the cursor.
+    const overEmbed = (clientX, clientY) => {
+      if (!Number.isFinite(clientX) || !Number.isFinite(clientY)) return false;
+      const hit = document.elementFromPoint(clientX, clientY);
+      return Boolean(hit && hit.closest("iframe, embed, object"));
+    };
+
     const out = (event) => {
       if (event.relatedTarget) return;
+      if (overEmbed(event.clientX, event.clientY)) return;
+      leave();
+    };
+
+    const rootLeave = () => {
+      if (overEmbed(x, y)) return;
       leave();
     };
 
@@ -54,14 +70,14 @@ export default function PetalCursor() {
     window.addEventListener("pointerdown", down, { passive: true });
     window.addEventListener("pointerup", up, { passive: true });
     document.addEventListener("mouseout", out);
-    document.documentElement.addEventListener("mouseleave", leave);
+    document.documentElement.addEventListener("mouseleave", rootLeave);
 
     return () => {
       window.removeEventListener("pointermove", move);
       window.removeEventListener("pointerdown", down);
       window.removeEventListener("pointerup", up);
       document.removeEventListener("mouseout", out);
-      document.documentElement.removeEventListener("mouseleave", leave);
+      document.documentElement.removeEventListener("mouseleave", rootLeave);
       root.classList.remove("petal-cursor-on");
     };
   }, []);
