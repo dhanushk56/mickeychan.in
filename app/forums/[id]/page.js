@@ -8,6 +8,7 @@ import { can, resolveAdmin } from "@/lib/roles";
 import LocalTime from "@/components/LocalTime";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import ReplyForm from "@/components/forums/ReplyForm";
+import ReportButton from "@/components/forums/ReportButton";
 import { ReplyDelete, ThreadTools } from "@/components/forums/ThreadTools";
 
 export const dynamic = "force-dynamic";
@@ -66,13 +67,16 @@ export default async function ThreadPage({ params }) {
               </p>
             ))}
           </div>
-          <ThreadTools
-            threadId={thread.id}
-            pinned={thread.pinned}
-            locked={thread.locked}
-            canModerate={canModerate}
-            canRemove={isAuthor || canModerate}
-          />
+          <div className="flex flex-wrap items-center gap-2">
+            <ThreadTools
+              threadId={thread.id}
+              pinned={thread.pinned}
+              locked={thread.locked}
+              canModerate={canModerate}
+              canRemove={isAuthor || canModerate}
+            />
+            {member && !isAuthor && <ReportButton threadId={thread.id} />}
+          </div>
         </article>
 
         <h2 className="font-display font-bold mt-8 mb-3">
@@ -98,6 +102,9 @@ export default async function ThreadPage({ params }) {
                       </span>
                       {(owns || canModerate) && (
                         <ReplyDelete threadId={thread.id} replyId={reply.id} />
+                      )}
+                      {member && !owns && (
+                        <ReportButton threadId={thread.id} replyId={reply.id} />
                       )}
                     </div>
                   </div>

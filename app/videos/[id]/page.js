@@ -240,7 +240,12 @@ export default async function VideoPage({ params }) {
         )}
       </div>
 
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      {/* Escaping < keeps a title such as "</script>" inside the block instead of
+          ending it early. */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
+      />
     </main>
   );
 }

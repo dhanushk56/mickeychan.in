@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { kvDel, kvGet, kvSet } from "@/lib/kv";
 import { collectBackup, SNAPSHOT_INDEX_KEY } from "@/lib/backup";
+import { pruneActivity } from "@/lib/activity-log";
+import { pruneReports } from "@/lib/reports";
 
 export const dynamic = "force-dynamic";
 
@@ -17,6 +19,10 @@ export async function GET(request) {
   if (request.headers.get("authorization") !== `Bearer ${secret}`) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+
+  // The snapshot keeps the record; retention keeps the live keys small.
+  const activity = await pruneActivity(180);
+  const reports = await pruneReports(90);
 
   const backup = await collectBackup();
   const body = JSON.stringify(backup);
@@ -42,6 +48,7 @@ export async function GET(request) {
       bytes: body.length,
       kept: kept.length,
       dropped: dropped.map((entry) => entry.key),
+      retention: { activity, reports },
     },
     { headers: { "Cache-Control": "no-store" } }
   );
