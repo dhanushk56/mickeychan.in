@@ -85,6 +85,30 @@
     outline: 2px solid var(--primary);
     outline-offset: 2px;
   }
+
+  /* Off screen until a keyboard reaches it, then it sits above the nav. */
+  .skip-link {
+    position: fixed;
+    top: .75rem;
+    left: .75rem;
+    z-index: 200;
+    padding: .6rem 1rem;
+    border-radius: 999px;
+    background: var(--primary);
+    color: #fff;
+    font-weight: 700;
+    font-size: .85rem;
+    transform: translateY(-200%);
+    transition: transform 180ms var(--ease-soft, ease);
+  }
+  .skip-link:focus-visible {
+    transform: translateY(0);
+    outline-offset: 3px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .skip-link { transition: none; }
+  }
   ::-webkit-scrollbar { width: 10px; height: 10px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb {

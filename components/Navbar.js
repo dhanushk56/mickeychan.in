@@ -354,6 +354,7 @@ export default function Navbar({ locked = false }) {
                             href={item.href}
                             className="nav-drop-item"
                             data-active={isActive(item.href)}
+                            aria-current={isActive(item.href) ? "page" : undefined}
                           >
                             <span className="nav-drop-item-label">{item.label}</span>
                             <span className="nav-drop-item-note">{item.note}</span>
@@ -368,6 +369,7 @@ export default function Navbar({ locked = false }) {
                     href={entry.href}
                     className="nav-link"
                     data-active={isActive(entry.href)}
+                    aria-current={isActive(entry.href) ? "page" : undefined}
                   >
                     {entry.label}
                   </Link>
@@ -491,6 +493,7 @@ export default function Navbar({ locked = false }) {
                       href={item.href}
                       className="mobile-nav-link mobile-nav-sublink"
                       data-active={isActive(item.href)}
+                      aria-current={isActive(item.href) ? "page" : undefined}
                       onClick={() => setOpen(false)}
                     >
                       {item.label}
@@ -505,6 +508,7 @@ export default function Navbar({ locked = false }) {
               href={entry.href}
               className="mobile-nav-link"
               data-active={isActive(entry.href)}
+              aria-current={isActive(entry.href) ? "page" : undefined}
               style={{ "--i": String(index) }}
               onClick={() => setOpen(false)}
             >

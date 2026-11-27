@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createPortal } from "react-dom";
 import LogoutButton from "@/components/LogoutButton";
+import { useConfirm } from "@/components/ConfirmDialog";
 import useBodyScrollLock from "@/lib/useBodyScrollLock";
 
 const dateFormat = new Intl.DateTimeFormat("en-GB", {
@@ -85,6 +86,8 @@ export default function AccountPanel({ profile, verificationRequired = true }) {
   useBodyScrollLock(Boolean(mounted && enlarged && current?.avatar));
   const [profileVisible, setProfileVisible] = useState(false);
   const [profileBusy, setProfileBusy] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [dialog, askConfirm] = useConfirm();
 
   useEffect(() => setMounted(true), []);
 
@@ -120,6 +123,34 @@ export default function AccountPanel({ profile, verificationRequired = true }) {
       setError(problem.message);
     } finally {
       setProfileBusy(false);
+    }
+  }
+
+  async function deleteAccount() {
+    const confirmed = await askConfirm({
+      title: "Delete your account?",
+      description: "Are you sure? This action cannot be undone.",
+      confirmLabel: "Delete account",
+      tone: "danger",
+    });
+    if (!confirmed) return;
+
+    setDeleting(true);
+    setError("");
+    setNotice("");
+    try {
+      const response = await fetch("/api/account", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ confirm: current.username }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || "The account was not deleted.");
+      router.push("/");
+      router.refresh();
+    } catch (problem) {
+      setError(problem.message);
+      setDeleting(false);
     }
   }
 
@@ -291,6 +322,7 @@ export default function AccountPanel({ profile, verificationRequired = true }) {
 
   return (
     <div className="grid gap-5">
+      {dialog}
       <div className="glass-card account-card animate-rise">
         <div className="account-head">
           <p className="kicker">My account</p>
@@ -664,6 +696,22 @@ export default function AccountPanel({ profile, verificationRequired = true }) {
             </div>
           </div>
         )}
+      </div>
+
+      <div className="glass-card account-card animate-rise">
+        <p className="kicker">Delete account</p>
+        <p className="muted text-sm leading-relaxed mt-2">
+          Deleting removes your profile, photo, sign-in details and notifications. Forum posts and
+          past applications stay with the people who answered them.
+        </p>
+        <button
+          type="button"
+          className="btn btn-danger btn-sm mt-3"
+          onClick={deleteAccount}
+          disabled={deleting}
+        >
+          {deleting ? "Deleting..." : "Delete my account"}
+        </button>
       </div>
 
       {mounted &&

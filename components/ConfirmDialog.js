@@ -3,9 +3,51 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import useBodyScrollLock from "@/lib/useBodyScrollLock";
 
+// Keyboard users get kept inside the panel while it is open, and land back on
+// the control that opened it once it closes.
+function useDialogFocus() {
+  const panelRef = useRef(null);
+
+  useEffect(() => {
+    const previous = document.activeElement;
+    const panel = panelRef.current;
+
+    const focusable = () =>
+      Array.from(
+        panel?.querySelectorAll(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        ) || []
+      ).filter((element) => !element.disabled);
+
+    const onKey = (event) => {
+      if (event.key !== "Tab") return;
+      const items = focusable();
+      if (items.length === 0) return;
+      const first = items[0];
+      const last = items[items.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      if (previous && typeof previous.focus === "function") previous.focus();
+    };
+  }, []);
+
+  return panelRef;
+}
+
 function Dialog({ title, description, confirmLabel, cancelLabel, tone, onConfirm, onCancel }) {
   const danger = tone === "danger";
   useBodyScrollLock();
+  const panelRef = useDialogFocus();
 
   useEffect(() => {
     const onKey = (event) => {
@@ -29,7 +71,11 @@ function Dialog({ title, description, confirmLabel, cancelLabel, tone, onConfirm
         style={{ background: "rgba(9, 6, 18, 0.55)", backdropFilter: "blur(12px)", cursor: "default" }}
         onClick={onCancel}
       />
-      <div className="glass-card p-6 relative w-full animate-rise" style={{ maxWidth: "26rem" }}>
+      <div
+        ref={panelRef}
+        className="glass-card p-6 relative w-full animate-rise"
+        style={{ maxWidth: "26rem" }}
+      >
         <span className={`badge ${danger ? "badge-denied" : "badge-neutral"}`}>
           {danger ? "Please confirm" : "Confirm"}
         </span>
@@ -72,6 +118,7 @@ function PromptDialog({
 }) {
   const danger = tone === "danger";
   useBodyScrollLock();
+  const panelRef = useDialogFocus();
   const [value, setValue] = useState("");
 
   useEffect(() => {
@@ -97,6 +144,7 @@ function PromptDialog({
         onClick={onCancel}
       />
       <form
+        ref={panelRef}
         className="glass-card p-6 relative w-full animate-rise"
         style={{ maxWidth: "26rem" }}
         onSubmit={(event) => {

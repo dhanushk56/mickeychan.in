@@ -74,6 +74,9 @@ export default async function RootLayout({ children }) {
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </head>
       <body>
+        <a href="#content" className="skip-link">
+          Skip to content
+        </a>
         <div className="grid-veil" aria-hidden="true" />
         <PetalField />
         <PetalCursor />
@@ -87,7 +90,9 @@ export default async function RootLayout({ children }) {
         </Suspense>
         <Navbar locked={maintenance.locked} />
         <BackToTop />
-        <main className="relative z-10 pt-24">{children}</main>
+        <main id="content" tabIndex={-1} className="relative z-10 pt-24">
+          {children}
+        </main>
         <Footer />
       </body>
     </html>
