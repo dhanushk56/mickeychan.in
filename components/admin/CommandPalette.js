@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import useBodyScrollLock from "@/lib/useBodyScrollLock";
+import { trapTab, useMounted } from "@/components/ui/dialog-helpers";
 
 const GROUP_ORDER = ["Go to", "Actions", "Applications", "Messages", "Accounts", "Forms"];
 const MAX_RESULTS = 6;
@@ -13,31 +14,6 @@ function searchText(item) {
   return `${item.label} ${item.hint || ""} ${item.keywords || ""}`.toLowerCase();
 }
 
-// Both layers live on the body, so a page wrapper with its own transform or
-// animation cannot trap them under the site header.
-function useMounted() {
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
-  return mounted;
-}
-
-// Tab should walk the open dialog, not the page behind it.
-function trapTab(event) {
-  if (event.key !== "Tab") return;
-  const nodes = event.currentTarget.querySelectorAll(
-    'button, input, a[href], [tabindex]:not([tabindex="-1"])'
-  );
-  if (nodes.length === 0) return;
-  const first = nodes[0];
-  const last = nodes[nodes.length - 1];
-  if (event.shiftKey && document.activeElement === first) {
-    event.preventDefault();
-    last.focus();
-  } else if (!event.shiftKey && document.activeElement === last) {
-    event.preventDefault();
-    first.focus();
-  }
-}
 
 export function CommandPalette({ open, onClose, items, modKey = "Ctrl" }) {
   const [query, setQuery] = useState("");
@@ -235,54 +211,3 @@ export function CommandPalette({ open, onClose, items, modKey = "Ctrl" }) {
   );
 }
 
-export function ShortcutSheet({ open, onClose, rows }) {
-  const mounted = useMounted();
-  useBodyScrollLock(open && mounted);
-  if (!open || !mounted) return null;
-
-  return createPortal(
-    <div className="palette-backdrop">
-      <button
-        type="button"
-        className="palette-scrim"
-        aria-label="Close keyboard shortcuts"
-        onClick={onClose}
-      />
-      <div
-        className="glass-card shortcut-sheet animate-rise"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="shortcut-sheet-title"
-        onKeyDown={trapTab}
-      >
-        <div className="shortcut-sheet-head">
-          <h2 id="shortcut-sheet-title" className="font-display text-lg font-bold">
-            Keyboard shortcuts
-          </h2>
-          <button type="button" className="btn btn-ghost btn-sm" onClick={onClose} autoFocus>
-            Close
-          </button>
-        </div>
-
-        {rows.map((row) => (
-          <section key={row.group} className="shortcut-group">
-            <p className="palette-group-label">{row.group}</p>
-            {row.items.map((item) => (
-              <div key={item.label} className="shortcut-row">
-                <span>{item.label}</span>
-                <span className="shortcut-keys">
-                  {item.keys.map((key) => (
-                    <kbd key={key} className="kbd">
-                      {key}
-                    </kbd>
-                  ))}
-                </span>
-              </div>
-            ))}
-          </section>
-        ))}
-      </div>
-    </div>,
-    document.body
-  );
-}

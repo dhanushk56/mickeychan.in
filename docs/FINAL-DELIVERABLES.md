@@ -69,6 +69,7 @@ Status of the twenty modules from the additional master requirement, including t
 - Social previews built from each page's own words: Open Graph and Twitter fields on stories, story pages, forums, threads, announcements and positions, with the logo as the image, instead of every share showing the site name.
 - The sitemap now lists published stories and public forum threads alongside videos and channels.
 - Faint text raised from a 4.12:1 contrast ratio to 6.23:1 against the page background, finger-sized targets under `pointer: coarse`, and Escape closing the profile photo overlays.
+- The site has the same keyboard shortcut sheet as the console, opened with `?` or the footer link and sharing its scroll lock: search, the search box, back to top, this list and close.
 
 ## 4. Modified existing features
 

@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import LogoutButton from "@/components/LogoutButton";
 import NotificationsBell from "@/components/NotificationsBell";
 import useBodyScrollLock from "@/lib/useBodyScrollLock";
+import ShortcutSheet from "@/components/ui/ShortcutSheet";
 
 // Videos, contact and open positions stand on their own. Everything about taking
 // part in the channel sits behind one menu, which opens on hover.
@@ -39,6 +40,8 @@ export default function Navbar({ locked = false }) {
   const [scrolled, setScrolled] = useState(false);
   const [member, setMember] = useState(null);
   const [accountOpen, setAccountOpen] = useState(false);
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
+  const [modKey, setModKey] = useState("Ctrl");
   const accountRef = useRef(null);
   const searchRef = useRef(null);
   const drawerSearchRef = useRef(null);
@@ -136,6 +139,65 @@ export default function Navbar({ locked = false }) {
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
   }, [pathname]);
+
+  // The same sheet the console uses, opened with "?" or from the footer, with
+  // T for the top of the page.
+  useEffect(() => {
+    if (typeof navigator === "undefined") return;
+    if (/Mac|iPhone|iPad/i.test(navigator.platform || navigator.userAgent)) setModKey("⌘");
+  }, []);
+
+  useEffect(() => {
+    const openSheet = () => setShortcutsOpen(true);
+    window.addEventListener("mc:shortcuts", openSheet);
+    return () => window.removeEventListener("mc:shortcuts", openSheet);
+  }, []);
+
+  useEffect(() => {
+    if (pathname === "/search" || pathname.startsWith("/admin")) return undefined;
+
+    const onKey = (event) => {
+      const target = event.target;
+      const typing =
+        target instanceof HTMLElement &&
+        (target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.tagName === "SELECT" ||
+          target.isContentEditable);
+
+      if (event.key === "Escape" && shortcutsOpen) {
+        setShortcutsOpen(false);
+        return;
+      }
+      if (typing || event.metaKey || event.ctrlKey || event.altKey) return;
+      if (event.key === "?") {
+        event.preventDefault();
+        setShortcutsOpen(true);
+        return;
+      }
+      if (event.key.toLowerCase() === "t" && !document.querySelector('[aria-modal="true"]')) {
+        event.preventDefault();
+        const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        window.scrollTo({ top: 0, left: 0, behavior: reduced ? "auto" : "smooth" });
+      }
+    };
+
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [pathname, shortcutsOpen]);
+
+  const shortcutRows = [
+    {
+      group: "Everywhere",
+      items: [
+        { label: "Open search", keys: [modKey, "K"] },
+        { label: "Focus the search box", keys: ["/"] },
+        { label: "Back to top", keys: ["T"] },
+        { label: "Show this list", keys: ["?"] },
+        { label: "Close this list", keys: ["Esc"] },
+      ],
+    },
+  ];
 
   function onSearchKeyDown(event) {
     if (event.key !== "Escape") return;
@@ -563,6 +625,12 @@ export default function Navbar({ locked = false }) {
           </Link>
         )}
       </nav>
+
+      <ShortcutSheet
+        open={shortcutsOpen}
+        onClose={() => setShortcutsOpen(false)}
+        rows={shortcutRows}
+      />
     </>
   );
 }

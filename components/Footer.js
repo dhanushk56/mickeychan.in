@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getSocials } from "@/lib/socials";
+import ShortcutsButton from "@/components/ShortcutsButton";
 
 export default async function Footer() {
   const socials = await getSocials();
@@ -15,6 +16,7 @@ export default async function Footer() {
           <Link href="/positions">Open positions</Link>
           <Link href="/contact">Contact</Link>
           <Link href="/sitemap">Sitemap</Link>
+          <ShortcutsButton />
           {socials[0]?.href && (
             <a
               href={socials[0].href}
