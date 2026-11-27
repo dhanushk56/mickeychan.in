@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { unstable_noStore as noStore } from "next/cache";
 import { kvGet } from "@/lib/kv";
 import Breadcrumbs from "@/components/Breadcrumbs";
+import { socialMeta } from "@/lib/metadata";
 import { STORIES_KEY, findStory, isPublic, readStories, sortedBeats, statusMeta } from "@/lib/stories";
 
 export const dynamic = "force-dynamic";
@@ -23,6 +24,12 @@ export async function generateMetadata({ params }) {
     title: story.title,
     description: story.summary,
     alternates: { canonical: `/stories/${story.slug}` },
+    ...socialMeta({
+      title: `${story.title} | Mickey Chan`,
+      description: story.summary,
+      path: `/stories/${story.slug}`,
+      type: "article",
+    }),
   };
 }
 

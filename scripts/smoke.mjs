@@ -132,6 +132,18 @@ if (!(await ready())) {
     memberSession.text.slice(0, 60)
   );
 
+  const memberOnAdmin = await req("GET", "/api/admin/accounts");
+  check(
+    "a member session cannot open the console api",
+    memberOnAdmin.status === 401,
+    String(memberOnAdmin.status)
+  );
+
+  const badAvatar = await req("POST", "/api/account/avatar", {
+    dataUrl: "data:text/html;base64,PHNjcmlwdD5hbGVydCgxKTwvc2NyaXB0Pg==",
+  });
+  check("a non-image avatar is refused", badAvatar.status === 400, String(badAvatar.status));
+
   const ownerLogin = await req("POST", "/api/auth/member", {
     username: owner,
     password: OWNER_PASSWORD,

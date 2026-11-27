@@ -1,16 +1,21 @@
 import { unstable_noStore as noStore } from "next/cache";
 import { kvGet } from "@/lib/kv";
 import { ANNOUNCEMENTS_KEY, publicAnnouncements, readAnnouncements } from "@/lib/announcements";
+import { socialMeta } from "@/lib/metadata";
 import AnnouncementExplorer from "@/components/announcements/AnnouncementExplorer";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 export const fetchCache = "force-no-store";
 
+const TITLE = "Announcements";
+const DESCRIPTION = "What's happening right now, and everything posted before, from the Mickey Chan team.";
+
 export const metadata = {
-  title: "Announcements",
-  description: "What's happening right now, and everything posted before, from the Mickey Chan team.",
+  title: TITLE,
+  description: DESCRIPTION,
   alternates: { canonical: "/announcements" },
+  ...socialMeta({ title: `${TITLE} | Mickey Chan`, description: DESCRIPTION, path: "/announcements" }),
 };
 
 export default async function AnnouncementsPage() {

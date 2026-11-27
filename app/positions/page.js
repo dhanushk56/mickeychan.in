@@ -2,6 +2,7 @@ import Link from "next/link";
 import { cookies } from "next/headers";
 import { kvGet } from "@/lib/kv";
 import { memberFromCookieStore } from "@/lib/members";
+import { socialMeta } from "@/lib/metadata";
 import {
   STATUS_TEXT,
   applicationGate,
@@ -18,10 +19,18 @@ import JobMeta from "@/components/applications/JobMeta";
 import { isReadyForm } from "@/lib/form-builder/schema";
 import { EMAIL_VERIFICATION_REQUIRED } from "@/lib/features";
 
+const TITLE = "Open Positions";
+const POSITIONS_DESCRIPTION = "Current openings to join the Mickey Chan team.";
+
 export const metadata = {
-  title: "Open Positions",
-  description: "Current openings to join the Mickey Chan team.",
+  title: TITLE,
+  description: POSITIONS_DESCRIPTION,
   alternates: { canonical: "/positions" },
+  ...socialMeta({
+    title: `${TITLE} | Mickey Chan`,
+    description: POSITIONS_DESCRIPTION,
+    path: "/positions",
+  }),
 };
 
 export const dynamic = "force-dynamic";

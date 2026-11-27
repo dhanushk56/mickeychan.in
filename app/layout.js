@@ -42,6 +42,14 @@ export const metadata = {
     title: "Mickey Chan",
     description: "Minecraft challenges and shorts, plus the roles that are open right now.",
     type: "website",
+    siteName: "Mickey Chan",
+    images: [{ url: "/mickey-logo.png", width: 88, height: 88, alt: "Mickey Chan" }],
+  },
+  twitter: {
+    card: "summary",
+    title: "Mickey Chan",
+    description: "Minecraft challenges and shorts, plus the roles that are open right now.",
+    images: ["/mickey-logo.png"],
   },
 };
 

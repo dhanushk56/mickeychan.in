@@ -13,7 +13,7 @@
 
   --text: #f4f0ff;
   --text-muted: rgba(244, 240, 255, .68);
-  --text-faint: rgba(244, 240, 255, .45);
+  --text-faint: rgba(244, 240, 255, .58);
 
   --glass: rgba(255, 255, 255, .055);
   --glass-soft: rgba(255, 255, 255, .035);
@@ -3119,4 +3119,16 @@ h1, h2, h3 { text-wrap: balance; }
   background: rgba(255, 255, 255, .03);
   touch-action: none;
   cursor: crosshair;
+}
+
+/* A finger needs a larger target than a mouse does. */
+@media (pointer: coarse) {
+  .icon-button {
+    width: 2.75rem;
+    height: 2.75rem;
+  }
+
+  .btn-sm {
+    min-height: 2.5rem;
+  }
 }

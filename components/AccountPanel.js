@@ -91,6 +91,18 @@ export default function AccountPanel({ profile, verificationRequired = true }) {
 
   useEffect(() => setMounted(true), []);
 
+  // Escape closes whichever of the two photo overlays is open.
+  useEffect(() => {
+    if (!photoMenu && !enlarged) return undefined;
+    const onKey = (event) => {
+      if (event.key !== "Escape") return;
+      setPhotoMenu(false);
+      setEnlarged(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [photoMenu, enlarged]);
+
   useEffect(() => {
     let alive = true;
     fetch("/api/profile", { cache: "no-store" })

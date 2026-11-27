@@ -66,6 +66,9 @@ Status of the twenty modules from the additional master requirement, including t
 - SEO and performance pass: `noindex` on private pages, corrected sitemap and robots, breadcrumb structured data, escaped JSON-LD, lazy avatars, font preconnect, root error screen.
 - Accessibility pass: skip link, `aria-current` on navigation, focus trapping in the shared dialogs.
 - Data retention in the daily snapshot: activity older than 180 days, handled reports older than 90.
+- Social previews built from each page's own words: Open Graph and Twitter fields on stories, story pages, forums, threads, announcements and positions, with the logo as the image, instead of every share showing the site name.
+- The sitemap now lists published stories and public forum threads alongside videos and channels.
+- Faint text raised from a 4.12:1 contrast ratio to 6.23:1 against the page background, finger-sized targets under `pointer: coarse`, and Escape closing the profile photo overlays.
 
 ## 4. Modified existing features
 
@@ -126,8 +129,9 @@ Every route below is same-origin guarded for mutations by the middleware unless 
 
 - `npx next build`: passes with no errors.
 - `npm run data-model`: 26 of 26 checks pass (record store reads through the legacy keys, concurrent sign-ups survive, password changes, deletes and tombstones).
-- `npm run smoke`: 40 of 40 checks pass. It needs a fixture owner in `data/users.json`, which is bundled at build time, so the order is `npm run smoke:seed`, `npx next build`, `npm run smoke`; restore `data/users.json` afterwards so the fixture never ships. Covered: page rendering, anonymous rejection, password policy, reserved owner handle, registration, member and console sign-in, console rejection with a bad password, admin API access, address-free accounts and activity payloads, robots and sitemap contents, noindex on search, skip link and main landmark, forum thread creation, admin-created member, report creation, dedupe, moderator handling and deletion, self-deletion confirmation, session cleared, handle reserved, 404s, logout methods, and login throttling.
+- `npm run smoke`: 42 of 42 checks pass. It needs a fixture owner in `data/users.json`, which is bundled at build time, so the order is `npm run smoke:seed`, `npx next build`, `npm run smoke`; restore `data/users.json` afterwards so the fixture never ships. Covered: page rendering, anonymous rejection, password policy, reserved owner handle, registration, member and console sign-in, console rejection with a bad password, admin API access, address-free accounts and activity payloads, robots and sitemap contents, noindex on search, skip link and main landmark, forum thread creation, admin-created member, report creation, dedupe, moderator handling and deletion, self-deletion confirmation, session cleared, handle reserved, 404s, logout methods, and login throttling, plus the two added last: a member session cannot open the console API, and a non-image avatar is refused.
 - Manual checks during the work: deletion end to end (wrong confirm 400, correct 200, old cookie resolves to `member:null`, password login refused, handle reserved), report flow (401 anonymous, 400 own post, 403 cross-origin, queue read and resolve), IP removal (0 `ips`, `location` and `ip` keys in the two console payloads while the stored record kept its address), SEO output (`/robots.txt`, `/sitemap.xml`, `noindex` meta, breadcrumb JSON-LD).
+- Manual checks after the last pass: `/stories` renders `og:title` as "Stories | Mickey Chan" with an absolute `og:image` and a `twitter:card`, the home page carries `og:site_name`, and a freshly created forum thread appears in `/sitemap.xml` within the same minute.
 - Not run here: real Google and Discord round trips (no provider credentials), Resend email delivery, a real KV instance, cross-browser and screen-reader passes, and visual review at 320, 768 and 1440 px.
 
 ## 11. Known limitations

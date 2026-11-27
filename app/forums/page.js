@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { memberFromCookieStore } from "@/lib/members";
+import { socialMeta } from "@/lib/metadata";
 import {
   FORUM_CATEGORIES,
   categoryMeta,
@@ -13,11 +14,15 @@ import LocalTime from "@/components/LocalTime";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
+const TITLE = "Forums";
+const DESCRIPTION =
+  "Threads from the community: questions about the videos, feedback on what to make next, and everything that does not fit a comment box.";
+
 export const metadata = {
-  title: "Forums",
-  description:
-    "Threads from the community: questions about the videos, feedback on what to make next, and everything that does not fit a comment box.",
+  title: TITLE,
+  description: DESCRIPTION,
   alternates: { canonical: "/forums" },
+  ...socialMeta({ title: `${TITLE} | Mickey Chan`, description: DESCRIPTION, path: "/forums" }),
 };
 
 const VALID = new Set(FORUM_CATEGORIES.map((entry) => entry.id));

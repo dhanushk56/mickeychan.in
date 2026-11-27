@@ -1,4 +1,7 @@
 import { channels, getVideos } from "@/lib/content";
+import { listThreads } from "@/lib/forums";
+import { kvGet } from "@/lib/kv";
+import { STORIES_KEY, isPublic, readStories } from "@/lib/stories";
 
 const BASE_URL = "https://mickeychan.in";
 
@@ -34,6 +37,33 @@ export default async function sitemap() {
     videos = [];
   }
 
+  let stories = [];
+  let threads = [];
+  try {
+    stories = readStories(await kvGet(STORIES_KEY, [])).filter((story) => isPublic(story));
+  } catch {
+    stories = [];
+  }
+  try {
+    threads = await listThreads();
+  } catch {
+    threads = [];
+  }
+
+  const storyEntries = stories.slice(0, 60).map((story) => ({
+    url: `${BASE_URL}/stories/${story.slug}`,
+    lastModified: story.updatedAt ? new Date(story.updatedAt) : now,
+    changeFrequency: "monthly",
+    priority: 0.7,
+  }));
+
+  const threadEntries = threads.slice(0, 120).map((thread) => ({
+    url: `${BASE_URL}/forums/${thread.id}`,
+    lastModified: thread.updatedAt ? new Date(thread.updatedAt) : now,
+    changeFrequency: "weekly",
+    priority: 0.5,
+  }));
+
   const channelEntries = channels.map((channel) => ({
     url: `${BASE_URL}/channels/${channel.handle}`,
     lastModified: now,
@@ -63,5 +93,7 @@ export default async function sitemap() {
     })),
     ...channelEntries,
     ...videoEntries,
+    ...storyEntries,
+    ...threadEntries,
   ];
 }

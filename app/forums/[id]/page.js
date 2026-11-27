@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { getSessionFromCookies } from "@/lib/auth";
 import { categoryMeta, findThread } from "@/lib/forums";
 import { memberFromCookieStore } from "@/lib/members";
+import { socialMeta } from "@/lib/metadata";
 import { can, resolveAdmin } from "@/lib/roles";
 import LocalTime from "@/components/LocalTime";
 import Breadcrumbs from "@/components/Breadcrumbs";
@@ -22,6 +23,12 @@ export async function generateMetadata({ params }) {
     title: thread.title,
     description: `${thread.title}, a thread on the Mickey Chan forums.`,
     alternates: { canonical: `/forums/${thread.id}` },
+    ...socialMeta({
+      title: `${thread.title} | Mickey Chan`,
+      description: `${thread.title}, a thread on the Mickey Chan forums.`,
+      path: `/forums/${thread.id}`,
+      type: "article",
+    }),
   };
 }
 

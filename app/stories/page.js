@@ -1,16 +1,21 @@
 import Link from "next/link";
 import { unstable_noStore as noStore } from "next/cache";
 import { kvGet } from "@/lib/kv";
+import { socialMeta } from "@/lib/metadata";
 import { STORIES_KEY, isPublic, readStories, sortStories, statusMeta } from "@/lib/stories";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
+const TITLE = "Stories";
+const DESCRIPTION =
+  "The story arcs from the channel, written down beat by beat, and how each one ended. A record of what happened, kept in order.";
+
 export const metadata = {
-  title: "Stories",
-  description:
-    "The story arcs from the channel, written down beat by beat, and how each one ended. A record of what happened, kept in order.",
+  title: TITLE,
+  description: DESCRIPTION,
   alternates: { canonical: "/stories" },
+  ...socialMeta({ title: `${TITLE} | Mickey Chan`, description: DESCRIPTION, path: "/stories" }),
 };
 
 export default async function StoriesPage() {
