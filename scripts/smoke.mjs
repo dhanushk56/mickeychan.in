@@ -158,6 +158,109 @@ if (!(await ready())) {
   const ownerAdmin = await req("GET", "/api/admin/accounts");
   check("admin api accepts the owner", ownerAdmin.status === 200, String(ownerAdmin.status));
 
+  const accountsPayload = await req("GET", "/api/admin/accounts");
+  check(
+    "accounts payload carries no addresses",
+    accountsPayload.status === 200 &&
+      !accountsPayload.text.includes('"ips"') &&
+      !accountsPayload.text.includes('"location"'),
+    String(accountsPayload.status)
+  );
+
+  const activityPayload = await req("GET", "/api/admin/activity");
+  check(
+    "activity payload carries no addresses",
+    activityPayload.status === 200 && !activityPayload.text.includes('"ip"'),
+    String(activityPayload.status)
+  );
+
+  const robots = await req("GET", "/robots.txt");
+  check("robots keeps search out", robots.text.includes("Disallow: /search"), String(robots.status));
+
+  const sitemap = await req("GET", "/sitemap.xml");
+  check(
+    "sitemap lists public pages only",
+    sitemap.text.includes("/hub") && !sitemap.text.includes("/login"),
+    String(sitemap.status)
+  );
+
+  const searchNoindex = await req("GET", "/search?q=smoke");
+  check("search results are noindex", searchNoindex.text.includes("noindex"), String(searchNoindex.status));
+
+  const homeA11y = await req("GET", "/");
+  check(
+    "the skip link and its target exist",
+    homeA11y.text.includes("Skip to content") && homeA11y.text.includes('id="content"')
+  );
+
+  // A thread from the owner's member session, then a second member to report it.
+  const createdThread = await req("POST", "/api/forums", {
+    title: "Smoke thread for reports",
+    body: "This thread exists so the report queue can be checked end to end.",
+    category: "general",
+  });
+  let threadId = "";
+  try {
+    threadId = JSON.parse(createdThread.text || "{}")?.thread?.id || "";
+  } catch {
+    threadId = "";
+  }
+  check("forum thread created", createdThread.status === 200 && Boolean(threadId), String(createdThread.status));
+
+  const reporterName = `rep${Date.now().toString(36).slice(-6)}`;
+  const madeReporter = await req("POST", "/api/admin/accounts", {
+    username: reporterName,
+    name: "Smoke Reporter",
+    email: `${reporterName}@example.com`,
+    password: MEMBER_PASSWORD,
+  });
+  check("admin creates a second member", madeReporter.status === 201, String(madeReporter.status));
+
+  const reporterLogin = await req("POST", "/api/auth/member", {
+    username: reporterName,
+    password: MEMBER_PASSWORD,
+  });
+  check("second member signs in", reporterLogin.status === 200, String(reporterLogin.status));
+
+  const report = await req("POST", "/api/reports", { threadId, reason: "spam" });
+  check("a member can report a thread", report.status === 200, `${report.status} ${report.text.slice(0, 50)}`);
+
+  const repeated = await req("POST", "/api/reports", { threadId, reason: "spam" });
+  check("the same report is not queued twice", repeated.text.includes('"duplicate":true'), repeated.text.slice(0, 50));
+
+  const queue = await req("GET", "/api/admin/reports");
+  let reportId = "";
+  try {
+    reportId = JSON.parse(queue.text || "{}")?.reports?.[0]?.id || "";
+  } catch {
+    reportId = "";
+  }
+  check("the report reaches the console", queue.status === 200 && Boolean(reportId), String(queue.status));
+
+  const handled = await req("PATCH", "/api/admin/reports", { id: reportId, status: "handled" });
+  check("a moderator can mark it handled", handled.status === 200, String(handled.status));
+
+  const droppedReport = await req("DELETE", `/api/admin/reports?id=${encodeURIComponent(reportId)}`);
+  check("a moderator can delete the report", droppedReport.status === 200, String(droppedReport.status));
+
+  const wrongConfirm = await req("DELETE", "/api/account", { confirm: "not-my-name" });
+  check("self-deletion needs the username typed", wrongConfirm.status === 400, String(wrongConfirm.status));
+
+  const selfDelete = await req("DELETE", "/api/account", { confirm: reporterName });
+  check("a member can delete their own account", selfDelete.status === 200, String(selfDelete.status));
+
+  const afterDelete = await req("GET", "/api/auth/member");
+  check("the deleted session is gone", afterDelete.text.includes('"member":null'), afterDelete.text.slice(0, 50));
+
+  const reuseHandle = await req("POST", "/api/auth/register", {
+    username: reporterName,
+    name: "Someone Else",
+    email: `other-${reporterName}@example.com`,
+    password: MEMBER_PASSWORD,
+    confirmPassword: MEMBER_PASSWORD,
+  });
+  check("a deleted handle stays reserved", reuseHandle.status === 409, String(reuseHandle.status));
+
   const missingForm = await req("GET", "/api/form-builder/forms/smoke-missing");
   check("missing form returns 404", missingForm.status === 404, String(missingForm.status));
 
