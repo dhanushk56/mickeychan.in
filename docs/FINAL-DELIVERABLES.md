@@ -24,6 +24,31 @@ API groups: `/api/auth/*` (member login, register, verify, password request and 
 
 Existing behaviour includes the video library with search, filters and sorting, dedicated video pages with structured data, channel pages, the community hub, opt-in public profiles, forums with categories, pin, lock and delete, polls, events, announcements, an ideas board with backing, stories, the studio page, recruitment with forms and application review, contact enquiries, notifications, maintenance mode, the form builder, the audit log, roles and permissions, and the console tabs that manage all of it.
 
+### Admin console modules
+
+Status of the twenty modules from the additional master requirement, including the ones left out on purpose.
+
+1. Admin Overview Dashboard: not built. The tab bar carries counts; there is no separate overview screen.
+2. Website Content Management: built. Home page, Announcements, Stories, Studio, Socials, Events, Polls and Ideas panels, plus `/api/admin/content` for the video list.
+3. User Management: built. Accounts panel with details, password, delete, form blocking, duplicate badges.
+4. Roles and Permissions: built. Admins and Roles panels over 49 granular permissions.
+5. Recruitment Management: built. Applications, Forms and Messages panels, including review and clearing.
+6. ARG Management: excluded by request. No ARG code exists anywhere in the project.
+7. Announcement and Notification Management: announcements built. Notification management is excluded by request and has no console screen. The member notification bell is a separate member feature and stays.
+8. Contact and Support Inbox: built. Enquiries panel with status and notes, plus join us messages.
+9. Community Moderation: built. Reports panel, forum pin, lock and delete, ideas moderation, account form blocking.
+10. Website Appearance Editor: excluded by request. No appearance screen exists; `lib/skin.js` is runner geometry, not theme editing.
+11. Media Library: excluded by request. Avatars and form attachments are stored with the record that owns them, with no shared library.
+12. Website Analytics: not built. There is no traffic or engagement reporting; the audit log is the only activity record.
+13. System Health and Diagnostics: not built.
+14. Backup and Maintenance Center: maintenance mode is built. Backup is an API route plus the daily snapshot cron with no console screen.
+15. Audit and Security Center: built. The `/audit` page and the activity API.
+16. Global Admin Search: built. The command palette with keyboard shortcuts.
+17. Quick Actions: partly. The palette switches tabs and runs the shortcuts; there is no separate quick action strip.
+18. Scheduled Tasks: not built as a screen. The snapshot runs from `/api/cron/snapshot` on the host schedule.
+19. Draft and Revision Management: excluded by request. Stories have a draft status and announcements can be scheduled, but there is no revision history or restore.
+20. Integration Management: excluded by request. No integration screen.
+
 ## 3. Features added in this engagement
 
 - Forum reporting with a moderator queue (Reports tab, open and handled, dedupe, 5 an hour per member).
@@ -116,7 +141,8 @@ Every route below is same-origin guarded for mutations by the middleware unless 
 - Admin email and phone are visible to roles with `accounts.view`; there is no per-field redaction.
 - Form-builder uploads and avatars live in KV as data URLs, so they are size-capped, not streamed to object storage.
 - No CI job runs the smoke suite; it needs the fixture owner and a build, so it currently runs by hand.
-- Not built from the wider brief: the ARG portal (storylines, puzzles, clues, progress), playlists, watch history and watch later, achievements, leaderboards, job drafts, and the remaining console modules listed in the additional master requirement (analytics, media library, scheduled tasks, integration management). Nothing there is stubbed to look finished.
+- Not built from the wider brief: the ARG portal (storylines, puzzles, clues, progress), playlists, watch history and watch later, achievements, leaderboards and job drafts. Nothing there is stubbed to look finished.
+- Console modules left out at the owner's request: ARG Management (6), the notification half of Announcement and Notification Management (7), Website Appearance Editor (10), Media Library (11), Draft and Revision Management (19) and Integration Management (20). The module status list in section 2 records what exists for each of the twenty.
 - The home page "Featured members" strip is separate from the removed studio team roster and remains in place.
 
 ## 12. Still needs external configuration
