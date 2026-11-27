@@ -1381,7 +1381,7 @@ export default function AdminDashboard({ currentUser }) {
             </button>
             <button
               type="button"
-              className="btn btn-ghost btn-sm"
+              className="btn btn-ghost btn-sm admin-shortcuts"
               onClick={() => setShortcutSheetOpen(true)}
               aria-label="Keyboard shortcuts"
               title="Keyboard shortcuts"

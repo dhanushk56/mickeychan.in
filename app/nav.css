@@ -320,6 +320,9 @@
 
   @media (max-width: 959px) {
     .menu-button { display: inline-grid; }
+    /* The shortcut list is a keyboard feature, so the header button goes on
+       phones and the footer link stays. */
+    .shortcuts-button { display: none; }
     .nav-shell {
       grid-template-columns: auto 1fr;
       gap: .5rem;

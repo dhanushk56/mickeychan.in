@@ -1344,7 +1344,13 @@
   /* Form builder is the action people come here for, so it leads the row. */
   .admin-header > div:last-child > a:last-child { order: -1; }
 
-  .admin-header .admin-search-trigger { flex: 0 0 auto; }
+      .admin-header .admin-search-trigger { flex: 0 0 auto; }
+
+  /* The shortcut list is keystrokes only, so the console drops the header
+     button where the console layout stacks. */
+  @media (max-width: 767px) {
+    .admin-header .admin-shortcuts { display: none; }
+  }
 
   /* A bar with a handful of tabs splits its width evenly, so the labels sit
      dead-centre in equal segments instead of bunching to the left. */
