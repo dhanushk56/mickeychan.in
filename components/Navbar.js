@@ -286,6 +286,17 @@ export default function Navbar({ locked = false }) {
                 <span />
               </span>
             </button>
+            <button
+              type="button"
+              className="icon-button shortcuts-button"
+              aria-label="Keyboard shortcuts"
+              aria-haspopup="dialog"
+              aria-keyshortcuts="?"
+              title="Keyboard shortcuts"
+              onClick={() => setShortcutsOpen(true)}
+            >
+              <span aria-hidden="true">?</span>
+            </button>
             {member && <NotificationsBell key={member.username} />}
             <div className="nav-account" ref={accountRef}>
               {member ? (

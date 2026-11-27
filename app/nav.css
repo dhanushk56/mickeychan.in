@@ -179,6 +179,12 @@
 
   .menu-button { display: none; }
 
+  .shortcuts-button {
+    border-radius: 999px;
+    font-size: .9rem;
+    font-weight: 700;
+  }
+
   .mobile-scrim {
     position: fixed;
     inset: 0;
