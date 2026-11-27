@@ -46,23 +46,11 @@ export default function PetalCursor() {
     };
 
     // A cross-origin frame (a YouTube embed) sends no pointer events to this
-    // page and fires a null mouseout as the pointer crosses into it, so the
-    // mouse leaving the window and the mouse entering a player look alike.
-    // Ask what is under the pointer before hiding the cursor.
-    const overEmbed = (clientX, clientY) => {
-      if (!Number.isFinite(clientX) || !Number.isFinite(clientY)) return false;
-      const hit = document.elementFromPoint(clientX, clientY);
-      return Boolean(hit && hit.closest("iframe, embed, object"));
-    };
-
+    // page, so once the pointer is inside the player there is no way to move
+    // the picture. Hiding it is better than leaving it stuck at the edge, and
+    // the first pointermove back on the page brings it straight back.
     const out = (event) => {
       if (event.relatedTarget) return;
-      if (overEmbed(event.clientX, event.clientY)) return;
-      leave();
-    };
-
-    const rootLeave = () => {
-      if (overEmbed(x, y)) return;
       leave();
     };
 
@@ -70,14 +58,14 @@ export default function PetalCursor() {
     window.addEventListener("pointerdown", down, { passive: true });
     window.addEventListener("pointerup", up, { passive: true });
     document.addEventListener("mouseout", out);
-    document.documentElement.addEventListener("mouseleave", rootLeave);
+    document.documentElement.addEventListener("mouseleave", leave);
 
     return () => {
       window.removeEventListener("pointermove", move);
       window.removeEventListener("pointerdown", down);
       window.removeEventListener("pointerup", up);
       document.removeEventListener("mouseout", out);
-      document.documentElement.removeEventListener("mouseleave", rootLeave);
+      document.documentElement.removeEventListener("mouseleave", leave);
       root.classList.remove("petal-cursor-on");
     };
   }, []);
